@@ -169,7 +169,7 @@ function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
             $tmpcid = $lib[$j]['cid'];
         }
         $tsql->query("update `{$tb_kj}` set js=1 where {$whi}");
-        jiaozhengedu(); // 恢复派奖函数调用，确保手动开奖和系统开奖都会派奖
+        // jiaozhengedu() 调用位置已移到 prize 计算完成后（第187行）
     }
     $us = $tsql->arr("select * from `$tb_shui` where isok=1 and shui>0",1);
     foreach($us as $k => $v){
@@ -183,8 +183,12 @@ function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
             $tsql->query("update `$tb_lib` set prize=if(prize>$zuid,$zuid,prize),kk=1 where {$whi} and userid='{$v['userid']}' and z=1 and zc0>0");
             $tsql->query("update `$tb_lib` set prize=if(prize<$zuix,0,prize),kk=1 where {$whi} and userid='{$v['userid']}' and z=1 and zc0>0");
         }
-        
+
     }
+
+    // 在 prize 字段计算完成后调用派奖函数，确保获取到正确的实际派奖金额
+    jiaozhengedu();
+
     return 1;
 }
 function calcmoni($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype)

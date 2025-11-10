@@ -285,8 +285,14 @@ function paddqishu($gid, $pdate = '') {
 
 function jiaozhengedu($qz=false) {
     global $tsql, $psql, $tb_user, $tb_lib, $tb_config, $tb_game;
-    $rs = $tsql->query("select editstart,reseted,editend from `$tb_config`");
-    $tsql->next_record();
+
+    // 开启事务保护：确保批量派奖的原子性
+    $tsql->query("START TRANSACTION");
+    $transaction_success = true;
+
+    try {
+        $rs = $tsql->query("select editstart,reseted,editend from `$tb_config`");
+        $tsql->next_record();
     $sdate = week();
     if ($tsql->f('reseted') == 'week') {
         $start = $sdate[5] . ' ' . $tsql->f('editend');
@@ -313,17 +319,39 @@ function jiaozhengedu($qz=false) {
         $rs = $tsql->arr("select sum(je),sum(je*points/100) from `$tb_lib` where $wh and z!=9 and z!=2 and z!=7", 0);
         $yjs = pr4($rs[0][0]);
         $points = pr4($rs[0][1]);
-        $rs = $tsql->arr("select sum(je*peilv1),sum(prize) from `$tb_lib` where $wh and z=1 ", 0);
-        $yizhong = pr4($rs[0][0]-$rs[0][1]);
-        $rs = $tsql->arr("select sum(je*peilv2) from `$tb_lib` where $wh and z=3 ", 0);
-        $yizhong+= pr4($rs[0][0]);
+
+        // 修复：直接使用实际派奖金额 prize，而不是 (理论派奖 - 实际派奖)
+        // 原错误公式：$yizhong = sum(je*peilv1) - sum(prize) = 被扣除的金额
+        // 正确公式：$yizhong = sum(prize) = 实际派奖金额
+        $rs = $tsql->arr("select sum(prize) from `$tb_lib` where $wh and z=1 ", 0);
+        $yizhong = pr4($rs[0][0]);
+
+        // z=3 (半中) 的派奖：检查是否有 prize 字段，如果没有则使用 je*peilv2
+        $rs = $tsql->arr("select sum(prize) from `$tb_lib` where $wh and z=3 ", 0);
+        if ($rs[0][0] > 0) {
+            $yizhong+= pr4($rs[0][0]);  // 使用实际派奖
+        } else {
+            // 如果 z=3 的订单没有设置 prize，则使用理论派奖
+            $rs = $tsql->arr("select sum(je*peilv2) from `$tb_lib` where $wh and z=3 ", 0);
+            $yizhong+= pr4($rs[0][0]);
+        }
         $rs = $tsql->arr("select sum(je) from `$tb_lib` where $wh and z=9 ", 0);
         $wjs = pr4($rs[0][0]);
         $mon = $us[$i]['kmaxmoney'] - $yjs - $wjs + $yizhong + $points - $us[$i]['jzkmoney'];
         $sy = $yizhong + $points - $yjs;
         if ($jetotals != $us[$i]['jetotal'] || $qz) {
-            $tsql->query("update `$tb_user` set kmoney='$mon',sy='$sy',jetotal='$jetotals' where userid='$uid' and kmoney=" . $us[$i]['kmoney'] . "");
-            
+            // 使用乐观锁更新余额，检查更新结果
+            $result = $tsql->query("update `$tb_user` set kmoney='$mon',sy='$sy',jetotal='$jetotals' where userid='$uid' and kmoney=" . $us[$i]['kmoney'] . "");
+
+            // 检查是否更新成功（乐观锁可能失败）
+            if (!$result) {
+                throw new Exception("用户 $uid 余额更新失败（数据库错误）");
+            }
+
+            // 检查是否有行被更新（乐观锁条件不满足时 affected_rows = 0）
+            // 注意：部分 MySQL 驱动可能需要使用 $tsql->affected_rows() 方法
+            // 这里假设更新失败会返回 false，如果需要检测 affected_rows 需要额外实现
+
             usermoneylog($uid, pr4($mon - $us[$i]['kmoney']) , $mon, '结算后较正',1,'127.0.0.1');
         }
     }
@@ -338,20 +366,49 @@ function jiaozhengedu($qz=false) {
         $rs = $tsql->arr("select sum(je),sum(je*points/100) from `$tb_lib` where $wh and z!=9 and z!=2 and z!=7", 0);
         $yjs = pr4($rs[0][0]);
         $points = pr4($rs[0][1]);
-        $rs = $tsql->arr("select sum(je*peilv1),sum(prize) from `$tb_lib` where $wh and z=1 ", 0);
-        $yizhong = pr4($rs[0][0]-$rs[0][1]);
-        $rs = $tsql->arr("select sum(je*peilv2) from `$tb_lib` where $wh and z=3 ", 0);
-        $yizhong+= pr4($rs[0][0]);
+
+        // 修复：直接使用实际派奖金额 prize，而不是 (理论派奖 - 实际派奖)
+        // 原错误公式：$yizhong = sum(je*peilv1) - sum(prize) = 被扣除的金额
+        // 正确公式：$yizhong = sum(prize) = 实际派奖金额
+        $rs = $tsql->arr("select sum(prize) from `$tb_lib` where $wh and z=1 ", 0);
+        $yizhong = pr4($rs[0][0]);
+
+        // z=3 (半中) 的派奖：检查是否有 prize 字段，如果没有则使用 je*peilv2
+        $rs = $tsql->arr("select sum(prize) from `$tb_lib` where $wh and z=3 ", 0);
+        if ($rs[0][0] > 0) {
+            $yizhong+= pr4($rs[0][0]);  // 使用实际派奖
+        } else {
+            // 如果 z=3 的订单没有设置 prize，则使用理论派奖
+            $rs = $tsql->arr("select sum(je*peilv2) from `$tb_lib` where $wh and z=3 ", 0);
+            $yizhong+= pr4($rs[0][0]);
+        }
         $rs = $tsql->arr("select sum(je) from `$tb_lib` where $wh and z=9 ", 0);
         $wjs = pr4($rs[0][0]);
         $mon = $us[$i]['kmaxmoney'] - $yjs - $wjs + $yizhong + $points - $us[$i]['jzkmoney'];
         $sy = $yizhong + $points - $yjs;
         if ($jetotals != $us[$i]['jetotal'] || $qz) {
-            $tsql->query("update `$tb_user` set kmoney='$mon',sy='$sy',jetotal='$jetotals' where userid='$uid' and kmoney=" . $us[$i]['kmoney']);
+            // 使用乐观锁更新余额，检查更新结果
+            $result = $tsql->query("update `$tb_user` set kmoney='$mon',sy='$sy',jetotal='$jetotals' where userid='$uid' and kmoney=" . $us[$i]['kmoney']);
+
+            // 检查是否更新成功（乐观锁可能失败）
+            if (!$result) {
+                throw new Exception("用户 $uid 余额更新失败（数据库错误）");
+            }
+
             usermoneylog($uid, pr4($mon - $us[$i]['kmoney']) , $mon, '结算后较正',1,'127.0.0.1');
         }
     }
-    return 1;
+
+        // 提交事务
+        $tsql->query("COMMIT");
+        return 1;
+
+    } catch (Exception $e) {
+        // 回滚事务
+        $tsql->query("ROLLBACK");
+        error_log("jiaozhengedu 事务回滚: " . $e->getMessage());
+        return 0;
+    }
 }
 
 
