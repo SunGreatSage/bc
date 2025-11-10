@@ -62,13 +62,20 @@ for ($k = 0; $k < $cg; $k++) {
             $url = 'http://1680660.com/smallSix/findSmallSixInfo.do';
 
             $ma = http_get($url);
-         
+
+            if($ma === false || empty($ma)){
+                echo "[香港六合彩] API 请求失败<BR/>";
+                error_log("[autokjs_ss.php] 香港六合彩 API 请求失败: " . $url);
+                continue;
+            }
+
             $ma = json_decode($ma, true);
-            //   var_dump($ma['result']['data']['preDrawCode']);
-            // var_dump($ma);
-         //   echo "--------------------";
-           
-            
+            if(!isset($ma['result']['data']['preDrawCode'])){
+                echo "[香港六合彩] API 返回数据格式错误<BR/>";
+                error_log("[autokjs_ss.php] 香港六合彩 API 返回数据无效: " . json_encode($ma));
+                continue;
+            }
+
             $m = explode(',', $ma['result']['data']['preDrawCode']);
             
         
@@ -85,10 +92,10 @@ for ($k = 0; $k < $cg; $k++) {
 			$drawTime=$ma['result']['data']['drawTime'];
 			$closetime=$ma['result']['data']['drawTime'];
 			$opentime1=$ma['result']['data']['preDrawTime'];
-			
+
 			$dateTime = new DateTime($drawTime);
             $dateOnly = $dateTime->format('Y-m-d');
-            $qishu = "2024".substr($qishu,4,4);
+            $qishu = date('Y').substr($qishu,4,4);
             $nqi =  $qishu+1;
             $fsql1 = "select qishu from `{$tb_kj}` where gid=100 and qishu='{$nqi}'";
             $tsql->query("select * from `$tb_kj` where gid=100 and  qishu='{$nqi}' limit 1");
@@ -115,29 +122,43 @@ for ($k = 0; $k < $cg; $k++) {
 		   }
             $sql = "update `{$tb_kj}` set m1='{$m[0]}',m2='{$m[1]}',m3='{$m[2]}',m4='{$m[3]}',m5='{$m[4]}',m6='{$m[5]}',m7='{$m[6]}',m8='{$m[7]}',m9='{$m[8]}',m10='{$m[9]}'";
             $sql .= " where  gid='{$gid}' and qishu='{$qishu}' ";
-           $tsql->query($sql);
-        //   var_dump($nqi);
-        //   var_dump($opentime1);
-        //   var_dump($closetime);
-        //     die;
+           $result = $tsql->query($sql);
+           if(!$result){
+               echo "[香港六合彩] 数据库更新失败<BR/>";
+               error_log("[autokjs_ss.php] 香港六合彩更新开奖号码失败: gid={$gid}, qishu={$qishu}");
+               continue;
+           }
 		   echo "[香港六合彩] 开奖期号：".$nqi." 开盘时间：".$opentime1." 开奖时间：".$closetime.'<BR/>'; 
         }
         
        if ($gid == 300) { //澳门六合彩
             $his = date("His");
             $url = 'http://api.bjjfnet.com/data/opencode/2032';
-            $ma = http_get($url);        
+            $ma = http_get($url);
+
+            if($ma === false || empty($ma)){
+                echo "[澳门六合彩] API 请求失败<BR/>";
+                error_log("[autokjs_ss.php] 澳门六合彩 API 请求失败: " . $url);
+                continue;
+            }
+
             $ma = json_decode($ma, true);
+            if(!isset($ma['data'][0]['openCode'])){
+                echo "[澳门六合彩] API 返回数据格式错误<BR/>";
+                error_log("[autokjs_ss.php] 澳门六合彩 API 返回数据无效: " . json_encode($ma));
+                continue;
+            }
+
             $m = explode(',', $ma['data'][0]['openCode']);
-           /* if($m[0]<10){$m[0]="0".$m[0];}
+            if($m[0]<10){$m[0]="0".$m[0];}
             if($m[1]<10){$m[1]="0".$m[1];}
             if($m[2]<10){$m[2]="0".$m[2];}
             if($m[3]<10){$m[3]="0".$m[3];}
             if($m[4]<10){$m[4]="0".$m[4];}
             if($m[5]<10){$m[5]="0".$m[5];}
-            if($m[6]<10){$m[6]="0".$m[6];}*/
+            if($m[6]<10){$m[6]="0".$m[6];}
 			$qishu = $ma['data'][0]['issue'];
-            $qishu = "2024".substr($qishu,4,4);
+            $qishu = date('Y').substr($qishu,4,4);
             $nqi =  $qishu+1;
             //var_dump($qishu);
             $fsql1 = "select qishu from `{$tb_kj}` where gid=300 and qishu='{$nqi}'";
@@ -161,26 +182,44 @@ for ($k = 0; $k < $cg; $k++) {
 		   }
             $sql = "update `{$tb_kj}` set m1='{$m[0]}',m2='{$m[1]}',m3='{$m[2]}',m4='{$m[3]}',m5='{$m[4]}',m6='{$m[5]}',m7='{$m[6]}',m8='{$m[7]}',m9='{$m[8]}',m10='{$m[9]}'";
             $sql .= " where  gid='{$gid}' and qishu='{$qishu}' ";
-           $tsql->query($sql);
+           $result = $tsql->query($sql);
+           if(!$result){
+               echo "[澳门六合彩] 数据库更新失败<BR/>";
+               error_log("[autokjs_ss.php] 澳门六合彩更新开奖号码失败: gid={$gid}, qishu={$qishu}");
+               continue;
+           }
 		    echo "[澳门六合彩] 开奖期号：".$nqi." 开盘时间：".$opentime1." 开奖时间：".$closetime.'<BR/>';        
         }
 		
 		if ($gid == 200) { //新澳门六合彩
             $his = date("His");
             $url = 'https://api.00853lhc.com/api/opencode/2032';
-            $ma = http_get($url);        
+            $ma = http_get($url);
+
+            if($ma === false || empty($ma)){
+                echo "[新澳门六合彩] API 请求失败<BR/>";
+                error_log("[autokjs_ss.php] 新澳门六合彩 API 请求失败: " . $url);
+                continue;
+            }
+
             $ma = json_decode($ma, true);
+            if(!isset($ma['data'][0]['openCode'])){
+                echo "[新澳门六合彩] API 返回数据格式错误<BR/>";
+                error_log("[autokjs_ss.php] 新澳门六合彩 API 返回数据无效: " . json_encode($ma));
+                continue;
+            }
+
             $m = explode(',', $ma['data'][0]['openCode']);
             $m = array_map('trim', $m);
-           /* if($m[0]<10){$m[0]="0".$m[0];}
+            if($m[0]<10){$m[0]="0".$m[0];}
             if($m[1]<10){$m[1]="0".$m[1];}
             if($m[2]<10){$m[2]="0".$m[2];}
             if($m[3]<10){$m[3]="0".$m[3];}
             if($m[4]<10){$m[4]="0".$m[4];}
             if($m[5]<10){$m[5]="0".$m[5];}
-            if($m[6]<10){$m[6]="0".$m[6];}*/
+            if($m[6]<10){$m[6]="0".$m[6];}
 			$qishu = $ma['data'][0]['issue'];
-            $qishu = "2024".substr($qishu,4,4);
+            $qishu = date('Y').substr($qishu,4,4);
             //var_dump($qishu); 
             $nqi =  $qishu+1;
             $fsql1 = "select qishu from `{$tb_kj}` where gid=200 and qishu='{$nqi}'";
@@ -203,7 +242,12 @@ for ($k = 0; $k < $cg; $k++) {
 		   }
             $sql = "update `{$tb_kj}` set m1='{$m[0]}',m2='{$m[1]}',m3='{$m[2]}',m4='{$m[3]}',m5='{$m[4]}',m6='{$m[5]}',m7='{$m[6]}',m8='{$m[7]}',m9='{$m[8]}',m10='{$m[9]}'";
             $sql .= " where  gid='{$gid}' and qishu='{$qishu}' ";
-           $tsql->query($sql);
+           $result = $tsql->query($sql);
+           if(!$result){
+               echo "[新澳门六合彩] 数据库更新失败<BR/>";
+               error_log("[autokjs_ss.php] 新澳门六合彩更新开奖号码失败: gid={$gid}, qishu={$qishu}");
+               continue;
+           }
 		    echo "[新澳门六合彩] 开奖期号：".$nqi." 开盘时间：".$opentime1." 开奖时间：".$closetime.'<BR/>';        
         }
         
@@ -278,26 +322,36 @@ if ($js == 1 && date("H")!=6) {
 }
 //echo 'ok';
 
-echo '
-<script language="JavaScript"> 
-function myrefresh() 
-{ 
-window.location.reload(); 
-} 
-setTimeout(\'myrefresh()\',3000); //指定1秒刷新一次 
-</script>';
-exit;
 /****************************限制盈利***************************************/
+// 应用盈利限制逻辑（如果配置了限制）
 $msql->query("select yingxz,yingxzje from `{$tb_config}`");
 $msql->next_record();
 $yingxz = $msql->f("yingxz");
 $yingxzje = $msql->f("yingxzje");
 if ($yingxz > 0) {
-    $msql->query("update `{$tb_user}` set yingdeny=1 where ifagent=0 and yingdeny=0 and (sy>(kmaxmoney+jzkmoney)*{$yingxz} or sy>{$yingxzje})");
-    $msql->query("update `{$tb_user}` set yingdeny=0 where ifagent=0 and yingdeny=1 and sy<=(kmaxmoney+jzkmoney)*{$yingxz} and sy<={$yingxzje}");
+    // 冻结盈利超标的用户
+    $result1 = $msql->query("update `{$tb_user}` set yingdeny=1 where ifagent=0 and yingdeny=0 and (sy>(kmaxmoney+jzkmoney)*{$yingxz} or sy>{$yingxzje})");
+    if(!$result1){
+        error_log("[autokjs_ss.php] 盈利限制：冻结用户失败");
+    }
+
+    // 解冻盈利降回限制内的用户
+    $result2 = $msql->query("update `{$tb_user}` set yingdeny=0 where ifagent=0 and yingdeny=1 and sy<=(kmaxmoney+jzkmoney)*{$yingxz} and sy<={$yingxzje}");
+    if(!$result2){
+        error_log("[autokjs_ss.php] 盈利限制：解冻用户失败");
+    }
 }
-$msql->query("update `{$tb_user}` set yingdeny=0 where ifagent=0 and yingdeny=1");
 /****************************限制盈利***************************************/
+
+echo '
+<script language="JavaScript">
+function myrefresh()
+{
+window.location.reload();
+}
+setTimeout(\'myrefresh()\',3000); //指定1秒刷新一次
+</script>';
+exit;
 function curl_get($type, $url, $cookie = '') {//type与url为必传、若无cookie则传空字符串
 
 	if (empty($url)) {
