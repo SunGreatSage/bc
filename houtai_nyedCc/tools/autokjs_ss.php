@@ -107,18 +107,21 @@ for ($k = 0; $k < $cg; $k++) {
                 $opentime1 = $opentime." ".$game[$k]['opentimekj'];
                 $closetime = $ttime." ".$game[$k]['closetimekj'];
                 $kjtime = $ttime." 21:35:00";
-				$current_time = date("H");
 				$currentDate = new DateTime();
                 $currentDateFormatted = $currentDate->format('Y-m-d');
-				//  var_dump($nqi);
-				//  var_dump($dateOnly);
-				//  var_dump($currentDateFormatted);
-    //         die;
-				if ($nqi != 2025 && $dateOnly == $currentDateFormatted) {
-                $msql->query("insert into `$tb_kj` set dates='" . $opentime . "',opentime='" . $opentime1 . "',closetime='" . $closetime . "',kjtime='" . $kjtime . "',baostatus='1',bml='癸卯',gid='$gid',qishu='$nqi'");
-				$cacheKeys = $redis->keys("zd:100*");
-                $redis->del($cacheKeys);
-                 }
+
+				// 插入新期次（只要期次不存在就插入，不限制时间）
+				if ($nqi > 10000000) {  // 期号格式校验：必须是8位数字
+                    $result_insert = $msql->query("insert into `$tb_kj` set dates='" . $opentime . "',opentime='" . $opentime1 . "',closetime='" . $closetime . "',kjtime='" . $kjtime . "',baostatus='1',bml='癸卯',gid='$gid',qishu='$nqi'");
+                    if($result_insert){
+                        echo "[香港六合彩] 成功插入新期次: {$nqi}<BR/>";
+                        $cacheKeys = $redis->keys("zd:100*");
+                        $redis->del($cacheKeys);
+                    } else {
+                        echo "[香港六合彩] 插入新期次失败: {$nqi}<BR/>";
+                        error_log("[autokjs_ss.php] 香港六合彩插入新期次失败: gid={$gid}, qishu={$nqi}");
+                    }
+                }
 		   }
             $sql = "update `{$tb_kj}` set m1='{$m[0]}',m2='{$m[1]}',m3='{$m[2]}',m4='{$m[3]}',m5='{$m[4]}',m6='{$m[5]}',m7='{$m[6]}',m8='{$m[7]}',m9='{$m[8]}',m10='{$m[9]}'";
             $sql .= " where  gid='{$gid}' and qishu='{$qishu}' ";
@@ -166,18 +169,23 @@ for ($k = 0; $k < $cg; $k++) {
             $tsql->next_record();
             
            if(!$tsql->f('id')){
-              //  $opentime =  date('Y-m-d',strtotime("+1 day"));
 			    $opentime = date('Y-m-d');
-               // $ttime = date('Y-m-d',strtotime("+1 day"));
 			    $ttime = date('Y-m-d');
                 $opentime1 = $opentime." ".$game[$k]['opentimekj'];
                 $closetime = $ttime." ".$game[$k]['closetimekj'];
                 $kjtime = $ttime." 21:35:00";
-			    $current_time = date("H");
-                if ($nqi != 2025 && $current_time == "00") {
-                $msql->query("insert into `$tb_kj` set dates='" . $opentime . "',opentime='" . $opentime1 . "',closetime='" . $closetime . "',kjtime='" . $kjtime . "',baostatus='1',bml='癸卯',gid='$gid',qishu='$nqi'");
-				$cacheKeys = $redis->keys("zd:300*");
-                $redis->del($cacheKeys);
+
+                // 插入新期次（只要期次不存在就插入，不限制时间）
+                if ($nqi > 10000000) {  // 期号格式校验：必须是8位数字
+                    $result_insert = $msql->query("insert into `$tb_kj` set dates='" . $opentime . "',opentime='" . $opentime1 . "',closetime='" . $closetime . "',kjtime='" . $kjtime . "',baostatus='1',bml='癸卯',gid='$gid',qishu='$nqi'");
+                    if($result_insert){
+                        echo "[澳门六合彩] 成功插入新期次: {$nqi}<BR/>";
+                        $cacheKeys = $redis->keys("zd:300*");
+                        $redis->del($cacheKeys);
+                    } else {
+                        echo "[澳门六合彩] 插入新期次失败: {$nqi}<BR/>";
+                        error_log("[autokjs_ss.php] 澳门六合彩插入新期次失败: gid={$gid}, qishu={$nqi}");
+                    }
                 }
 		   }
             $sql = "update `{$tb_kj}` set m1='{$m[0]}',m2='{$m[1]}',m3='{$m[2]}',m4='{$m[3]}',m5='{$m[4]}',m6='{$m[5]}',m7='{$m[6]}',m8='{$m[7]}',m9='{$m[8]}',m10='{$m[9]}'";
@@ -226,18 +234,23 @@ for ($k = 0; $k < $cg; $k++) {
             $tsql->query("select * from `$tb_kj` where gid=200 and  qishu='{$nqi}' limit 1");
             $tsql->next_record();
            if(!$tsql->f('id')){
-              //  $opentime =  date('Y-m-d',strtotime("+1 day"));
 			    $opentime = date('Y-m-d');
-               // $ttime = date('Y-m-d',strtotime("+1 day"));
 			    $ttime = date('Y-m-d');
                 $opentime1 = $opentime." ".$game[$k]['opentimekj'];
                 $closetime = $ttime." ".$game[$k]['closetimekj'];
                 $kjtime = $ttime." 21:35:00";
-			    $current_time = date("H");
-                if ($nqi != 2025 && $current_time == "00") {
-                $msql->query("insert into `$tb_kj` set dates='" . $opentime . "',opentime='" . $opentime1 . "',closetime='" . $closetime . "',kjtime='" . $kjtime . "',baostatus='1',bml='癸卯',gid='$gid',qishu='$nqi'");
-				$cacheKeys = $redis->keys("zd:200*");
-                $redis->del($cacheKeys);
+
+                // 插入新期次（只要期次不存在就插入，不限制时间）
+                if ($nqi > 10000000) {  // 期号格式校验：必须是8位数字
+                    $result_insert = $msql->query("insert into `$tb_kj` set dates='" . $opentime . "',opentime='" . $opentime1 . "',closetime='" . $closetime . "',kjtime='" . $kjtime . "',baostatus='1',bml='癸卯',gid='$gid',qishu='$nqi'");
+                    if($result_insert){
+                        echo "[新澳门六合彩] 成功插入新期次: {$nqi}<BR/>";
+                        $cacheKeys = $redis->keys("zd:200*");
+                        $redis->del($cacheKeys);
+                    } else {
+                        echo "[新澳门六合彩] 插入新期次失败: {$nqi}<BR/>";
+                        error_log("[autokjs_ss.php] 新澳门六合彩插入新期次失败: gid={$gid}, qishu={$nqi}");
+                    }
                 }
 		   }
             $sql = "update `{$tb_kj}` set m1='{$m[0]}',m2='{$m[1]}',m3='{$m[2]}',m4='{$m[3]}',m5='{$m[4]}',m6='{$m[5]}',m7='{$m[6]}',m8='{$m[7]}',m9='{$m[8]}',m10='{$m[9]}'";
