@@ -1,0 +1,215 @@
+{+include file='header2.html'+}
+<link href="/default/css/agent/backshare.css" rel="stylesheet" type="text/css" />
+<link href="/default/css/control.css" rel="stylesheet" />
+<link href="/default/css/Skins/blue/skin.css?v=004" rel="stylesheet" />
+<script src="/js/jquery.loadmask.js?v=004"></script>
+<link href="/default/css/jquery.loadmask.css" rel="stylesheet" />
+<script src="/js/sitetool.js?v=004"></script>
+<script type="text/javascript" src="/default/js/function.js"> </script>
+</head>
+<body id="topbody">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='autofly';
+</script>
+
+<div class="jt-container">
+	<div class="top_info">
+		<span class="title" style="color:#000000" >自动补货设置</span><span class="right"></span>
+	</div>
+		<div class="s_main" >
+			<div class="sub_w2" style="margin:0px;" >
+           <div class="right_btns">
+                <span class="left_arrow" id="toleft2"><a class="bx-prev disabled" ></a></span><span class="right_arrow" id="toright2"><a class="bx-next disabled" ></a></span>
+            </div>
+
+            <div class="page-tabs">
+                <div class="tab_con2 clear " id="scroll_div2">
+                    <ul id="sliderLottery">
+					{+if $config.slowtype==1+}
+<li>
+{+section name=i loop=$game+}
+    {+if $game[i].fast==0+}<a href="javascript:void(0)" class="g{+$game[i].gid+}" gid='{+$game[i].gid+}'>{+$game[i].gname+}</a>{+/if+}
+ {+/section+}
+</li>
+{+/if+}
+                    </ul>
+                </div>
+            </div>
+        </div>
+		
+		   <div class="sider-left floatR" id="menuleft">
+
+            <div class="main_set" id="quickSetting" style="display:">
+                <table style="border: none" class="t_list" width="100%">
+                    <tbody>
+                        <tr style="border: none">
+                            <td height="27" align="center" style="border: none; text-align: justify" nowrap="nowrap" id="tdMaxWinlostCode">
+                                快速设置：
+                            </td>
+                        </tr>
+
+                    </tbody>
+                    <tbody id="quickSetting"  style=" text-align:center">
+                        <tr style="border: none">
+                            <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap"><span class="input_panel"> 注额：<input   type="number" min="0" class="mintxt integer" /> </span></td>
+                        </tr>
+                        <tr style="border: none">
+                            <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap">
+                                <label><input type="radio" name="set"  value="1"  />自动补货</label>
+                                <label><input type="radio" name="set" value="0" checked="checked" />手动补货</label>
+								 
+                            </td>
+                        </tr>
+                        <tr style="border: none">
+                            <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap">
+                                <input type="button" class="button btn1 ok" value="确定" />&nbsp;&nbsp;
+                                <input type="button" data-ignore="1" value="保存"  class="button btn1 send" />
+								
+                            </td>
+                        </tr>
+						<tr style="border: none">
+                            <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap">
+                                <input type="button" gid="{+$gid+}" class="button btn7 yiwotongbu" value="以我同步其他彩" >
+								
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+
+            </div>
+        </div>
+		
+		 <div class="toggle floatR"><div class="sider-toggle"><span title="收缩" style="top:50px">切换&nbsp;</span></div></div>
+
+
+		<div class="contents" style="margin-top:10px;">
+    <div id="p_MCHK6" class="tab_panel  param_panel input_panel MCHK6">
+ 
+			<table class="layout pantb ">
+			<tbody>
+			<tr>
+				<td class="panel">
+					<table class="list data_table at_2 table_ball ">
+					<thead>
+					<tr>
+						<th style="display: none;">
+							<input type="checkbox" class="all">全选
+						</th>
+						<th>
+							种类
+						</th>
+						<th>
+							注额
+						</th>
+						<th>
+							状态
+						</th>
+					</tr>
+					</thead>
+					<tbody>
+                    
+   {+section name=i loop=$fly step=1 +}
+     {+if $smarty.section.i.index<=$nums+}
+   <TR class='nr' f='{+$fly[i].ftype+}' ab='{+$fly[i].ab+}'>
+    <td  style="display: none;"><input type="checkbox"  class="pantbc"  /><input type="button" class="s1 pantb" value="同步选中" /></td>
+    <th>{+$fly[i].name+}</th>
+    <td> 
+    {+if $fly[i].ab==1+}  
+     AB:
+     <input type="text" value='{+$fly[i].A+}'  class="flag je a" />
+     B：
+     <input type="text" value='{+$fly[i].B+}' class="flag je b" />
+     {+else+}
+     <input type="text" value='{+$fly[i].A+}'  class="flag je a" />
+     {+/if+}
+    </td>
+    <td>
+    <label><input  type="radio" class='ifok' name='ifok{+$fly[i].ftype+}' value="1" {+if $fly[i].ifok==1+}checked{+/if+} />自动补货</label>
+    <label><input  type="radio" class='ifok' name='ifok{+$fly[i].ftype+}' value="0" {+if $fly[i].ifok==0+}checked{+/if+} />手动补货</label>
+    </td>
+   </TR>
+   {+/if+}
+   {+/section+}
+   					</tbody>
+					</table>
+				</td>
+				<td class="panel">
+					<table class="list data_table at_2 table_ball">
+					<thead>
+					<tr>
+						<th  style="display: none;">
+							<input type="checkbox" class="all">全选
+						</th>
+						<th>
+							种类
+						</th>
+						<th>
+							注额
+						</th>
+						<th>
+							状态
+						</th>
+					</tr>
+					</thead>
+					<tbody>
+   {+section name=i loop=$fly step=1 +}
+     {+if $smarty.section.i.index>$nums+}
+   <TR class='nr' f='{+$fly[i].ftype+}' ab='{+$fly[i].ab+}'>
+    <td style="display: none;"><input type="checkbox"  class="pantbc"  /><input type="button" class="s1 pantb" value="同步选中" /></td>
+    <th>{+$fly[i].name+}</th>
+    <td> 
+    {+if $fly[i].ab==1+}  
+      AB:
+     <input type="text" value='{+$fly[i].A+}'  class="flag je a" />
+     B：
+     <input type="text" value='{+$fly[i].B+}' class="flag je b" />
+     {+else+}
+     <input type="text" value='{+$fly[i].A+}'  class="flag je a" />
+     {+/if+}
+    </td>
+    <td><label><input  type="radio" class='ifok' name='ifok{+$fly[i].ftype+}' value="1" {+if $fly[i].ifok==1+}checked{+/if+} />自动补货</label>
+     <label><input  type="radio" class='ifok' name='ifok{+$fly[i].ftype+}' value="0" {+if $fly[i].ifok==0+}checked{+/if+} />手动补货</label>
+	 
+</td>
+   </TR>
+   {+/if+}
+   {+/section+}
+   					</tbody>
+					</table>
+				</td>
+			</tr>
+			</tbody>
+			</table>
+		</div>
+		</div>
+		<div class=" data_footer control">
+			<input type="button" value="保存" class="button send btn1">
+			<input type="button" value="取消" class="button cancel btn1">
+		</div>
+		</div>
+      <div id="quickSettingb" style="display: none;"><BR />
+			补货盘口:
+			<select class="defaultpan">
+				{+foreach item=i from=$pan+}
+                  <option value="{+$i+}" {+if $i==$defaultpan+}selected{+/if+}>{+$i+}盘</option>
+                {+/foreach+}
+			</select>
+			<input type="button" gid="{+$gid+}" class="yiwotongbu" value="以我同步其他彩"><input name="xtype" value="setautofly" type="hidden">
+		</div>
+        
+		
+        
+   {+if $fenlei==100+}
+  {+/if+}
+
+</div>
+
+
+</div>
+<div id='test'></div>
+<script language="javascript">
+var gid={+$gid+};
+</script>
+</body>
+</html>

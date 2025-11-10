@@ -1,0 +1,54 @@
+ {+include file='headers.html'+}
+
+ <style type="text/css">
+ .gamelabel{color:#000;border:1px solid #000;margin-right:5px;margin-top:3px;display:block;float:left;cursor:pointer;padding-left:1px;padding-right:1px}
+.chk{background:#FFC;color:#D50000}
+.bcmd tr:hover{background:none}
+</style>
+  <table class="tinfo bcmd wd100">
+  <tr>
+   <th rowspan="2" style="width:120px;">彩种选择</th>
+   <td class="r"><input type="radio" value="all" name="gamea" class="c" />
+     全部&nbsp;&nbsp;
+    <input type="radio" value="0" name="gamea" />
+    低频&nbsp;&nbsp;
+    <input type="radio" value="1" name="gamea" />
+    快开&nbsp;&nbsp;
+    {+foreach item=i key=k from=$fl+}
+    <input type="radio" value="{+$k+}" name="gamea" />
+    {+$i+}&nbsp;&nbsp;
+    {+/foreach+}</td>
+  </tr>
+  <tr>
+   <td class="r"> 
+  {+section name=i loop=$gamecs+}
+   <label gid='{+$gamecs[i].gid+}' class="gamelabel{+if $gid==$gamecs[i].gid+} chk{+/if+}"  fast='{+$gamecs[i].fast+}' fenlei='{+$gamecs[i].fenlei+}' flname='{+$gamecs[i].flname+}'>{+$gamecs[i].gname+}</label>
+    {+/section+}  </td>
+  </tr>
+  <tr>
+   <th>日期选择</th>
+   <td class="r"><input class='textb hide' id="start"  value='{+$sdate[5]+}' size='11' /><input class='textb hide' id="end" name='end'  value='{+$sdate[6]+}' size='11' />
+    <input type="button" class="s btn"  d=1 value="今天" />
+    <input type="button" class="s btn"  d=2 value="昨天" />
+    <input type="button" class="s btn click"  d=3 value="本星期" />
+    <input type="button" class="s btn"  d=4 value="上星期" />
+    <input type="button" class="s btn"  d=5 value="本月" />
+    <input type="button" class="s btn"  d=6 value="上月" />
+    <input type="hidden" id=page value="1" /></td>
+  </tr>
+
+ </table>
+
+
+ 
+ <table class="tinfo flytb wd100" style="margin-top:10px;display:none">
+  <Tr>
+   <th>时间</th>
+   <th>注数</th>
+   <th>金额</th>
+   <th>退水</th>
+   <th>中奖</th>
+   <th>盈亏</th>
+  </Tr>
+ </table> <table class="tinfo baotb wd100" style="margin-top:10px;">
+ </table>

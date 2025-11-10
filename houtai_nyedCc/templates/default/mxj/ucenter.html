@@ -1,0 +1,205 @@
+<div class="scrollable ng-scope others ucenter">
+<div class="scrollable-content member-setting overthrow">
+
+<div>
+
+  <div class="clearfix margintop10 marginleft10">
+      <div class="fl"><img src="/default/images/mobile/cash/icouser.jpg" width="47" height="46" alt=""></div><div class="fl blue cnbig1 marginleft10 margintop15">pei888</div>
+    </div>
+    <div class="settingmenu margintop10 clearfix">
+        <a href="#/center/index/1" class="colbtn">
+          <img src="/default/images/mobile/cash/icolock.jpg" width="73" height="74" alt="">
+            <p class="margintop10">安全设置</p>
+            <div class="settingarrow"></div>
+        </a>
+        <a href="#/center/address" class="colbtn">
+          <img src="/default/images/mobile/cash/icouser2.jpg" width="73" height="74" alt="">
+            <p class="margintop10">账号设置</p>
+         
+        </a>
+        <a href="#/center/notices" class="colbtn">
+          <img src="/default/images/mobile/cash/icoreport.jpg" width="73" height="74" alt="">
+            <p class="margintop10">消息中心</p>
+            
+        </a>
+    </div>
+    <div class="clearfix">
+      <div class="settingtab" data-id="personalDetail_container">
+            <div class="settingbluebar"></div>
+            <div class="settingpanel">
+              <div class="settingpaneltxt">个人资料</div>
+            </div>
+        </div>
+        
+        <div class="settingtab active" data-id="changePassword_container">
+          <div class="settingbluebar"></div>
+          <div class="settingpanel">
+              <div class="settingpaneltxt">修改密码</div>
+            </div>
+        </div>
+    </div>
+    
+      <!-- 个人资料 -->
+      <div id="personalDetail_container" class="settingContainer" style="display: none;">
+        <div class="padding20">
+            提款时只能用真实姓名操作，绑定后就无法修改哦，<a target="_blank" href="http://tb.53kf.com/webCompany.php?arg=10153167&amp;style=1">如需修改请联系客服</a>
+        </div>
+        <div class="padding20">
+          <div class="textbox clearfix">
+            <div class="col1 fl">姓名</div>
+              <div class="col2 fl">
+                林**
+              </div>
+          </div>
+          <div class="textbox clearfix">
+            <div class="col1 fl">性别</div>
+            <div class="col2a fl">
+            <i class="fa fa-angle-down"></i>
+              <select name="sex" id="sex" class="province floatleft dropdown needsclick">
+                <option selected="selected" value="0">男</option>
+                <option value="1">女</option>
+              </select>
+            </div>
+          </div>
+          <div class="textbox clearfix">
+            <div class="col1 fl">出生年月</div>
+              <div class="col2b fl">
+                  <!-- <input id="birthDay" type="text" data-role="date" class="textfield1" value=""> -->
+                    <input id="birthDay" class="textfield1 needsclick" type="date" value="2015-08-09" style="pointer-events: none;">
+              </div>
+          </div>
+          <div class="gap20"></div>
+  
+          <div class="col-xs-12">
+            <div class="submitbtn cnbig btnradius" onclick="bandName()">保存</div>
+          </div>
+        </div>
+      </div>
+      <!-- 绑定邮箱 -->    
+      <div style="display:none" id="mailBox_container" class="settingContainer">
+        <div>
+          <div class="gap10"></div>
+          <div class="container substep step2 active">
+            <div type="button" class="btn btn-col3 btn-info btn-arrow-right btn-arrow-right-none">输入邮箱地址</div>
+            <div type="button" class="btn btn-col3 btn-primary btn-arrow-right">填写验证码</div>
+            <div type="button" class="btn btn-col3 btn-info btn-arrow-right">完成</div>
+          </div>
+          <div class="gap10"></div>
+          <div class="padding20">
+            您已经绑定了一个邮箱，请输入验证码
+          </div>
+           <div class="padding20">
+              <div id="mailPage">
+                <div class="textbox clearfix">
+                  <div class="col1 fl">邮箱地址</div>
+                    <div class="col2 fl"><input type="text" class="textfield1 needsclick" value="2342@qq.com" disabled="" readonly="" style="pointer-events: none;"></div>
+                </div>
+                <div class="textbox clearfix">
+                  <div class="col1 fl">验证码</div>
+                    <div class="col2 fl"><input type="text" class="textfield1 needsclick" id="txtEmailCode1" placeholder="(请填写)" style="pointer-events: none;"></div>
+                </div>
+                <div class="textbox noborder clearfix">
+                  <input type="button" class="get_unbindmail btnlink fl white cnbig1 needsclick" value="点击获取" style="pointer-events: none;"> 
+                </div>
+              </div>
+            <div class="gap20"></div>
+            <div class="col-xs-12">
+              <input id="btnEditMail" onclick="editEmail();" class="submitbtn cnbig btnradius needsclick" value="验证" style="pointer-events: none;">
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 绑定手机 -->       
+      <div style="display:none" id="mobileNo_container" class="settingContainer">
+        <div>
+          <div class="gap10"></div>
+          <div class="container substep step1 active">
+            <div type="button" class="btn btn-col3 btn-primary btn-arrow-right btn-arrow-right-none">输入手机号码</div>
+            <div type="button" class="btn btn-col3 btn-info btn-arrow-right">填写验证码</div>
+            <div type="button" class="btn btn-col3 btn-info btn-arrow-right">完成</div>
+          </div>
+          <div class="container substep step2">
+            <div type="button" class="btn btn-col3 btn-info btn-arrow-right btn-arrow-right-none">输入手机号码</div>
+            <div type="button" class="btn btn-col3 btn-primary btn-arrow-right">填写验证码</div>
+            <div type="button" class="btn btn-col3 btn-info btn-arrow-right">完成</div>
+          </div>
+          <div class="gap10"></div>
+           <div class="padding20">
+              <div id="mobilePage">
+                <div class="textbox clearfix">
+                  <div class="col1 fl">手机号码：</div>
+                    <div class="col2 fl"><input type="text" class="textfield1 needsclick" id="txtMobile" placeholder="(请填写)" style="pointer-events: none;"></div>
+                </div>
+                <div class="aligncenter">手机号码可用于找回密码</div>
+              </div>
+              <div id="mobileCodePage" style="display: none">
+                <div class="textbox clearfix">
+                  <div class="col1 fl">验证码</div>
+                    <div class="col2 fl"><input type="text" class="textfield1 needsclick" id="txtMobileCode" placeholder="(请填写)" style="pointer-events: none;"></div>
+                </div>
+                <div class="textbox noborder clearfix">
+                  <input type="button" class="get_mobile btnlink fl white cnbig1 needsclick" id="get_mobile" value="点击获取" style="pointer-events: none;"> 
+                </div>
+              </div>
+            <div class="gap20"></div>
+            <div class="col-xs-12">
+              <input id="btnCheckMobile" onclick="checkUserMobile();" class="submitbtn cnbig btnradius needsclick" value="下一步" style="pointer-events: none;">
+              <input id="btnCheckMobileCode" onclick="bindMobile();" style="display: none; pointer-events: none;" class="submitbtn cnbig btnradius needsclick" value="下一步">
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 绑定微信号 -->  
+         
+      <div style="display:none" id="wechat_container" class="settingContainer">
+        <div>
+          <div class="gap10"></div>
+          <div class="container substep step1 active">
+            <div type="button" class="btn btn-col3 btn-primary btn-arrow-right btn-arrow-right-none">输入微信号</div>
+          </div>
+          <div class="gap10"></div>
+           <div class="padding20">
+              <div id="wechatPage">
+                <div class="textbox clearfix">
+                  <div class="col1 fl">微信号：</div>
+                    <div class="col2 fl"><input type="text" class="textfield1 needsclick" id="txtWechat" placeholder="(请填写)" style="pointer-events: none;"></div>
+                </div>
+                <div class="aligncenter"><!--手机号码可用于找回密码--></div>
+              </div>
+
+            <div class="gap20"></div>
+            <div class="col-xs-12">
+              <input id="btnCheckWechat" onclick="checkUserWechat();" class="submitbtn cnbig btnradius needsclick" value="绑定" style="pointer-events: none;">
+              
+            </div>
+           </div>
+        </div>
+      </div>      
+		
+      <!-- 修改密码 -->
+      <div style="display: block;" id="changePassword_container" class="settingContainer">
+        <div class="padding20">
+          <div class="textbox clearfix">
+            <div class="col1 fl">旧密码</div>
+              <div class="col2 fl"><input type="password" id="oldPassword" class="textfield1 needsclick" placeholder="(请填写)" style="pointer-events: none;"></div>
+          </div>
+          <div class="textbox clearfix">
+            <div class="col1 fl">新密码</div>
+              <div class="col2 fl"><input type="password" id="password" class="textfield1 needsclick" placeholder="(请填写)" style="pointer-events: none;"></div>
+          </div>
+          <div class="textbox clearfix">
+            <div class="col1 fl">确认密码</div>
+              <div class="col2 fl"><input type="password" id="ckPassword" class="textfield1 needsclick" placeholder="(请填写)" style="pointer-events: none;"></div>
+          </div>
+          <div class="gap20"></div>
+            <div class="col-xs-12">
+              <input onclick="changePassword();" class="submitbtn cnbig btnradius needsclick" value="确定" style="pointer-events: none;">
+            </div>
+        </div>
+      </div>
+</div>
+
+</div>
+</div>

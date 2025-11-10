@@ -1,0 +1,40 @@
+{+include file='header2.html'+}
+<script src="/js/sitetool.js?v=004"></script>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='gameset';</script>
+</head>
+<body>
+<div class="jt-container">
+	<div class="top_info">
+		<span class="title">彩种管理设置<span class="right"></span>
+	</div>
+	<div class="s_main">
+ <table class="s_tb table_ball list">
+ 
+<thead>
+ <TR>
+ <th >彩种</th><th  style="display: none;" >gid</th><th>排序</th><th>总开关(包括后台)</th><th>基本开关(仅下线)</th><th>年份(农历前一位)</th><th>开奖直播链接</th><th>玩法名称</th>
+ </TR></thead>	 
+ {+section name=i loop=$game+}
+   <TR>
+       <td><label>{+$game[i].gname+}</label></td>
+       <td class='gid' style="display: none;">{+$game[i].gid+}</td>
+	   <td><INPUT type='text'  style="width: 60px;"   class="px"   value="{+$game[i].xsort+}"  /></td>
+       <td class='v'><INPUT type='checkbox'  class="ifopen"   value="{+$game[i].gid+}" {+if $game[i].ifopen==1+}checked{+/if+} /></td>
+       <td class='v'><INPUT type='checkbox'  class="ifok"   value="{+$game[i].gid+}" {+if $game[i].ifok==1+}checked{+/if+} /></td>
+	   <td class="thisbml"><INPUT type='text'   style="width: 60px;" value="{+$game[i].thisbml+}"  />&nbsp;<input type="button" class="tlset button btn3" value="设置"></td>
+	   <td class="kjurl"><INPUT type='text'     value="{+$game[i].kjurl+}"  />&nbsp;<input type="button" class="kjset button btn3" value="设置"></td>
+	   <td class="flname"><INPUT type='text'     style="width: 60px;"  value="{+$game[i].flname+}"  />&nbsp;<input type="button" class="wfset button btn3" value="设置"></td>
+   </TR>
+ {+/section+}
+  </table>
+  
+	<div class=" data_footer control">
+			<input type="button" value="保存" class="send button bnt_1">
+		</div>
+</div>
+</div>
+
+<div id='test'></div>
+
+</body>
+</html>

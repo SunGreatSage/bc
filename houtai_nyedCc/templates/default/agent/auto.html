@@ -1,0 +1,141 @@
+{+include file='header2.html'+}
+<link href="/default/css/agent/backshare.css" rel="stylesheet" type="text/css" />
+<link href="/default/css/control.css" rel="stylesheet" />
+<link href="/default/css/Skins/blue/skin.css?v=004" rel="stylesheet" />
+<script type="text/javascript" src="/default/js/function.js"> </script>
+</head>
+<body id="topbody">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='auto';
+</script>
+
+
+<div class="jt-container">
+	<div class="top_info">
+		<span class="title" style="color:#000000">自动降倍设置-&gt;调整项目</span><div class="center" >&nbsp;&nbsp;有效：<select id="quickzt" style="float: none;" >
+				        <option value="0">请选择</option>
+                        <option value="1">开启</option>
+                        <option value="2">关闭</option>
+                    </select>&nbsp;&nbsp;预降：<select id="quickyj" style="float: none;" >
+				        <option value="0">请选择</option>
+                        <option value="1">开启</option>
+                        <option value="2">关闭</option>
+						 </select>&nbsp;&nbsp;累计方法：<select id="quickjsff" style="float: none;" >
+				        <option value="0">请选择</option>
+                        <option value="1">总额</option>
+                        <option value="2">占成</option>
+						 </select></div>
+		<span class="right">&nbsp;&nbsp;<a class="back" onclick="javascript:history.back(-1);" href="javascript:void(0);">返回</a></span>
+	</div>
+    	
+		<div class="contents param_panel s_main">
+			<div class="sub_w2">
+             <div class="right_btns">
+                <span class="left_arrow" id="toleft2"><a class="bx-prev disabled" href=""></a></span><span class="right_arrow" id="toright2"><a class="bx-next disabled" href=""></a></span>
+            </div>
+
+            <div class="page-tabs">
+                <div class="tab_con2 clear " id="scroll_div2">
+                    <ul id="sliderLottery">
+					{+if $config.slowtype==1+}
+<li>
+{+section name=i loop=$game+}
+    {+if $game[i].fast==0+}<a href="javascript:void(0)" class="g{+$game[i].gid+}" gid='{+$game[i].gid+}'>{+$game[i].gname+}</a>{+/if+}
+ {+/section+}
+</li>
+{+/if+}
+                    </ul>
+                </div>
+            </div>
+        </div>
+		
+		 <div class="sider-left floatR" id="menuleft">
+
+            <div class="main_set" id="quickSetting" style="display:">
+                <table style="border: none" class="t_list" width="100%">
+                    <tbody>
+                        <tr style="border: none">
+                            <td height="27" align="center" style="border: none; text-align: justify" nowrap="nowrap" id="tdMaxWinlostCode">
+                                设置：
+                            </td>
+                        </tr>
+
+                    </tbody>
+                    <tbody id="quickSetting"  style=" text-align:center">
+                        <tr style="border: none">
+                            <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap">
+                                <input type="button" data-ignore="1" value="保存"  class="button btn1 send" />
+								<input type="button" data-ignore="1" value="取消"  class="button btn1" />
+								
+                            </td>
+                        </tr>
+						<tr style="border: none">
+                            <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap">
+                                <input type="button" gid="{+$gid+}" class="button bnt_2 yiwotongbu" value="以我同步其他彩" >
+								
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+
+            </div>
+        </div>
+		 <div class="toggle floatR"><div class="sider-toggle"><span title="收缩" style="top:50px">切换&nbsp;</span></div></div>
+      		<div class="contents" style="margin-top:10px;">
+    <div id="p_MCHK6" class="tab_panel  param_panel input_panel MCHK6">      
+ <table class="list data_table pantb table_ball">
+ <thead>
+  <TR>
+  <th class="wd120" style="display: none;" ><input type="checkbox"  class="all" />全选</th>
+   <th class="wd120">类别</th>
+   <th>有效</th>
+   <th>预降</th>
+   <th>累计方法</th>
+   <th>开始下调金额-下调赔率</th>
+   <th>金额变动值-下调赔率</th>
+   <th style="display: none;">开始下调期数-下调赔率[限快开]</th>
+   <th style="display:none">停止下注金额</th>
+   <th>停降赔率</th>
+  </TR>
+  </thead>
+  {+section name=i loop=$auto+}
+  <tr f='{+$auto[i].ftype+}' class="nr">
+  <td style="display: none;"><input type="checkbox"  /><input type="button" class="s1 pantb" value="同步选中" /></td>
+   <th >{+$auto[i].name+}</th>
+   <td><input type="checkbox" class="ifok" {+if $auto[i].ifok==1+}checked{+/if+} /></td>
+   <td><input type="checkbox" class="yj" {+if $auto[i].yj==1+}checked{+/if+} /></td>
+   <td><select class='ifzc'>
+     <option {+if $auto[i].ifzc==0+}selected{+/if+} value="0">总额</option>
+     <option {+if $auto[i].ifzc==1+}selected{+/if+}  value="1">占成</option>
+    </select></td>
+   <td><input type="text" class="flag startje"  value="{+$auto[i].startje+}" />
+    -
+    <input type="text" class="flag startpeilv"  value="{+$auto[i].startpeilv+}" /></td>
+   <td><input type="text" class="flag addje"  value="{+$auto[i].addje+}" />
+    -
+    <input type="text" class="flag attpeilv"  value="{+$auto[i].attpeilv+}" /></td>
+   <td style="display: none;"><input type="text" class="flag qsnum"  value="{+$auto[i].qsnum+}" />
+    -
+    <input type="text" class="flag qspeilv"  value="{+$auto[i].qspeilv+}" /></td>
+   <td  style="display:none"><input type="text" class="flag stopje"  value="{+$auto[i].stopje+}" /></td>
+   <td><input type="text" class="flag lowpeilv"  value="{+$auto[i].lowpeilv+}" /></td>
+  </tr>
+  {+/section+}
+ </table>
+ </div>
+ <div class=" data_footer control">
+			<input type="button" value="保存" class="button send btn1">
+			<input type="button" value="取消" class="button cancel btn1">
+		</div>
+ </div>
+		
+</div>
+  
+</div>
+<script language="javascript">
+var gid={+$gid+};
+</script>
+<div id='test'></div>
+</body>
+</html>

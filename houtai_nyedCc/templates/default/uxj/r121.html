@@ -1,0 +1,115 @@
+<div class="rules">
+    <h4 class="headline">具体游戏规则如下:</h4>
+    <ol>
+      <!-- 1. -->
+      <li>
+        <strong>【单码】</strong>
+        <i>指第一球、第二球、第三球、第四球、第五球出现的顺序与号码为派彩依据</i>
+        <ul>
+          <li>
+                <span class="stress">单号</span>：如现场滚球第一个开奖号码为10号，投注第一球为10号则视为中奖，其它号码视为不中奖。
+          </li>
+          <li>
+                <span class="stress">大小</span>：开出的号码大于或等于6为大，小于或等于5为小，开出11为和
+            (不计算输赢)。
+          </li>
+          <li>
+                <span class="stress">单双</span>：号码为双数叫双，如2、8；号码为单数叫单，如5、9；开出11为和
+            (不计算输赢)。
+          </li>
+        </ul>
+      </li>
+      <!-- 2. -->
+      <li>
+        <strong>【总和】</strong>
+        <i>以全部开出的5个号码，加起来的总和来判定</i>
+        <ul>
+          <li>
+                <span class="stress">总和大小</span>：所有开奖号码数字加总值大于30为和大；总和值小于30为和小；若总和值等于30为和
+            (不计算输赢)。
+          </li>
+          <li>
+                <span class="stress">总和单双</span>：所有开奖号码数字加总值为单数叫和单，如11、31；加总值为双数叫和双，如42、30。
+          </li>
+          <li>
+                <span class="stress">总和尾数大小</span>：所有开奖号码数字加总值的尾数，大于或等于5为尾大，小于或等于4为尾小。
+          </li>
+        </ul>
+      </li>
+      <!-- 3. -->
+      <li>
+        <strong>【龙虎】</strong>
+        <ul>
+          <li>
+                <span class="stress">龙</span>：第一球开奖号码大于第五球开奖号码，如第一球开出10，第五球开出7。
+          </li>
+          <li>
+                <span class="stress">虎</span>：第一球开奖号码小于第五球开奖号码，如第一球开出3，第五球开出7。
+          </li>
+        </ul>
+      </li>
+      <!-- 4. -->
+      <li>
+        <strong>选号</strong>
+        <i>选号玩法是由1~11号中，选出1~5个号码为一投注组合来进行投注</i>
+        <ul>
+          <li>
+                <span class="stress">一中一</span>：投注1个号码与当期开奖的5个号码中任1个号码相同，视为中奖。
+          </li>
+          <li>
+                <span class="stress">任选二</span>：投注2个号码与当期开奖的5个号码中任2个号码相同(顺序不限)，视为中奖。
+          </li>
+          <li>
+                <span class="stress">任选三</span>：投注3个号码与当期开奖的5个号码中任3个号码相同(顺序不限)，视为中奖。
+          </li>
+          <li>
+                <span class="stress">任选四</span>：投注4个号码与当期开奖的5个号码中任4个号码相同(顺序不限)，视为中奖。
+          </li>
+          <li>
+                <span class="stress">任选五</span>：投注5个号码与当期开奖的5个号码中5个号码相同(顺序不限)，视为中奖。
+          </li>
+          <li>
+                <span class="stress">任选六</span>：投注6个号码中任5个号码与当期开奖的5个号码相同(顺序不限)，视为中奖。
+          </li>
+          <li>
+                <span class="stress">任选七</span>：投注7个号码中任5个号码与当期开奖的5个号码相同(顺序不限)，视为中奖。
+          </li>
+          <li>
+                <span class="stress">任选八</span>：投注8个号码中任5个号码与当期开奖的5个号码相同(顺序不限)，视为中奖。
+          </li>
+          <li>
+                <span class="stress">组选前二</span>：投注的2个号码与当期顺序开出的5个号码中的前2个号码相同，视为中奖。
+          </li>
+          <li>
+                <span class="stress">组选前三</span>：投注的3个号码与当期顺序开出的5个号码中的前3个号码相同，视为中奖。
+          </li>
+          <li>
+                <span class="stress">直选前二</span>：投注的2个号码与当期顺序开出的5个号码中的前2个号码相同且顺序一致，视为中奖。
+          </li>
+          <li>
+                <span class="stress">直选前三</span>：投注的3个号码与当期顺序开出的5个号码中的前3个号码相同且顺序一致，视为中奖。
+          </li>
+        </ul>
+      </li>
+
+      {+if ($ft==1)+}
+       <li>
+        <strong>番摊规则说明</strong>
+        <ul>
+         <li><span class="stress">{+$mstr+}除以4余数，余0为4番，余3为3番，余2为2番，余1为1番。</span></li>
+ <li><span class="stress">单双</span>：13为单,24为双。</li>
+ <li><span class="stress">大小</span>：12为小,34为大。</li>
+ <li><span class="stress">X番</span>：开出X为赢，其他为输。</li>
+ <li><span class="stress">X念Y</span>：开出X为赢，开出Y为和，其他为输。</li>
+ <li><span class="stress">XY角</span>：开出X或Y为赢，其他为输。</li>
+ <li><span class="stress">X正</span>：开出X为赢，开出X的对面为输，开出X的两边为和。13互为对面，24互为对面。</li>
+ <li><span class="stress">XYZ中</span>：开出X/Y/Z为赢，其他为输。</li>
+ <li><span class="stress">YZX通</span>：开出“通”的数字X为输，开出Y/Z为赢，其他为和。</li>
+ <li><span class="stress">Y加ZX</span>：开出Y为赢，开出Z/X为和,其他为输。</li>
+
+        </ul>
+      </li>
+      {+/if+}
+    </ol>
+  </div>
+</div>  

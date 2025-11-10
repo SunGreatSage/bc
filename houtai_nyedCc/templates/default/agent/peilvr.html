@@ -1,0 +1,80 @@
+{+include file='header2.html'+}
+<style type="text/css">
+.data_table .flag{width:70px;}
+.data_table td{height:30px;}
+.pantb td{text-align:center}
+input.s1{padding:1.5px;}
+</style>
+</head>
+<body id="topbody">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='peilvr';
+</script>
+
+<div class="main">
+	<div class="top_info">
+		<span class="title">控盘日志</span><span class="right"></span>
+	</div>
+		<div class="contents param_panel s_main">
+			 <div class="sub_w2" style="margin-bottom:10px;">
+                <div class="right_btns">
+                    <span class="left_arrow" id="toleft2"><a class="bx-prev disabled" href=""></a></span><span class="right_arrow" id="toright2"><a class="bx-next disabled" href=""></a></span>
+                </div>
+
+                <div class="page-tabs">
+                    <div class="tab_con2 clear" id="scroll_div2">
+                        <ul id="sliderLottery">
+                                <li>
+				{+section name=i loop=$game+}{+if $game[i].fast==0+}<a href="javascript:void(0)" class="g{+$game[i].gid+}" gid='{+$game[i].gid+}'>{+$game[i].gname+}</a>{+/if+}{+/section+}
+                                </li>
+
+                        </ul>
+                    </div>
+                </div>
+            </div>
+			
+ <table class="table_ball data_list list nrtb">
+
+<thead>
+  <TR>
+  <th>彩种
+    </th>
+    <th>种类</th>
+     <th>调赔值</th>
+   <th>操作</th>
+   <th>操作时间</th>
+   <th>操作员</th>
+  
+  </TR>
+  </thead>
+  {+section name=i loop=$p+}
+  <TR>
+   <th>{+$p[i].gname+}</th>
+   <td>{+$p[i].pid+}</td>
+   <td>{+$p[i].peilv+}</td>
+   <td>{+$p[i].auto+}</td>
+   <td>{+$p[i].time+}</td>
+   <td>{+$p[i].sonuser+}</td>
+  </TR>
+  {+/section+}
+ </table>
+ <table>
+            <tbody><tr>
+                <td style="width:420px">
+                    <div class="info_tishi">注意：控盘记录最少被保留{+$autodelpltime+}天、超过{+$autodelpltime+}天部分最多保留最后50笔。
+                     
+                    </div>
+                </td>
+                <td>
+                    <div class="pagination page_info page_control page" id="OperationLog_page" page="{+$page+}" pcount="{+$pcount+}" uid='{+$uid+}' ></div>
+                </td>
+            </tr>
+        </tbody></table>
+ </div>
+</div>
+<div id='test'></div>
+<script language="javascript">
+var gid={+$gid+};
+</script>
+</body>
+</html>

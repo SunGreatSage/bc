@@ -1,0 +1,76 @@
+{+include file='header2.html'+}
+<style type="text/css">
+.data_table .flag{width:70px;}
+.data_table input{width:70px;}
+.data_table td{height:30px;}
+.pantb td{text-align:center}
+input.s1{padding:1.5px;}
+</style>
+</head>
+<body id="topbody">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='cssz';
+</script>
+
+<div class="main">
+	<div class="top_info">
+		<span class="title">赔率参数设置</span><span class="right"></span>
+	</div>
+    	<div class="control">
+			<input type="button" gid="{+$gid+}" class="yiwotongbu" value="以我同步其他彩">&nbsp;&nbsp;&nbsp;<input type="button" value="保存" class="button send"><input type="button" value="取消" class="button" style="display:none">
+		</div>
+		<div class="contents param_panel">
+			<div class="game_class">
+				<ul>
+{+if $config.fasttype==1+}
+<li><span>快开彩</span>
+{+section name=i loop=$game+}
+    {+if $game[i].fast==1+}<a href="javascript:void(0)" class="g{+$game[i].gid+}"  gid='{+$game[i].gid+}'>{+$game[i].gname+}</a>{+/if+}
+ {+/section+}
+</li>
+{+/if+}
+{+if $config.slowtype==1+}
+<li><span>低频彩</span>
+{+section name=i loop=$game+}
+    {+if $game[i].fast==0+}<a href="javascript:void(0)" class="g{+$game[i].gid+}" gid='{+$game[i].gid+}'>{+$game[i].gname+}</a>{+/if+}
+ {+/section+}
+</li>
+{+/if+}
+				</ul>
+			</div>
+            
+ <table class="list data_table nrtb pantb">
+<thead>
+
+ <TR>
+    <th style="width:150px;"><input type="checkbox"  class="all" />全选</th><th>类别</th>
+     
+     <th>A盘差</th><th>B盘差</th><th>C盘差</th><th>D盘差</th><th>AB差</th>
+   
+     
+
+  </TR>
+  </thead>
+    {+section name=i loop=$cs+}
+  <tr f='{+$auto[i].ftype+}' class="nr">
+  <td><input type="checkbox"  /><input type="button" class="s1 pantb" value="同步选中" /></td>
+        <td>{+$cs[i].name+}</td>
+
+
+        <td>{+$cs[i].a1+}</td>
+        <td>{+$cs[i].b1+}</td>
+        <td>{+$cs[i].c1+}</td>
+        <td>{+$cs[i].d1+}</td>
+        <td>{+$cs[i].ab1+}</td>
+
+     </TR>
+  {+/section+}
+ </table>
+</div>
+</div>
+<div id='test'></div>
+<script language="javascript">
+var gid={+$gid+};
+</script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+{+include file='header2.html'+}
+<style type="text/css">
+.data_table .flag{width:70px;}
+.data_table td{height:30px;}
+.pantb td{text-align:center}
+input.s1{padding:1.5px;}
+</style>
+</head>
+<body id="topbody">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='autofly';
+</script>
+
+<div class="main">
+	<div class="top_info">
+		<span class="title">自动补货设定</span><span class="right"></span>
+	</div>
+	<form style="margin:0;padding:0" method="post">
+		<div class="contents param_panel">
+			<div class="game_class">
+				<ul>
+{+if $config.fasttype==1+}
+<li><span>快开彩</span>
+{+section name=i loop=$game+}
+    {+if $game[i].fast==1+}<a href="javascript:void(0)" class="g{+$game[i].gid+}"  gid='{+$game[i].gid+}'>{+$game[i].gname+}</a>{+/if+}
+ {+/section+}
+</li>
+{+/if+}
+{+if $config.slowtype==1+}
+<li><span>低频彩</span>
+{+section name=i loop=$game+}
+    {+if $game[i].fast==0+}<a href="javascript:void(0)" class="g{+$game[i].gid+}" gid='{+$game[i].gid+}'>{+$game[i].gname+}</a>{+/if+}
+ {+/section+}
+</li>
+{+/if+}
+				</ul>
+			</div>
+ 
+			<table class="layout pantb">
+			<tbody>
+			<tr>
+				<td class="panel">
+					<table class="list data_table at_0">
+					<thead>
+					<tr>
+						<th>
+							<input type="checkbox" class="all">全选
+						</th>
+						<th>
+							种类
+						</th>
+						<th>
+							占成
+						</th>
+						<th>
+							飞单限额
+						</th>
+						<th>
+							开关
+						</th>
+					</tr>
+					</thead>
+					<tbody>
+                    
+   {+section name=i loop=$fly step=1 +}
+     {+if $smarty.section.i.index<=$nums+}
+   <TR class='nr' f='{+$fly[i].ftype+}' ab='{+$fly[i].ab+}'>
+    <td><input type="checkbox"  class="pantbc"  /><input type="button" class="s1 pantb" value="同步选中" /></td>
+    <th>{+$fly[i].name+}</th>
+    <td> 
+    {+if $fly[i].ab==1+}  
+      总额(含AB盘):
+     <input type="text" value='{+$fly[i].A+}'  class="flag je a" />
+     其中B盘：
+     <input type="text" value='{+$fly[i].B+}' class="flag je b" />
+     {+else+}
+     <input type="text" value='{+$fly[i].A+}'  class="flag je a" />
+     {+/if+}
+    </td>
+    <td><input type="text" value='{+$fly[i].maxje+}'  class="flag maxje" /></td>
+    <td><input type="checkbox" class='ifok' value="1" {+if $fly[i].ifok==1+}checked{+/if+}/></td>
+   </TR>
+   {+/if+}
+   {+/section+}
+   					</tbody>
+					</table>
+				</td>
+				<td class="panel">
+					<table class="list data_table at_0">
+					<thead>
+					<tr>
+						<th>
+							<input type="checkbox" class="all">全选
+						</th>
+						<th>
+							种类
+						</th>
+						<th>
+							占成
+						</th>
+						<th>
+							飞单限额
+						</th>
+						<th>
+							开关
+						</th>
+					</tr>
+					</thead>
+					<tbody>
+   {+section name=i loop=$fly step=1 +}
+     {+if $smarty.section.i.index>$nums+}
+   <TR class='nr' f='{+$fly[i].ftype+}' ab='{+$fly[i].ab+}'>
+    <td><input type="checkbox"  class="pantbc"  /><input type="button" class="s1 pantb" value="同步选中" /></td>
+    <th>{+$fly[i].name+}</th>
+    <td> 
+    {+if $fly[i].ab==1+}  
+      总额(含AB盘):
+     <input type="text" value='{+$fly[i].A+}'  class="flag je a" />
+     其中B盘：
+     <input type="text" value='{+$fly[i].B+}' class="flag je b" />
+     {+else+}
+     <input type="text" value='{+$fly[i].A+}'  class="flag je a" />
+     {+/if+}
+    </td>
+    <td><input type="text" value='{+$fly[i].maxje+}'  class="flag maxje" /></td>
+    <td><input type="checkbox" class='ifok' value="1" {+if $fly[i].ifok==1+}checked{+/if+}/></td>
+   </TR>
+   {+/if+}
+   {+/section+}
+   					</tbody>
+					</table>
+				</td>
+			</tr>
+			</tbody>
+			</table>
+		</div>
+        
+		<div id="quickSetting"><BR />
+			补货盘口:
+			<select class="defaultpan">
+				{+foreach item=i from=$pan+}
+                  <option value="{+$i+}" {+if $i==$defaultpan+}selected{+/if+}>{+$i+}盘</option>
+                {+/foreach+}
+			</select>
+			<input type="button" gid="{+$gid+}" class="yiwotongbu" value="以我同步其他彩"><input name="xtype" value="setautofly" type="hidden">
+		</div>
+        
+		<div class="control">
+			<input type="button" value="保存" class="button send"><input type="button" value="取消" class="button" style="display:none">
+		</div>
+        
+   {+if $fenlei==100+}
+   <table class="data_table data_list">
+   <tr>
+    <Td style="text-align:left;padding:10px;line-height:150%;"> 说明：<BR />
+     1、（特码B）和（正特B）在总收单金额大于(总额)的情况下才会补货，B盘优先。如总额设[1000元],B盘设[300元]，收单金额A:300元、收单金额B：500，不会自动补货。若收单金额A:300元、收单金额B:800元,向B盘补货100。若收单金额A:800元、收单金额B:500元,优先向B盘走200，然后向A盘补货100。<BR />
+     2、只有允许(内补)，才会自动补货。<BR />
+     3、只有当(总开关)和(分类开关都)开启时， 才会发生自动补货！<BR />
+     4、两面玩法以两边金额的差额来计算，连码、过关、生肖连、尾数连、特肖连最大占成为(单组金额)，其余为(单号金额)！<BR />
+     5、系统将对超过〈最高占成〉金额1元以上自动补货，不足1元不会自动补货.<BR />
+     6、随时可以更改(最高占成)金额 及 手动补货，请仔细设置，如有不明应咨询上级！ </d>
+   </tr>
+  </table>
+  {+/if+}
+	</form>
+</div>
+
+
+</div>
+<div id='test'></div>
+<script language="javascript">
+var gid={+$gid+};
+</script>
+</body>
+</html>

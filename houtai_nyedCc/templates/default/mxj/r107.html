@@ -1,0 +1,56 @@
+<div class="rules">
+    <h4 class="headline">具体游戏规则如下:</h4>
+    <ol>
+      <!-- 1. -->
+      <li>
+        <strong>1～10 两面</strong>：指 单、双；大、小。
+        <ul>
+          <li><span class="stress">单、双：</span>号码为双数叫双，如4、8；号码为单数叫单，如5、9。</li>
+          <li><span class="stress">大、小：</span>开出之号码大于或等于6为大，小于或等于5为小。</li>
+          <li><span class="stress">第一名～第十名 车号指定：</span>每一个车号为一投注组合，开奖结果“投注车号”对应所投名次视为中奖，其余情形视为不中奖。</li>
+        </ul>
+      </li>
+      <!-- 2. -->
+      <li>
+        <strong>1～5龙虎</strong>
+        <ul>
+          <li><span class="stress">冠&nbsp;&nbsp;军 龙/虎：</span>“第一名”车号大于“第十名”车号视为【龙】中奖、反之小于视为【虎】中奖，其余情形视为不中奖。</li>
+          <li><span class="stress">亚&nbsp;&nbsp;军 龙/虎：</span>“第二名”车号大于“第九名”车号视为【龙】中奖、反之小于视为【虎】中奖，其余情形视为不中奖。</li>
+          <li><span class="stress">第三名 龙/虎：</span>“第三名”车号大于“第八名”车号视为【龙】中奖、反之小于视为【虎】中奖，其余情形视为不中奖。</li>
+          <li><span class="stress">第四名 龙/虎：</span>“第四名”车号大于“第七名”车号视为【龙】中奖、反之小于视为【虎】中奖，其余情形视为不中奖。</li>
+          <li><span class="stress">第五名 龙/虎：</span>“第五名”车号大于“第六名”车号视为【龙】中奖、反之小于视为【虎】中奖，其余情形视为不中奖。</li>
+        </ul>
+      </li>
+      <!-- 3. -->
+      <li>
+        <strong>冠军车号＋亚军车号＝冠亚和值（为3~19)</strong>
+        <ul>
+          <li><span class="stress">冠亚和单双：“冠亚和值”</span>为单视为投注“单”的注单视为中奖，为双视为投注“双”的注单视为中奖，其余视为不中奖。</li>
+          <li><span class="stress">冠亚和大小：“冠亚和值”</span>大于11时投注“大”的注单视为中奖，小于或等于11时投注“小”的注单视为中奖，其余视为不中奖。</li>
+          <li><span class="stress">冠亚和指定：“冠亚和值”</span>可能出现的结果为3～19， 投中对应<span class="stress">“冠亚和值”</span>数字的视为中奖，其余视为不中奖。
+          </li>
+
+        </ul>
+      </li>
+      {+if ($ft==1)+}
+       <li>
+        <strong>番摊规则说明</strong>
+        <ul>
+         <li><span class="stress">{+$mstr+}除以4余数，余0为4番，余3为3番，余2为2番，余1为1番。</span></li>
+ <li><span class="stress">单双</span>：13为单,24为双。</li>
+ <li><span class="stress">大小</span>：12为小,34为大。</li>
+ <li><span class="stress">X番</span>：开出X为赢，其他为输。</li>
+ <li><span class="stress">X念Y</span>：开出X为赢，开出Y为和，其他为输。</li>
+ <li><span class="stress">XY角</span>：开出X或Y为赢，其他为输。</li>
+ <li><span class="stress">X正</span>：开出X为赢，开出X的对面为输，开出X的两边为和。13互为对面，24互为对面。</li>
+ <li><span class="stress">XYZ中</span>：开出X/Y/Z为赢，其他为输。</li>
+ <li><span class="stress">YZX通</span>：开出“通”的数字X为输，开出Y/Z为赢，其他为和。</li>
+ <li><span class="stress">Y加ZX</span>：开出Y为赢，开出Z/X为和,其他为输。</li>
+
+        </ul>
+      </li>
+      {+/if+}
+    </ol>
+  </div>
+
+ </div> 

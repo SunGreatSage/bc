@@ -1,0 +1,100 @@
+{+include file='header2.html'+}	
+</head>
+<link href="/default/css/control.css" rel="stylesheet" />
+<link href="/default/css/Site.css" rel="stylesheet" />
+<link href="/default/css/jquery.loadmask.css" rel="stylesheet" />
+<script src="/js/sitetool.js?v=004"></script>
+<script src="/js/jquery.loadmask.js?v=004"></script>
+<body>
+  <style>
+a {
+    color: #3e34fc;
+}
+.table-container {
+  margin-right: 10px;
+}
+.tables-row {
+  display: flex;
+  width: 100%;
+}
+
+.data-container {
+  flex: 30;
+}
+
+.zd-container {
+  flex: 70;
+}
+
+ </style>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='data';</script>
+<div class="jt-container">
+	<div class="top_info">
+		<span class="title">数据单检测</span><div class="center"><div id="cmcontrol">投注时间开始检测：<input style="width:100px" class="datatime" value="{+$datatime+}">&nbsp;单注超过金额：<input style="width:80px" class="dataje" value="{+$dataje+}">&nbsp;特码超过注数：<input style="width:60px" class="number" value="{+$number+}">&nbsp;<input type="button" data-ignore="1" value="保存" class="button btn1 send"> 检测特码注数不为主要条件，一样显示其他项目注单</div></div><span class="right"></span>
+	</div>
+<div class="s_main">
+<div id="p_para" class="contents param_panel input_panel tab_panel">
+
+                        <table class="layout" templatecode="HK6">
+                            <tbody><tr>
+                                <td height="30" colspan="2" align="left">
+								{+section name=i loop=$game+}
+                                        {+if $game[i].fast==0+}<span loto="MCHK6" group="HK6" class="g{+$game[i].gid+} group_tap" gid='{+$game[i].gid+}'>{+$game[i].gname+}</span>{+/if+}
+								 {+/section+}
+                                    
+                                </td>
+                            </tr>
+							</tbody>
+							</table>
+							 </div>							 
+<div class="container">
+  <div class="tables-row">
+    <div class="table-container data-container">
+      <table id="data" style="border-collapse: unset;" class="list data_table table_center">
+        <thead>
+          <tr>
+            <th><strong>会员账号</strong></th>
+            <th><strong>名称</strong></th>
+            <th><strong>可用额度</strong></th>
+            <th><strong>特码注数</strong></th>
+            <th><strong>明细</strong></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="table-container zd-container">
+      <table id="zd"  style="border-collapse: unset;" class="list data_table table_center">
+        <thead>
+		<tr class=""><th colspan="10"><strong>注单明细</strong>
+		<button id="bulkCancel" style="width: 80px;font-size: 12px;" class="btn4">批量注销</button> <button id="bulkRestore" style="width: 80px;font-size: 12px;" class="btn7">批量恢复</button>
+        <span id="current" style="color: red;"></span>
+</th></tr>
+          <tr>
+		   <th><input type="checkbox" id="selectAll" /> 全选</th>
+            <th><strong>彩种</strong></th>
+            <th><strong>期数</strong></th>
+            <th><strong>下注内容</strong></th>
+            <th><strong>金额</strong></th>
+            <th><strong>赔率</strong></th>
+            <th><strong>退水</strong></th>
+            <th><strong>时间</strong></th>
+            <th><strong style="color: red" >公司金额</strong></th>
+			<th><strong>功能</strong></th>
+          </tr>
+        </thead>
+        <tbody>
+		<tr><td height="28" colspan="10" align="center"><marquee align="middle" behavior="alternate" style="width: 100%;"><font class="font_r">请选择会员查看详细</font></marquee></td></tr>
+		</tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+ </div>
+</div>
+</body>
+<script language="javascript">
+var gid={+$gid+};
+</script>
+</html>

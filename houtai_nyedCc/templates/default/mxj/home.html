@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<meta charset="UTF-8">
+<meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0" name="viewport">
+<title>{+$webname+}</title>
+<style data-styled-components="">
+html, body {
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    overflow: hidden;
+    -webkit-overflow-scrolling: touch;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+body {
+    font-family: Tahoma,Helvetica,"Microsoft Yahei",sans-serif;
+    padding: 0;
+    margin: 0;
+    -webkit-overflow-scrolling: touch;
+}
+a {
+    color: #666;
+    -webkit-text-decoration: none;
+    text-decoration: none;
+}
+#root {
+    width: 100%;
+    height: 100%;
+}
+.kvKbyZ {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background: #fff;
+}
+.kvKbyZ .Navigation {
+    position: relative;
+    background: rgb(19,46,123);
+    background: -o-linear-gradient(315deg,rgba(19,46,123,1) 0%,rgba(0,201,202,1) 100%);
+    background: linear-gradient( 135deg,rgba(19,46,123,1) 0%,rgba(0,201,202,1) 100% );
+    -webkit-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#132e7b',endColorstr='#00c9ca',GradientType=1);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#132e7b',endColorstr='#00c9ca',GradientType=1);
+}
+.kvKbyZ .Navigation .naviga2 {
+    margin: 0 auto;
+    width: calc(-150px + 100%);
+    height: 45px;
+}
+.kvKbyZ .Navigation .naviga2 .logo {
+    width: 100%;
+    height: 100%;
+}
+.kvKbyZ .Navigation .naviga2 .logo
+{
+    background-image: url("undefined");
+    background-position-x: center;
+    background-position-y: center;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+    background-clip: border-box;
+    background-origin: padding-box;
+    background-size: contain;
+    background-color: transparent;
+}
+.kvKbyZ .Navigation .naviga3 {
+    cursor: pointer;
+    position: absolute;
+    background: url(/css/mobi/img/icon_count.png);
+    background-position: -224px -131px;
+    background-size: 307px 217px;
+    width: 29px;
+    height: 35px;
+    border-radius: 50%;
+    top: 0px;
+    bottom: 0px;
+    right: 10px;
+    margin: auto;
+}
+.hWStWm {
+    position: relative;
+}
+.hWStWm .profile {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    height: 48px;
+    width: 100%;
+    padding: 0 8px;
+    box-sizing: border-box;
+    -webkit-align-items: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+.hWStWm .profile .avatar {
+    background: url(/css/mobi/img/ic_display_pic.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    border: 2px solid #888888;
+}
+.hWStWm .profile .name {
+    color: #5f5f5f;
+    font-size: 16px;
+    font-weight: bold;
+    padding-left: 8px;
+}
+.hWStWm .profile .refresh {
+    margin-left: auto;
+    padding-left: 25px;
+    height: 20px;
+    border-radius: 6px;
+    color: #fff;
+    background-color: #888;
+    box-sizing: border-box;
+    padding-right: 5px;
+    font-size: 12px;
+    line-height: 20px;
+    position: relative;
+}
+.hWStWm .profile .refresh::before {
+    content: "";
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 20px;
+    width: 20px;
+    background: url(/css/mobi/img/ic_refresh.png) center / contain no-repeat;
+}
+.yCvxX {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    padding: 0 8px;
+    height: 50%;
+    box-sizing: border-box;
+    -webkit-flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    margin: 0 -4px 4px -4px;
+}
+.lbhiCE {
+    -webkit-flex: 1 1 auto;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    color: #5f5f5f;
+    font-size: 13px;
+    padding: 0px 4px;
+    box-sizing: border-box;
+}
+.lbhiCE > div {
+    border-radius: 4px;
+    background-color: #fff;
+    display: block;
+    padding: 4px 4px;
+}
+.lbhiCE > div .balance_type {
+    -webkit-flex: 0 0 auto;
+    -ms-flex: 0 0 auto;
+    flex: 0 0 auto;
+}
+.lbhiCE > div .balance_amount {
+    -webkit-flex: 1 1 auto;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    margin-top: 2px;
+    text-align: left;
+    font-size: 16px;
+}
+.kvKbyZ .scroll-wrapper-home {
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+    overflow-y: scroll;
+}
+.kvKbyZ .scroll-wrapper-home .icon_lottery_type {
+    width: 100%;
+    margin: 0 0 0.5rem;
+}
+.kvKbyZ .scroll-wrapper-home .icon_lottery_type .ilt_div {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -webkit-flex-flow: row wrap;
+    -ms-flex-flow: row wrap;
+    flex-flow: row wrap;
+}
+.kvKbyZ .scroll-wrapper-home .icon_lottery_type .ilt_div a {
+    -webkit-box-flex: 0;
+    -ms-flex: 0 0 25%;
+    -webkit-flex: 0 0 25%;
+    -ms-flex: 0 0 25%;
+    flex: 0 0 25%;
+}
+.kvKbyZ .scroll-wrapper-home .icon_lottery_type .ilt_div div {
+    -webkit-transform: scale(0.85);
+    -ms-transform: scale(0.85);
+    transform: scale(0.85);
+    height: 88px;
+    margin: 6px auto;
+    width: 88px;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+.rough_lines {
+    width: 100%;
+    height: 10px;
+    background-color: #ebebeb;
+    -webkit-box-shadow: 0px 1px 1px #bbb inset;
+    box-shadow: inset 0px 1px 1px #bbb;
+}
+.kvKbyZ .scroll-wrapper-home .foot_font {
+    position: relative;
+    text-align: center;
+    width: 100%;
+}
+.OSUUp {
+    position: fixed;
+    background-color: rgba(55, 55, 55, 0.7);
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    -webkit-transition: all 0.2s ease-in-out;
+    -o-transition: all 0.2s ease-in-out;
+    -webkit-transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    opacity: 1;
+    visibility: visible;
+}
+.efUsXr {
+    position: fixed;
+    width: 80%;
+    height: 100%;
+    overflow: hidden;
+    top: 0px;
+    -webkit-transform: translate3d(0px, 0px, 0px);
+    -ms-transform: translate3d(0,0,0);
+    transform: translate3d(0px, 0px, 0px);
+    background-color: #fff !important;
+    z-index: 999;
+    -webkit-box-shadow: 0 0 16px rgba(55,55,55,0.5);
+    box-shadow: 0px 0px 16px rgba(55,55,55,0.5);
+    -webkit-transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+    -o-transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+    -webkit-transition: -webkit-transform 0.2s cubic-bezier(0.4,0,0.2,1);
+    -webkit-transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+    transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+.efUsXr .menu_navigation {
+    position: relative;
+    width: 100%;
+    height: 50px;
+    background: rgb(19,46,123);
+    background: -o-linear-gradient(315deg,rgba(19,46,123,1) 0%,rgba(0,201,202,1) 100%);
+    background: linear-gradient( 135deg,rgba(19,46,123,1) 0%,rgba(0,201,202,1) 100% );
+    -webkit-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#132e7b',endColorstr='#00c9ca',GradientType=1);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#132e7b',endColorstr='#00c9ca',GradientType=1);
+}
+.efUsXr .menu_navigation .naviga2 {
+    margin: 0 auto;
+    width: 10rem;
+    height: 50px;
+    text-align: center;
+    font-weight: bold;
+    line-height: 50px;
+    color: #fff;
+}
+.efUsXr .menu_type {
+    position: relative;
+    width: 100%;
+    height: calc(-56px + 100%);
+    overflow: auto;
+    -webkit-tap-highlight-color: rgba(55, 55, 55, 0.3);
+}
+.efUsXr .menu_type .mt_div {
+    height: 50px;
+    display: block;
+    border-bottom: 1px solid #ccc;
+}
+.efUsXr .menu_type .mt_div .mtd_icon div {
+    width: 30px;
+    height: 30px;
+    margin: 11px auto 0;
+    background: url(/css/mobi/img/icon_menu.png);
+    background-size: 457px 30px;
+}
+.efUsXr .menu_type .mt_div .mtd_icon {
+    float: left;
+    height: 100%;
+    width: 60px;
+}
+.efUsXr .menu_type .mt_div .mtd_font .mtdf_1 {
+    float: left;
+    color: #999;
+    line-height: 50px;
+    font-size: 16px;
+}
+.efUsXr .menu_type .mt_div .mtd_icon1 div {
+    background-position: 0px 0px;
+}
+.efUsXr .menu_type .mt_div .mtd_icon2 div {
+    background-position: -31px 0px;
+}
+.efUsXr .menu_type .mt_div .mtd_icon4 div {
+    background-position: -92px 0px;
+}
+.efUsXr .menu_type .mt_div .mtd_icon6 div {
+    background-position: -153px 0px;
+}
+.efUsXr .menu_type .mt_div .mtd_icon7 div {
+    background-position: -183px 0px;
+}
+.efUsXr .menu_type .mt_div .mtd_icon8 div {
+    background-position: -214px 0px;
+}
+.efUsXr .menu_type .mt_div .mtd_icon9 div {
+    background-position: -244px 0px;
+}
+.efUsXr .menu_type .mt_div .mtd_icon16 div {
+    background: url(/css/mobi/img/ic_navi_168result.png) center / contain no-repeat;
+}
+.efUsXr .menu_type .mt_div .mtd_icon10 div {
+    background-position: -275px 0px;
+}
+.efUsXr .menu_type .mt_div .mtd_icon15 div {
+    background-position: -427px 0px;
+}
+.ivfTfC {
+    position: fixed;
+    background-color: rgba(55, 55, 55, 0.7);
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    -webkit-transition: all 0.2s ease-in-out;
+    -o-transition: all 0.2s ease-in-out;
+    -webkit-transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+}
+.iJamhB {
+    position: fixed;
+    width: 80%;
+    height: 100%;
+    overflow: hidden;
+    top: 0px;
+    -webkit-transform: translate3d(-110%, 0px, 0px);
+    -ms-transform: translate3d(-110%,0,0);
+    transform: translate3d(-110%, 0px, 0px);
+    background-color: #fff !important;
+    z-index: 999;
+    -webkit-box-shadow: 0 0 16px rgba(55,55,55,0.5);
+    box-shadow: 0px 0px 16px rgba(55,55,55,0.5);
+    -webkit-transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+    -o-transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+    -webkit-transition: -webkit-transform 0.2s cubic-bezier(0.4,0,0.2,1);
+    -webkit-transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+    transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+.iJamhB .menu_navigation {
+    position: relative;
+    width: 100%;
+    height: 50px;
+    background: rgb(19,46,123);
+    background: -o-linear-gradient(315deg,rgba(19,46,123,1) 0%,rgba(0,201,202,1) 100%);
+    background: linear-gradient( 135deg,rgba(19,46,123,1) 0%,rgba(0,201,202,1) 100% );
+    -webkit-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#132e7b',endColorstr='#00c9ca',GradientType=1);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#132e7b',endColorstr='#00c9ca',GradientType=1);
+}
+.iJamhB .menu_navigation .naviga2 {
+    margin: 0 auto;
+    width: 10rem;
+    height: 50px;
+    text-align: center;
+    font-weight: bold;
+    line-height: 50px;
+    color: #fff;
+}
+.iJamhB .menu_type {
+    position: relative;
+    width: 100%;
+    height: calc(-56px + 100%);
+    overflow: auto;
+    -webkit-tap-highlight-color: rgba(55, 55, 55, 0.3);
+}
+.iJamhB .menu_type .mt_div {
+    height: 50px;
+    display: block;
+    border-bottom: 1px solid #ccc;
+}
+
+
+.ReactModal__Overlay.ReactModal__Overlay--after-open {
+    background-color: rgba(55, 55, 55, 0.7) !important;
+}
+.ReactModal__Overlay {
+    -webkit-animation: fadeIn 0.4s linear forwards;
+    animation: fadeIn 0.4s linear forwards;
+}
+.announcement-modal {
+    position: fixed;
+    width: 18rem;
+    height: auto;
+    max-height: 70vh;
+    margin: auto;
+    background-color: #fff;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+    border-radius: 8px;
+}
+.ReactModal__Content {
+    -webkit-animation: bounceIn 0.75s forwards;
+    animation: bounceIn 0.75s forwards;
+}
+*:focus {
+    outline: none;
+}
+.announcement-modal button.prev-btn {
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+    z-index: 1;
+    font-size: 0px;
+    background-color: transparent;
+    outline: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    border: 1px solid #000;
+}
+.announcement-modal button.prev-btn::before {
+    content: "‹";
+    color: #000;
+    font-size: 2rem;
+    line-height: 1rem;
+}
+
+
+.announcement-modal .total {
+    position: absolute;
+    width: 100%;
+    left: 0px;
+    top: 1rem;
+    display: block;
+    right: 0px;
+    text-align: center;
+}
+.announcement-modal button.next-btn {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    z-index: 1;
+    font-size: 0px;
+    background-color: transparent;
+    outline: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    border: 1px solid #000;
+}
+
+.announcement-modal button.next-btn::before {
+    content: "›";
+    color: #000;
+    font-size: 2rem;
+    line-height: 1rem;
+}
+
+
+.announcement-modal .content {
+    width: 80%;
+    margin: 3rem auto;
+    max-height: calc(-60px + -3rem + 100%);
+    overflow: auto;
+    text-align: center;
+}
+.iijcms {
+    width: 100%;
+    font-family: inherit;
+    white-space: pre-wrap;
+}
+
+.announcement-modal .close-btn {
+    background-color: transparent;
+    color: #000;
+    height: 45px;
+    width: 80%;
+    margin: auto;
+    text-align: center;
+    line-height: 39px;
+    font-size: 18px;
+    border: none;
+    border-radius: 8px;
+    position: absolute;
+    bottom: 1rem;
+    left: 0px;
+    right: 0px;
+}
+
+
+
+</style>
+<script language="javascript" src="/js/jquery-1.8.3.js"></script>
+<script language="javascript" src="/js/md5.js"></script>
+<script type="text/javascript">
+  var cnews = {+$cnews+};
+  var index = 1;
+  $(function() {
+    $(".naviga3").click(function() {
+        $(".zhao").removeClass("ivfTfC").addClass("OSUUp");
+        $(".menu").removeClass("iJamhB").addClass("efUsXr");
+    });
+    $(".zhao").click(function() {
+        $(".zhao").removeClass("OSUUp").addClass("ivfTfC");
+        $(".menu").removeClass("efUsXr").addClass("iJamhB");
+    });
+    $("a.refresh").click(function() {
+        window.location.href = window.location.href;
+    });
+    if (cnews > 0) {
+        $(".prev-btn").click(function() {
+            index--;
+            if (index < 1) index = 1;
+            $("pre").hide();
+            $("#r" + index).show();
+            $(".total").html(index + "/" + cnews);
+        });
+        $(".next-btn").click(function() {
+            index++;
+            if (index > cnews) {
+                $(".ReactModalPortal").html('');
+                return false;
+            }
+            $("pre").hide();
+            $("#r" + index).show();
+            $(".total").html(index + "/" + cnews);
+        });
+        $(".close-btn").click(function() {
+            $(".ReactModalPortal").html('');
+        });
+        $("#r" + index).show();
+        $(".total").html(index + "/" + cnews);
+        //$(".newscon").animate({height:'-=25px',width:'-=25px'},250).animate({height:'+=25px',width:'+=25px'},250).animate({height:'-=25px',width:'-=25px'},250).animate({height:'+=25px',width:'+=25px'},250);
+    }
+    $(".statuswarn button").click(function(){
+        $(".statuswarn").hide();
+    })
+    $(".menu_type a").click(function() {
+        var type = $(this).attr("type");
+        if (type == 'home') {
+            $(".menu").hide();
+            $(".zhao").hide();
+        } else if (type == "logout") {
+            window.location.href = mulu + "home.php?logout=yes";
+        } else if(type!=""){
+            window.location.href = type;
+        }else{
+            return false;
+        }
+    });
+    $(".game a").click(function() {
+        if(ustatus==2){
+            $(".statuswarn").show();
+            return;
+        }
+          window.location.href = "/Mobile/Index?xtype=show&type=lib&gids="+$(this).attr("gid");
+    });
+  })
+  var ustatus = {+$status+};
+</script>
+</head>
+<body class="">
+<script id=myjs language="javascript">var mulu="{+$mulu+}";
+var js=0;var sss='home';
+</script>  
+<div id="root">
+  <div class="sc-8mbiqr-0 kvKbyZ">
+    <div class="Navigation ">
+      <a target="_blank" rel="noopener noreferrer"></a><a href="#">
+      <div class="naviga2">
+        <div class="logo" style="background: url(&quot;undefined&quot;) center center / contain no-repeat;">
+        </div>
+      </div>
+      </a><a>
+      <div class="naviga3">
+      </div>
+      </a>
+    </div>
+    <div class="sc-8mbiqr-1 hWStWm">
+      <div class="profile">
+        <div class="avatar">
+        </div>
+        <div class="name">
+          {+$username+}
+        </div>
+        <a class="refresh">刷新</a>
+      </div>
+      <div class="sc-2d9lgz-0 yCvxX">
+        <div class="sc-2d9lgz-1 lbhiCE" size="3">
+          <div>
+            <div class="balance_type">
+              快开彩额度
+            </div>
+            <div class="balance_amount">
+              {+$kmoney+}
+            </div>
+          </div>
+        </div>
+        <div class="sc-2d9lgz-1 lbhiCE" size="3">
+          <div>
+            <div class="balance_type">
+              全国彩额度
+            </div>
+            <div class="balance_amount">
+              0.0
+            </div>
+          </div>
+        </div>
+        <div class="sc-2d9lgz-1 lbhiCE" size="3">
+          <div>
+            <div class="balance_type">
+              香港彩额度
+            </div>
+            <div class="balance_amount">
+              {+$money+}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="rough_lines">
+    </div>
+    <div class="scroll-wrapper-home after-login">
+      <div>
+        <div>
+          <div class="icon_lottery_type">
+            <div class="ilt_div game">
+              {+section name=i loop=$gamecs+}
+              {+if ($gamecs[i].isimg==1)+}
+              <a href="javascript:void(0)" gid='{+$gamecs[i].gid+}' alt="{+$gamecs[i].gname+}" title="{+$gamecs[i].gname+}">
+              <div class="lottery_item" style="background-image: url({+$gamecs[i].img+});" alt="{+$gamecs[i].gname+}" title="{+$gamecs[i].gname+}">
+              </div>
+              </a>
+              {+/if+}
+              {+/section+}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="rough_lines">
+      </div>
+      <div class="foot_font">
+        <p>
+          所有版权归2015<!--{+$yy+}-->{+$webname+}所有
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="slevm5-0 ivfTfC zhao" data-show="true" >
+  </div>
+  <div class="slevm5-1 iJamhB menu" data-show="true">
+    <div class="menu_navigation">
+      <div class="naviga2">
+       {+$username+}
+      </div>
+    </div>
+    <div class="rough_lines">
+    </div>
+    <div class="menu_type">
+      <a class="mt_div" type="/creditmobile/home" href="javascript:void(0)">
+      <div class="mtd_icon mtd_icon1">
+        <div>
+        </div>
+      </div>
+      <div class="mtd_font">
+        <div class="mtdf_1">
+          主页
+        </div>
+      </div>
+      </a><a class="mt_div" type="/Mobile/Info" href="javascript:void(0)">
+      <div class="mtd_icon mtd_icon2">
+        <div>
+        </div>
+      </div>
+      <div class="mtd_font">
+        <div class="mtdf_1">
+          个人资讯
+        </div>
+      </div>
+      </a><a class="mt_div" type="/Mobile/ChangePassword" href="javascript:void(0)">
+      <div class="mtd_icon mtd_icon4">
+        <div>
+        </div>
+      </div>
+      <div class="mtd_font">
+        <div class="mtdf_1">
+          修改密码
+        </div>
+      </div>
+      </a><a class="mt_div" type="/Mobile/UnCheckBetting" href="javascript:void(0)">
+      <div class="mtd_icon mtd_icon6">
+        <div>
+        </div>
+      </div>
+      <div class="mtd_font">
+        <div class="mtdf_1">
+          未结明细
+        </div>
+      </div>
+      </a><a class="mt_div" type="/Mobile/CheckBetting" href="javascript:void(0)">
+      <div class="mtd_icon mtd_icon7">
+        <div>
+        </div>
+      </div>
+      <div class="mtd_font">
+        <div class="mtdf_1">
+          今天已结
+        </div>
+      </div>
+      </a><a class="mt_div" type="/Mobile/HistoryBetList" href="javascript:void(0)">
+      <div class="mtd_icon mtd_icon8">
+        <div>
+        </div>
+      </div>
+      <div class="mtd_font">
+        <div class="mtdf_1">
+          两周报表
+        </div>
+      </div>
+      </a><a class="mt_div" type="/Mobile/ResultHistory" href="javascript:void(0)">
+      <div class="mtd_icon mtd_icon9">
+        <div>
+        </div>
+      </div>
+      <div class="mtd_font">
+        <div class="mtdf_1">
+          开奖结果
+        </div>
+      </div>
+      </a><a class="mt_div"  target="_blank" type="" href="{+$kfurl+}">
+      <div class="mtd_icon mtd_icon16">
+        <div>
+        </div>
+      </div>
+      <div class="mtd_font">
+        <div class="mtdf_1">
+          全国开奖网
+        </div>
+      </div>
+      </a><a class="mt_div" type="/Mobile/GameRule" href="javascript:void(0)">
+      <div class="mtd_icon mtd_icon10">
+        <div>
+        </div>
+      </div>
+      <div class="mtd_font">
+        <div class="mtdf_1">
+          规则
+        </div>
+      </div>
+      </a><a class="mt_div" type="logout" href="javascript:void(0)">
+      <div class="mtd_icon mtd_icon15">
+        <div>
+        </div>
+      </div>
+      <div class="mtd_font">
+        <div class="mtdf_1">
+          退出
+        </div>
+      </div>
+      </a>
+    </div>
+  </div>
+</div>
+<div id="modal">
+</div>
+<div class="ReactModalPortal">
+  {+if $cnews>0+}
+  <div class="ReactModal__Overlay ReactModal__Overlay--after-open" style="position: fixed; top: 0px; left: 0px; right: 0px; bottom: 0px; background-color: rgba(255, 255, 255, 0.75);">
+    <div class="ReactModal__Content ReactModal__Content--after-open announcement-modal newscon" tabindex="-1" role="dialog" aria-label="alerts">
+      <button class="prev-btn">上一页</button>
+      <div class="total">
+        1/3
+      </div>
+      <button class="next-btn next">下一页</button>
+      <div class="content">
+        {+section name=i loop=$news+}
+        <pre class="sc-1x0uvdd-0 iijcms" id="r{+$news[i].id+}" style="display: none;">
+          公告：{+$news[i].content+}
+        </pre>
+        {+/section+}
+      </div>
+      <button class="close-btn">关闭</button>
+    </div>
+  </div>
+  {+/if+}
+</div>
+
+
+<style type="text/css">
+.swal-overlay--show-modal {
+    opacity: 1;
+    pointer-events: auto;
+}
+.swal-overlay {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0;
+    overflow-y: auto;
+    background-color: rgba(0,0,0,.4);
+    z-index: 10000;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity .3s;
+}
+.swal-overlay--show-modal .swal-modal {
+    opacity: 1;
+    pointer-events: auto;
+    box-sizing: border-box;
+    -webkit-animation: showSweetAlert .3s;
+    animation: showSweetAlert .3s;
+    will-change: transform;
+}
+
+.swal-modal {
+    width: calc(100% - 20px);
+}
+.swal-modal {
+    opacity: 1;
+    pointer-events: none;
+    background-color: #fff;
+    text-align: center;
+    border-radius: 5px;
+    position: static;
+    margin: 20px auto ;
+    margin-top:calc(50%);
+    display: inline-block;
+    vertical-align: middle;
+    -webkit-transform: scale(1);
+    transform: scale(1);
+    -webkit-transform-origin: 50% 50%;
+    transform-origin: 50% 50%;
+    z-index: 10001;
+    transition: opacity .2s,-webkit-transform .3s;
+    transition: transform .3s,opacity .2s;
+    transition: transform .3s,opacity .2s,-webkit-transform .3s;
+}
+.swal-icon:first-child {
+    margin-top: 32px;
+}
+.swal-icon {
+    width: 80px;
+    height: 80px;
+    border-width: 4px;
+    border-style: solid;
+    border-radius: 50%;
+    padding: 0;
+    position: relative;
+    box-sizing: content-box;
+    margin: 20px auto;
+}
+.swal-icon--warning {
+    border-color: #f8bb86;
+    -webkit-animation: pulseWarning .75s infinite alternate;
+    animation: pulseWarning .75s infinite alternate;
+}
+.swal-icon--warning__body, .swal-icon--warning__dot {
+    position: absolute;
+    left: 50%;
+    background-color: #f8bb86;
+}
+.swal-icon--warning__body {
+    width: 5px;
+    height: 47px;
+    top: 10px;
+    border-radius: 2px;
+    margin-left: -2px;
+}
+.swal-icon--warning__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    margin-left: -4px;
+    bottom: -11px;
+}
+.swal-icon--warning__body, .swal-icon--warning__dot {
+    position: absolute;
+    left: 50%;
+    background-color: #f8bb86;
+}
+.swal-overlay--show-modal .swal-modal {
+    opacity: 1;
+    pointer-events: auto;
+    box-sizing: border-box;
+    -webkit-animation: showSweetAlert .3s;
+    animation: showSweetAlert .3s;
+    will-change: transform;
+}
+.swal-title:not(:last-child) {
+    margin-bottom: 13px;
+}
+.swal-title:not(:first-child) {
+    padding-bottom: 0;
+}
+.swal-title {
+    color: rgba(0,0,0,.65);
+    font-weight: 600;
+    text-transform: none;
+    position: relative;
+    display: block;
+    padding: 13px 16px;
+    font-size: 27px;
+    line-height: normal;
+    text-align: center;
+    margin-bottom: 0;
+}
+.swal-text {
+    font-size: 16px;
+    position: relative;
+    float: none;
+    line-height: normal;
+    vertical-align: top;
+    text-align: left;
+    display: inline-block;
+    margin: 0;
+    padding: 0 10px;
+    font-weight: 400;
+    color: rgba(0,0,0,.64);
+    max-width: calc(100% - 20px);
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+}
+
+.swal-footer {
+    text-align: right;
+    padding-top: 13px;
+    margin-top: 13px;
+    padding: 13px 16px;
+    border-radius: inherit;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+.swal-button-container {
+    margin: 5px;
+    display: inline-block;
+    position: relative;
+}
+.swal-button {
+    background-color: #7cd1f9;
+    color: #fff;
+    border: none;
+    box-shadow: none;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 10px 24px;
+    margin: 0;
+    cursor: pointer;
+}
+.swal-button__loader {
+    position: absolute;
+    height: auto;
+    width: 43px;
+    z-index: 2;
+    left: 50%;
+    top: 50%;
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%) translateY(-50%);
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.swal-button__loader div {
+    display: inline-block;
+    float: none;
+    vertical-align: baseline;
+    width: 9px;
+    height: 9px;
+    padding: 0;
+    border: none;
+    margin: 2px;
+    opacity: .4;
+    border-radius: 7px;
+    background-color: hsla(0,0%,100%,.9);
+    transition: background .2s;
+    -webkit-animation: swal-loading-anim 1s infinite;
+    animation: swal-loading-anim 1s infinite;
+}
+
+.swal-button__loader div:nth-child(3n+2) {
+    -webkit-animation-delay: .15s;
+    animation-delay: .15s;
+}
+
+.swal-button__loader div:nth-child(3n+3) {
+    -webkit-animation-delay: .3s;
+    animation-delay: .3s;
+}    
+
+</style>
+<div class="swal-overlay swal-overlay--show-modal statuswarn" style="display: none;">
+  <div class="swal-modal" role="dialog" aria-modal="true"><div class="swal-icon swal-icon--warning">
+    <span class="swal-icon--warning__body">
+      <span class="swal-icon--warning__dot"></span>
+    </span>
+  </div><div class="swal-title" style="">注意</div><div class="swal-text" style="">你的账户已经冻结，你将无法投注</div><div class="swal-footer"><div class="swal-button-container">
+
+    <button class="swal-button swal-button--confirm sweet-alert-btn-undefined">确定</button>
+
+    <div class="swal-button__loader">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+
+  </div></div></div></div>
+</body>
+</html>

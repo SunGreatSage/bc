@@ -1,0 +1,137 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>会员中心</title>
+		<link rel="stylesheet" href="../css/default/xj/jquery-ui.css">
+        <link rel="stylesheet" href="../css/default/master.css">
+        <link rel="stylesheet" href="../css/default/style.css">
+        <link rel="stylesheet" href="../css/default/center.css">
+        <link rel="stylesheet" href="../css/default/popup.css">
+        <link rel="stylesheet" href="../css/default/margin.css">
+        <link rel="stylesheet" href="../css/default/daviddeposit.css">
+        <link rel="stylesheet" href="../css/default/font-awesome.min.css">
+        <style type="text/css">
+		   .table .chu td{font-weight:bold;}
+
+#statusPanel {
+	width: 200px;
+	text-align: center;
+}
+
+#statusPanel .statuslist {
+	height: 22px;
+	line-height: 22px;
+}
+
+#statusPanel label {
+	margin: 0 3px;
+}
+
+
+.popdiv {
+	position: absolute;
+	z-index: 10;
+	border: 1px solid #b9c2cb;
+	background: white;
+	padding: 0;
+}
+
+.popdiv .title {
+	background: #C9E7F5 url(../css/default/img/table_head.gif) repeat-x;
+	height: 24px;
+	line-height: 24px;
+	border-bottom: 1px solid #b9c2cb;
+	font-weight: bold;
+}
+
+.popdiv .title i {
+	display: block;
+	background: url(../css/default/img/del.gif) no-repeat;
+	width: 16px;
+	height: 16px;
+	float: right;
+	cursor: pointer;
+	margin: 4px 2px 0 0;
+}
+.status .s2 {
+	color: #663399;
+}
+
+.status .s0, .user_list .status .ss1 {
+	color: red;
+}
+
+.status .s1 {
+	color: black;
+}
+        </style>
+        <script language="javascript" src="/js/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" src="../js/ui/jquery-ui.js"></script>
+<script type="text/javascript" src="../js/ui/dialog-hi.js"></script>
+    </head>
+<body>
+<script type="text/javascript" id="myjs">var mulu='{+$mulu+}';
+var js=1;
+var sss="mem_myitem";
+</script>
+<div class="content">
+<div class="account-content-container">
+					<div class="account-content">
+						<h3 class="title">{+$username+}({+$xing+})的团队</h3>
+						<div class="notification-list">
+							<table class="table">
+								<thead>
+									<tr>
+										<th bgcolor="#217eec">用户名</th>
+                                        <th bgcolor="#217eec">姓名</th>
+                                        <th bgcolor="#217eec">电话</th>
+                                        <th bgcolor="#217eec">QQ</th>
+                                        <th bgcolor="#217eec">注册时间</th>
+                                        <th bgcolor="#217eec">资金/余额</th>
+                                        <th bgcolor="#217eec">状态</th>
+                                        <th bgcolor="#217eec">赚取退水</th>
+                                        <th bgcolor="#217eec">更改密码</th>
+									</tr>
+								</thead>
+								<tbody>
+                                {+section name=i loop=$user+}
+									<tr uid='{+$user[i].userid+}'>
+										<td>{+$user[i].username+}</td>
+										<td>{+$user[i].tname+}</td>
+                                        <td>{+$user[i].tel+}</td>
+                                        <td>{+$user[i].qq+}</td>
+                                        <td>{+$user[i].regtime+}</td>
+                                        
+                                        <td>{+$user[i].kmaxmoney+}/{+$user[i].kmoney+}</td>
+                                        <td class="status"><input type="button" class="s{+$user[i].status+}" id='uid{+$user[i].userid+}' v="{+$user[i].status+}" value="{+$user[i].statusz+}"></td>
+                                        <td><label>{+$user[i].liushui+}</label>&nbsp;<a href='javascript:void(0)' class="eshui">修改</a></td>
+                                        <td><a href='javascript:void(0)' class="cpass">更改密码</a></td>
+									</tr>
+                                    {+/section+}
+								<tr><td colspan="9"><div class="page_info">
+<span class="record">共 {+$rcount+} 条记录</span>
+<span class="page_control" pcount='{+$pcount+}'>
+<a class="previous">前一页</a>
+{+foreach item=i from=$parr+}
+  {+if $i==$tpage+}
+     <span class="current">{+$i+}</span>
+   {+else+}  
+     <a href='javascript:void(0);'>{+$i+}</a>
+  {+/if+}
+{+/foreach+}
+<a class="next">后一页</a>
+</span>
+</div>
+</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+</div>
+  <div id="statusPanel" class="popdiv" style="position:absolute; display: none;"><div class="title">修改帐户状态<i></i></div><div class="statuslist"><label><input name="ustatus" type="radio" value="1">启用</label><label><input name="ustatus" type="radio" value="2">冻结</label><label><input name="ustatus" type="radio" value="0">停用</label></div></div>
+    
+</body>
+</html>

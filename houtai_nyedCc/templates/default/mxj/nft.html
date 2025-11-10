@@ -1,0 +1,17 @@
+ <div class="content-wrap">
+        <div class="content">
+            <div class="main marT">
+                <div class="news_box">
+				{+section name=i loop=$news+}
+                                <div class="item">
+                                    <h2>{+$news[i].time+}</h2>
+                                    <div class="con">
+                                        {+$news[i].content+}
+                                    </div>
+                                </div>
+								{+/section+}
+                </div>
+
+            </div>
+        </div>
+    </div>

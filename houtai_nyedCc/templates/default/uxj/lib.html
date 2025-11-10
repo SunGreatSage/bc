@@ -1,0 +1,69 @@
+{+include file='headers.html'+}
+</head>
+<style type="text/css">
+    .AutoNewline { word-break: break-all; /*必须*/ width: 350px; }
+
+    .list tbody tr:nth-child(even) { background-color: #ffffff; }
+
+    .list tbody .hover td, .list tbody .hover:nth-child(even) { background: rgb(255,255,198); }
+    .table_ball td { height: 40px; }
+</style>
+<body class="L_HK6 {+$skin+}" >
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='lib';</script>
+<div id="containers" class="containers main report jt-container pad10">
+    <div class="bar_tit">
+        <b>未结明细</b>
+    </div>
+ <table class="list table table_zh2 table_ball">
+<thead>
+  <tr class="t12">
+                <th width="102" height="20">
+                    单号
+                </th>
+                <th width="131">
+                    下注时间
+                </th>
+                <th width="50">
+                    类型
+                </th>
+                <th width="216">
+                    下注内容@赔率
+                </th>
+                <th width="82">
+                    盘口
+                </th>
+                <th width="82">
+                    下注金额
+                </th>
+                <th width="82">
+                    退水(%)
+                </th>
+                <th width="83">
+                    可赢金额
+                </th>
+
+            </tr>
+</thead>
+<tbody id="betList">
+{+section name=i loop=$lib+}
+<tr {+if $lib[i].z == '7' +}style="text-decoration: line-through;"{+/if+} >
+  <td nowrap><span align="center">{+$lib[i].tid+}</span></td>
+  <td height="27" nowrap ><span align="center">{+$lib[i].time+}</span></td>
+  <td nowrap><span class="lottery">{+$lib[i].gid+}</span><br /><span  style="color:#299a26">第 {+$lib[i].qishu+} 期</span></td>
+  <td class="AutoNewline" style="word-wrap:break-word;"><span  style="color:#2836f4;">{+$lib[i].wf+}{+if $lib[i].content!=''+}:{+$lib[i].content+}{+/if+}</span> @ <span style="color:red">{+$lib[i].peilv1+}{+if $lib[i].peilv2>1+}/{+$lib[i].peilv2+}{+/if+}</span></td>
+  <td>{+$lib[i].abcd+}</td>
+  <td nowrap><span align="center"><span>{+$lib[i].je+}</span></span></td>
+  <td nowrap><span>{+$lib[i].points+}%</span></td>
+  <td nowrap align="right"><span style="color:#2836f4">{+$lib[i].ky+}</span></td>
+</tr>
+{+/section+}
+
+</tbody>
+<tfoot id="footer">
+<tr class="t20 statistics" id="totalCount"><th height="21" colspan="5"><div align="right"></div><div align="right" class="fbback"></div><div align="right"><span class="fbback rcount0"></span></div><div align="right" class="fbback"></div></th><td><div align="center" class="fbback">{+$zje+}</div></td><td><div align="center" class="fbback"></div></td><td><div align="center" class="fbback"><span style="color:#2836f4">{+$zky+}</span></div></td></tr>
+<tr class="t20" id="totalCount"><th height="21" colspan="5"><div align="right"></div><div align="right" class="fbback"></div><div align="right"><span class="fbback">总计： {+$rcount+}笔</span></div><div align="right" class="fbback"></div></th><td><div align="center" class="fbback">{+$total.je+}</div></td><td><div align="center" class="fbback"></div></td><td><div align="center" class="fbback"><span style="color:#2836f4">{+$total.ky+}</span></div></td></tr> </tfoot>
+</table>
+<div id="pager"  style="cursor: pointer;" class="page page_info" rcount='{+$rcount+}' psize='{+$psize+}' tpage='{+$tpage+}' ><ul class="pages"><li class="pgNext pgEmpty front">首页</li><li class="pgNext pgEmpty previous">上一页</li><li class="page-number pgCurrent current">1</li><li class="pgNext pgEmpty next">下一页</li><li class="pgNext pgEmpty last">最后一页</li></ul></div>
+</div>
+</body>
+</html>

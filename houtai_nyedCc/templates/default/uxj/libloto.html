@@ -1,0 +1,15 @@
+<table class="tinfo"  style="width:700px;margin:0px;">
+<tr><Td style="width:50%"><select class='gamelib' style="display:none">
+{+section name=i loop=$gamecs+}
+<option value='{+$gamecs[i].gid+}' {+if $gamecs[i].gid==$gid+}selected{+/if+}>{+$gamecs[i].gname+}</option>
+{+/section+}
+</select><select class='qishu'>
+{+foreach item=i from=$q+}
+<option value='{+$i+}'>{+$i+}期</option>
+{+/foreach+}
+</select>
+<!--<input type="button" value="打印"  class="print  button" />--><input type="button" value="下载数据[请于关盘后下载]"  class="download  btn" /></TD><td id=page style="text-align:right;padding-right:5px;"></td></tr>
+</table>
+<table class="tinfo libs printtb" id=printtb style="width:700px;margin:0px;">
+<tr><th>编号</th><th>期数</th><th>号码</th><th>金额</th><th>时间</th></tr>
+</table>

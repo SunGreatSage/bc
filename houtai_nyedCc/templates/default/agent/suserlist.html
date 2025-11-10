@@ -1,0 +1,55 @@
+ {+section name=i loop=$user+}
+   <TR layer='{+$user[i].layer+}' uid="{+$user[i].userid+}" fid="{+$user[i].fid+}" fname="{+$user[i].fname+}" username='{+$user[i].username+}' ifagent='{+$user[i].ifagent+}' wid='{+$user[i].wid+}' class="in{+$user[i].userid+}" fudong='{+$user[i].fudong+}' fids='{+$user[i].userid+},{+$user[i].fids+}' types='{+if $user[i].ifagent==1+}ag{+else+}us{+/if+}' lyname='{+$user[i].lyname+}'>
+    
+      <td  class="option" style="display: none;" ><input type="checkbox" value="{+$user[i].userid+}" /></td>
+     <td class="online">{+if ($user[i].online==0)+}<span class='s0'></span>{+else+}<span class='s1 zhuxiao' title='注销'></span>{+/if+}</td>
+     <td class="parent">{+if $user[i].layer==1+}admin{+else+}<a href='javascript:void(0);' class="upuser">{+$user[i].upuser+}</a>{+/if+}</TD>
+  
+     
+     <td class="type">{+if $user[i].fudong==0+}信用{+else+}现金{+/if+}<BR />{+$user[i].layername+}</td>
+     <td class="username"><a href='javascript:void(0);' {+if $user[i].ifagent==1+} class='showdown' layertype=0 {+/if+}>{+$user[i].username+}</a> [{+$user[i].name+}]{+if $user[i].layer==1+}-{+$user[i].web+}{+/if+}</td>
+     {+if $config.fasttype==1 || $user[i].fudong==0+}
+     <td class="account">
+         {+if $user[i].ifagent==1+}
+           <a href='javascript:void(0);'  class="kmaxmoney">{+$user[i].kmoney+}</a> 
+         {+else+}
+           <a href='javascript:void(0);'  class="kmaxmoney">{+$user[i].kmoney+}</a> 
+         {+/if+}   
+     </td>
+     {+/if+}
+     {+if $config.slowtype==1+}
+     <td class="account" style="display: none;">
+         {+if $user[i].ifagent==1+}
+           <a href='javascript:void(0);'  class="maxmoney">{+$user[i].money+}</a> 
+         {+else+}
+           <a href='javascript:void(0);'  class="maxmoney">{+$user[i].money+}</a> 
+         {+/if+}  
+     </td>
+     {+/if+}
+     <td nowrap="nowrap"><a href='javascript:void(0);' class="zcmx">明细</a></td>
+     {+if ($user[i].ifagent==0)+}
+        <td class="branch">{+$user[i].pan+}盘</td>
+     {+else+}
+        <!--<td class="branch">{+$user[i].downnum+}</td>-->
+        <td class="branch"><a href='javascript:void(0);' class='showdown' layertype=0>{+$user[i].downnumag+}</a></td>
+        <td class="branch"><a href='javascript:void(0);' class='showdown' layertype=1>{+$user[i].downnumu+}</a></td>
+        <td nowrap="nowrap">
+        {+if ($user[i].layer+1)<$user[i].maxlayer+}<a href='javascript:void(0);' class='bu_ico ico_dl add' types='ag'>代理</a>/{+/if+}<a href='javascript:void(0);' class='bu_ico ico_hy add' types='us' >会员</a>
+        </td>
+     {+/if+}   
+
+     <td class="create">{+$user[i].regtime+}</td>
+     <td class="status"><input type="button" style="color: {+if ($user[i].status==1)+}green{+else+}red{+/if+};" class="s{+$user[i].status+}" v="{+$user[i].status+}" value="{+$user[i].statusz+}"></td>
+     <TD class="op">
+      <a href='javascript:void(0);'  class="modify edit"  >修改</a>/
+      <a href='javascript:void(0);'  class="commission setpoints"  >退水</a>/
+      <a href='javascript:void(0);'  class="login_log info logininfo" >登陆日志</a>/ 
+      <a href='javascript:void(0);'  class="op_log record"  >变更日志</a>
+
+
+     </TD>
+  
+   </TR>
+   {+/section+}
+   
+   <input type="hidden" class='pageinfo' pcount='{+$pcount+}' rcount='{+$rcount+}' upage='{+$upage+}' />

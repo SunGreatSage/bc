@@ -1,0 +1,651 @@
+{+include file='header2.html'+}
+ <link href="/default/css/report.css" rel="stylesheet" type="text/css" />
+ <link href="/js/css/jquery.dataTables.css" rel="stylesheet" />
+<script type="text/javascript" src="../js/jquery.ui.datepicker-zh-CN.js"></script>
+</head>
+<body id="topbody" style="overflow-y: hidden;"  >
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='baonew';
+</script>
+<div class="jt-container">
+<!--div class="top_info">
+<span class="title">报表查询</span>
+</div-->
+<div class="s_main" id="queryCondiction">
+<form action="list">
+<div class="contents">
+<table class="data_table info_table panel">
+<thead><tr><th colspan="2">查询设定</th></tr></thead>
+<tbody>
+<tr><th width="20%" class="ft_sd te-rt">彩票种类</th><td class="gametype">
+<a  href='javascript:void(0)'  class="ft_a ico_tick" type='2' v='1'>全部选择</a><a href='javascript:void(0)' class="ft_a" type='2' v='0'>全部不选择</a><br />
+<ul class="table_box">
+{+if $config.slowtype==1+}
+<li class="table_box_info slow">
+{+section name=i loop=$gamecs+}
+    {+if $gamecs[i].fast==0+}
+    <label><input type="checkbox" name="lottery" value="{+$gamecs[i].gid+}"
+ checked="checked" gname='{+$gamecs[i].gname+}' />{+$gamecs[i].gname+}</label>
+    {+/if+}
+{+/section+}
+</li>
+{+/if+}
+</ul>
+</td></tr>
+<tr><th class="ft_sd te-rt">日期范围</th><td>
+<span id="date"><input id="begin" value="{+$sdate[10]+}" /> — <input id="end" value="{+$sdate[10]+}" /></span>
+<input type="button" class="s btn today" value="今天" d=1 />
+<input type="button" class="s btn" value="昨天" d=2  />
+<input type="button" class="s btn" value="本星期" d=3 />
+<input type="button" class="s btn" value="上星期" d=4 />
+<input type="button" class="s btn" value="本月" d=5 />
+<input type="button" class="s btn" value="上月" d=6 />
+</td></tr>
+<tr><th class="ft_sd te-rt">期数</th><td>
+<select name="qishu" class="qishu" style="width:200px;"><option value="">--------请选择单一彩种--------</option></select>
+</td></tr>
+<tr><th class="ft_sd te-rt bbzl">代理报表种类</th><td>
+<label><input type="radio" name="types" value="true" checked="checked" />交收报表</label>
+<label><input type="radio" name="types" value="false" />分类报表</label>
+</td></tr>
+<tr><th class="ft_sd te-rt">结算状态</th><td>
+<label><input type="radio" name="settle" value="true" checked="checked" />已 结 算</label>&nbsp;
+<label class="unsettled"><input type="radio" name="settle" value="false" />未 结 算</label>
+</td></tr>
+<tr><th>用户名</th><td><input id="filter" /></td></tr>
+<tr><th>会员金额</th><td><input id="amount" /></td></tr>
+<tr><th>盈亏金额</th><td><input id="dividend" /></td></tr>
+</tbody>
+</table>
+</div>
+<div class="data_footer control">
+<input type="button" value="查 询"  class="query button bnt_1" />
+<input type='hidden' class="nowuser" value="{+$topid+}"  uid='{+$topid+}' layer="{+$layer+}"  username='{+$username+}'  />
+<input type="hidden" id='topid' value="{+$topid+}" layer="{+$layer+}" username='{+$username+}' />
+<input type="hidden" id='saveuserid' value="{+$topid+}" layer="{+$layer+}"  />
+<input type="button" value="取 消"  class="cancel button bnt_2" />
+</div>
+</form>
+</div>
+</div>
+<div class="s_main">
+<div class="main1 gdiv" style="display:none">
+	<!--div class="top_info">
+		<span class="title"></span><span class="right"><a class="back" uid="0" href="javascript:void(0);">返回</a></span>
+	</div-->
+	<div class="contents">
+		<table style="border-collapse:unset" class="data_table list report">
+		<caption>合计</caption>
+		<thead>
+		<tr class="shead">
+			<th rowspan="2">
+				<strong>彩种 </strong>
+			</th>
+			<th rowspan="2" data-sort="string" class="sortable sorting-desc">
+				玩法<i></i>
+			</th>
+			<th rowspan="2" class="count sortable" data-sort="number">
+				笔数<i></i>
+			</th>
+			<th rowspan="2" data-sort="number" class="sortable">
+				下注金额<i></i>
+			</th>
+			<th rowspan="2">
+				有效金额
+			</th>
+			<th colspan="3">
+				会员输赢
+			</th>
+			<th colspan="7" class="syname">
+				输赢
+			</th>
+			<th rowspan="2" class="ups">
+				上交货量
+			</th>
+			<th rowspan="2" data-sort="number" class="ups sortable ca">
+				上级交收<i></i>
+			</th>
+		</tr>
+		<tr class="shead">
+			<th>
+				输赢
+			</th>
+			<th>
+				退水
+			</th>
+			<th>
+				盈亏结果
+			</th>
+			<th data-sort="number" class="sortable self ca">
+				应收下线<i></i>
+			</th>
+			<th>
+			占成
+			</th>
+			<th>
+				实占金额
+			</th>
+			<th>
+				实占结果
+			</th>
+			<th>
+				实占退水
+			</th>
+			<th>
+				赚水
+			</th>
+			<th class="plc">
+				赚赔率差
+			</th>
+			<th class="ca">
+				盈亏结果
+			</th>
+		</tr>
+		</thead>
+		<tbody>
+		</tbody>
+		<tfoot>
+		<tr>
+			<th colspan="2">
+			</th>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td class="result color">
+			</td>
+			<td class="nosum">
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td class='plc'>
+			</td>
+			<td class="result color minus">
+			</td>
+			<td class="ups">
+			</td>
+			<td class="ups result color">
+			</td>
+		</tr>
+		</tfoot>
+		</table>
+	</div>
+	<!--div class="data_footer">
+	</div-->
+</div>
+<div class="main2 gdiv" style="display:none">
+	<!--div class="top_info">
+		<span class="title"></span><span class="right"><a class="back" uid="0" href="javascript:void(0);">返回</a></span>
+	</div-->
+	<div class="contents">
+		<table style="border-collapse:unset" class="data_table list report">
+		<caption>合计</caption>
+		<thead>
+		<tr class="shead">
+			<th rowspan="2">
+				级别
+			</th>
+			<th rowspan="2" data-sort="string" class="sortable sortdefault sorting-asc">
+				账号<i></i>
+			</th>
+			<th rowspan="2">
+				名称
+			</th>
+			<th rowspan="2">
+				余额
+			</th>
+			<th rowspan="2" class="count sortable" data-sort="number">
+				笔数<i></i>
+			</th>
+			<th rowspan="2" data-sort="number" class="sortable">
+				下注金额<i></i>
+			</th>
+			<th rowspan="2">
+				有效金额
+			</th>
+			<th colspan="3">
+				会员输赢
+			</th>
+			<th colspan="8" class="syname">
+				输赢
+			</th>
+			<th rowspan="2" class="ups">
+				上交货量
+			</th>
+			<th rowspan="2" data-sort="number" class="ups sortable ca">
+				上级交收<i></i>
+			</th>
+		</tr>
+		<tr class="shead">
+			<th>
+				输赢
+			</th>
+			<th>
+				退水
+			</th>
+			<th>
+				盈亏结果
+			</th>
+			<th data-sort="number" class="sortable self ca">
+				应收下线<i></i>
+			</th>
+			<th>
+				占成
+			</th>
+			<th>
+				实占金额
+			</th>
+			<th>
+				实占结果
+			</th>
+			<th>
+				实占退水
+			</th>
+			<th>
+				赚水
+			</th>
+			<th class="plc">
+				赚赔率差
+			</th>
+			<th class="ca">
+				盈亏结果
+			</th>
+		</tr>
+		</thead>
+		<tbody>
+		</tbody>
+		<tfoot>
+		<tr>
+			<th colspan="4">
+			</th>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td class="ff">
+			</td>
+			<td class="result color ff">
+			</td>
+			<td class="nosum">
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td class="plc">
+			</td>
+			<td class="result color ff">
+			</td>
+			<td class="ups">
+			</td>
+			<td class="ups result color ff">
+			</td>
+		</tr>
+		</tfoot>
+		</table>
+		<p class="more_detail">
+			<a onclick="" class="showgame">+ 显示各彩种明细</a>
+		</p>
+	</div>
+	<!--div class="data_footer">
+	</div-->
+</div>
+<div class="maingame gdiv" style="display:none">
+	<div class="contents">
+		<table style="border-collapse:unset" class="data_table list report">
+		<caption>合计</caption>
+		<thead>
+		<tr class="shead">
+			<th rowspan="2">
+				级别
+			</th>
+			<th rowspan="2" data-sort="string" class="sortable sortdefault sorting-asc">
+				账号<i></i>
+			</th>
+			<th rowspan="2">
+				名称
+			</th>
+			<th rowspan="2">
+				余额
+			</th>
+			<th rowspan="2" class="count sortable" data-sort="number">
+				笔数<i></i>
+			</th>
+			<th rowspan="2" data-sort="number" class="sortable">
+				下注金额<i></i>
+			</th>
+			<th rowspan="2">
+				有效金额
+			</th>
+			<th colspan="3">
+				会员输赢
+			</th>
+			<th colspan="8" class="syname">
+				输赢
+			</th>
+			<th rowspan="2" class="ups">
+				上交货量
+			</th>
+			<th rowspan="2" data-sort="number" class="ups sortable ca">
+				上级交收<i></i>
+			</th>
+		</tr>
+		<tr class="shead">
+			<th>
+				输赢
+			</th>
+			<th>
+				退水
+			</th>
+			<th>
+				盈亏结果
+			</th>
+			<th data-sort="number" class="sortable self ca">
+				应收下线<i></i>
+			</th>
+			<th>
+				占成
+			</th>
+			<th>
+				实占金额
+			</th>
+			<th>
+				实占结果
+			</th>
+			<th>
+				实占退水
+			</th>
+			<th>
+				赚水
+			</th>
+			<th class="plc">
+				赚赔率差
+			</th>
+			<th class="ca">
+				盈亏结果
+			</th>
+		</tr>
+		</thead>
+		<tbody>
+		</tbody>
+		<tfoot>
+		<tr>
+			<th colspan="4">
+			</th>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td class="ff">
+			</td>
+			<td class="result color ff">
+			</td>
+			<td class="nosum">
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td class="plc">
+			</td>
+			<td class="result color ff">
+			</td>
+			<td class="ups">
+			</td>
+			<td class="ups result color ff">
+			</td>
+		</tr>
+		</tfoot>
+		</table>
+	</div>
+	<!--div class="data_footer">
+	</div-->
+</div>
+<div class="main3 gdiv" style="display:none">
+	<div class="top_info">
+		<span class="title"></span><span class="right"><a class="back" uid="0" href="javascript:void(0);">返回</a></span>
+	</div>
+	<div class="contents">
+		<table style="border-collapse:unset" class="data_table list report" data-colspan="6">
+		<caption>合计</caption>
+		<thead>
+		<tr class="shead">
+			<th rowspan="2" data-sort="string" data-sort-dir="asc" class="sortable sortdefault sorting-desc">
+				日期<i></i>
+			</th>
+			<th rowspan="2">
+				级别
+			</th>
+			<th rowspan="2" data-sort="string" class="sortable">
+				账号<i></i>
+			</th>
+			<th rowspan="2">
+				名称
+			</th>
+			<th rowspan="2" class="count sortable" data-sort="number">
+				笔数<i></i>
+			</th>
+			<th rowspan="2" data-sort="number" class="sortable">
+				下注金额<i></i>
+			</th>
+			<th rowspan="2">
+				有效金额
+			</th>
+			<th colspan="3">
+				会员输赢
+			</th>
+		</tr>
+		<tr class="shead">
+			<th>
+				输赢
+			</th>
+			<th>
+				退水
+			</th>
+			<th>
+				盈亏结果
+			</th>
+		</tr>
+		</thead>
+		<tbody>
+		</tbody>
+		<tfoot>
+		<tr>
+			<th colspan="4">
+			</th>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+		</tr>
+		</tfoot>
+		</table>
+		<p class="more_detail">
+			<a href="javascript:void(0);" class="showgame">+ 显示各彩种明细</a>
+		</p>
+	</div>
+	<!--div class="data_footer">
+	</div-->
+</div>
+<div class="searchgame gdiv" style="display:none">
+	<div class="top_info">
+		<span class="title"></span><span class="right"></span>
+	</div>
+	<div class="contents">
+		<table style="border-collapse:unset" class="data_table list report" data-colspan="6">
+		<caption>合计</caption>
+		<thead>
+		<tr class="shead">
+			<th rowspan="2" data-sort="string" data-sort-dir="asc" class="sortable sortdefault sorting-desc">
+				日期<i></i>
+			</th>
+			<th rowspan="2">
+				级别
+			</th>
+			<th rowspan="2" data-sort="string" class="sortable">
+				账号<i></i>
+			</th>
+			<th rowspan="2">
+				名称
+			</th>
+			<th rowspan="2" class="count sortable" data-sort="number">
+				笔数<i></i>
+			</th>
+			<th rowspan="2" data-sort="number" class="sortable">
+				下注金额<i></i>
+			</th>
+			<th rowspan="2">
+				有效金额
+			</th>
+			<th colspan="3">
+				会员输赢
+			</th>
+		</tr>
+		<tr class="shead">
+			<th>
+				输赢
+			</th>
+			<th>
+				退水
+			</th>
+			<th>
+				盈亏结果
+			</th>
+		</tr>
+		</thead>
+		<tbody>
+		</tbody>
+		<tfoot>
+		<tr>
+			<th colspan="4">
+			</th>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+			<td>
+			</td>
+		</tr>
+		</tfoot>
+		</table>
+	</div>
+	<!--div class="data_footer">
+	</div-->
+</div>
+<div class="main5 gdiv" style="display:none">
+	<!--div class="top_info">
+		<span class="title">注单明细</span><span class="right"><a class="back" href="javascript:void(0)">返回</a></span>
+	</div-->
+	<div class="contents">
+		<table style="border-collapse:unset" class="data_table list table_center report">
+		<thead>
+		<tr>
+			<th  rowspan="2" nowrap=""><strong>下注编号</th>
+			<th  rowspan="2" nowrap=""><strong>下注时间</th>
+			<th  rowspan="2" nowrap=""><strong>彩种</strong></th>
+            <th style="display: none;">类型</th>
+			<th  rowspan="2" nowrap=""><strong>账号</strong></th>
+			<th  rowspan="2" nowrap=""><strong>投注内容</strong></th>
+			<th  rowspan="2" nowrap=""><strong>下注金额</strong></th>
+			<th  rowspan="2" nowrap=""><strong>退水(%)</strong></th>
+			<th  rowspan="2" nowrap=""><strong>下注结果</strong></th>
+			<th  rowspan="2" nowrap=""><strong>本级占成</strong></th>
+			<th class="result"><strong style="color:red" >本级结果</strong></th>
+			<th rowspan="2" class="note">明细</th>
+		</tr>
+		</thead>
+		<tfoot>
+		<tr>
+				<th colspan="5">
+			</th>
+			<td class="money font_bold">
+			</td>
+			<td>
+			</td>
+			<td class="money color font_bold">
+			</td>
+			<td>
+			</td>
+			<td class="money color font_bold">
+			</td>
+			<td>
+			</td>
+		</tr>
+		</tfoot>
+		</table>
+	</div>
+	<div id="pager" style="cursor: pointer;" class="page page_info">
+	<ul class="pages">
+	</ul>
+	</div>
+</div>
+</div>
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-draggable ui-resizable mx" tabindex="-1" role="dialog" aria-describedby="shares" aria-labelledby="ui-id-1" style="position: absolute; height: 152.28px; width: 360px; top: 257px; left: 564.5px; display:none; right: auto; bottom: auto;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle"><span id="ui-id-1" class="ui-dialog-title">2988316036# 占成明细</span><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span><span class="ui-button-text">Close</span></button></div><div id="shares" class="popdiv ui-dialog-content ui-widget-content" style="display: block; width: auto; min-height: 96px; max-height: 346px; height: auto;"><table class="data_table">
+<thead><tr><th>类型</th><th>账号</th><th>占成</th><th>退水</th><th>赔率</th></tr></thead>
+<tbody>
+</tbody>
+</table></div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div></div>
+<div id='test'></div>
+<div id='testtime'></div>
+<div class="ui-widget-overlay ui-front ui-fronts" style="z-index: 100;display:none;"></div>
+<script language="javascript">
+layername= new Array();
+{+foreach item=i from=$layername key=key+}
+layername[{+$key+}]="{+$i+}";
+{+/foreach+}
+var layer ={+$layer+} ;
+sdate=new Array();
+{+foreach item=i from=$sdate key=key+}
+sdate[{+$key+}]="{+$i+}";
+{+/foreach+}
+</script>
+</body>
+</html>

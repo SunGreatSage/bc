@@ -1,0 +1,37 @@
+{+include file='headers.html'+}
+</head>
+<link rel="stylesheet" type="text/css" href="/default/css/main.css?v=004" />
+<link rel="stylesheet" type="text/css" href="/default/css/rule.css" />
+<body class='L_HK6 {+$skin+}'>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='rule';</script>
+<style>
+.tit_box {
+    background: #e6edf8;
+    color: #3c4454;
+}
+.bar_tit b {
+    color: #2161b3;
+    border-bottom: 2px solid #2161b3;
+}
+.bar_tit {
+    border-bottom: 2px solid #ddd;
+}
+.search select {
+    border: 1px solid #bbc4ce;
+}
+
+</style>  
+<div class="jt-container pad10">
+        <div class="bar_tit">
+            <b>活动规则</b>
+                    <div class="search">
+                        <span class="title">彩种选择</span>
+                        <span>
+                            <select id="lottery" name="lottery" class="game" >
+                                   {+section name=i loop=$game+}
+                                    <option value="{+$game[i].gid+}" {+if ($game[i].gid==$gid)+}selected{+/if+}>{+$game[i].gname+}</option>
+									{+/section+}
+                            </select>
+                        </span>
+                    </div>
+        </div>

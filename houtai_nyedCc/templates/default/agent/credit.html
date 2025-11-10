@@ -1,0 +1,176 @@
+{+include file='header.html'+}
+<script language="javascript" src="/js/md5.js"></script>
+<style type="text/css">
+td,th{height:20px;line-height:20px;}
+select{width:50px;}
+tr:hover{background:#DEEFD8}
+.gametype{width:120px;}
+.addtb td {
+	text-align:left;
+}
+.conwidth {
+	width:400px;
+}
+.add_tb td {
+	width:35%;
+	height:30px;
+	line-height:30px;
+	text-align:left;
+	padding-left:20px;
+}
+.add_tb th {
+	width:15%;
+	height:30px;
+	line-height:30px;
+	text-align:right;
+	padding-right:8px;
+}
+.add_tb {
+	background:#fff
+}
+.add_tb label{color:red}
+</style>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='credit';
+</script>
+<div class="xbody1">
+ <form action="userinfo.php" method='POST' style="margin:0px;" name="form" id="form">
+  <input type="hidden" value="{+$userid+}" name='userid' id='userid' />
+  <table class="tinfo wd100 add_tb">
+   <tr>
+       <th>帐户</th>
+       <TD><label>{+$username+}({+$name+})[{+$usertype+}]</label></td>
+       
+       
+   </tr>
+   <TR>
+       <th>信用额度[低频]</th>
+       <TD><label>{+$maxmoney+}</label>&nbsp;&nbsp;可用:&nbsp;
+           <label id='money'>{+$money+}</label>&nbsp;&nbsp;(<label>{+$premoney+}%</label>)</td>
+   </tr>
+   <TR>
+    <th>信用额度[快开]</th>
+    <TD><label>{+$kmaxmoney+}</label>&nbsp;&nbsp;可用:&nbsp;<label id='kmoney'>{+$kmoney+}</label>&nbsp;&nbsp;(<label>{+$prekmoney+}%</label>)</td>
+    </tr>
+    {+if $maxrenflag==1+}
+   <Tr>
+   <th>最多下线数</th>
+    <TD><label>{+$maxren+}</label>
+     &nbsp;&nbsp;[目前
+     <label>{+$ren+}</label>
+     ]&nbsp;&nbsp;(<label>{+$preren+}%</label>) </td>
+     </Tr>
+     {+/if+}
+     <tr style="display:none">
+    <th>现金额度</th>
+    <td><img src='{+$globalpath+}img/{+$fudong+}.gif' /></td>
+   </tr>
+   <TR>
+    <th>盘口类型</th>
+    <TD>{+foreach item=i from=$pan+}    
+     <label>{+$i+}</label>    
+     {+/foreach+}盘</td>
+     </TR>
+     <tr style="display:none">
+    <th>默认盘口</th>
+    <TD><select class="pan">
+         {+foreach item=i from=$pan+}
+           <option value="{+$i+}" {+if $i==$defaultpan+}selected{+/if+}>{+$i+}</option>
+         {+/foreach+}
+      </select><input style="margin-left:5px;" type="button" value="更改" class="editpan btn2 btnf" /></td>
+   </tr>
+   <tr><th>登录默认彩种</th>
+    <TD><select class="gametype">
+    {+section name=i loop=$ugame+}
+    <OPTION value="{+$ugame[i].gid+}" {+if $ugame[i].gid==$ugid +}selected{+/if+}>{+$ugame[i].gname+}</OPTION>
+    {+/section+}
+    </select><input style="margin-left:5px;" type="button" value="更改" class="editgid btn2 btnf" /></td>
+    </tr>
+{+if ($layer==1 & $ifexe==1)+}
+   <TR style="display:none">
+    <Th>赔率模式</Th>
+    <Td>
+        
+        
+        <select class="pself">
+            <option value="0" {+if $pself==0+}selected{+/if+}>使用上级赔率</option>
+            <option value="1" {+if $pself==1+}selected{+/if+}>使用自定赔率</option>
+            </select>
+        <input type="button" class="btn1 btnf editpself" value="修改" />
+        
+    </Td>
+    </TR>    {+/if+}
+  </table>
+ </form><Br />
+<table class="tinfo wd100 cs">
+<Tr><th colspan="13">两面包括所有单双、大小、合单双、合大小、大小尾、六肖、总分大小、总分单双、龙虎</th></Tr>
+</table>
+<table class="tinfo wd100 cs2">
+   <Tr>
+    <th rowspan="2"> <select id='game' style="width:100px;">
+      <option value="all">选择游戏</option>
+      
+      
+   {+section name=i loop=$game+}
+      
+      
+      <option value="{+$game[i].gid+}">{+$game[i].gname+}</option>
+      
+      
+   {+/section+}
+   
+     
+     </select>
+    </th>
+    <th rowspan="2"> 类别 </th>
+    <th rowspan="2" style="display:none">保底赔率</th>
+    <th rowspan="2">单期最高</th>
+    <th rowspan="2">单注最高</th>
+    <th rowspan="2">单注最低</th>
+    {+foreach item=i from=$span+}
+    <th  class="{+$i+} p" colspan="2">{+$i+}盘退水%</th>
+    {+/foreach+} </Tr>
+   <tr> {+foreach item=i from=$span+}
+    <th class="a p">A</th>
+    <th class="a p">B</th>
+    {+/foreach+} </tr>
+   {+section name=i loop=$game+} 
+   {+assign var=pan value=$game[i].pan+}
+   {+section name=j loop=$pan+}
+   <tr gid='{+$game[i].gid+}' class="gametr">
+    <td class="{+$pan[j].class+}" gid='{+$game[i].gid+}'>{+$game[i].gname+}</td>
+    <td class="{+$pan[j].class+}" gid='{+$game[i].gid+}'>{+$pan[j].name+}</td>
+    <td>{+$pan[j].cmaxje+}</td>
+    <td>{+$pan[j].maxje+}</td>
+    <td>{+$pan[j].minje+}</td> 
+    {+if $pan[j].abcd==1+}
+        {+foreach item=k from=$span+}   
+           {+assign var='m' value=$k|@strtolower+}
+           {+if $pan[j].ab==1+}
+               {+assign var="tmp" value="points`$m`a"+}
+               <td>{+$pan[j].$tmp+}</td>
+               {+assign var="tmp" value="points`$m`b"+}
+               <td>{+$pan[j].$tmp+}</td>
+           {+else+}
+                {+assign var="tmp" value="points`$m`0"+}
+                <td colspan="2">{+$pan[j].$tmp+}</td>
+            {+/if+} 
+        {+/foreach+}
+    {+else+}
+         {+assign var="tmp" value=$span|@count+}
+         {+assign var="tmp2" value=$tmp*2+}
+         <td colspan="{+$tmp2+}">{+$pan[j].pointsa0+}</td>
+    {+/if+}
+    </tr>
+   {+/section+}
+   {+/section+}
+  </table>
+</div>
+<div id='test'></div>
+<SCRIPT language="javascript">
+var ngid = {+$gid+};
+</SCRIPT>
+</body>
+</html>

@@ -1,0 +1,43 @@
+{+include file='header.html'+}
+        <style>
+        body,ul,ol,li,p,div,form,h1,h2,h3,h4,img,a img {padding:0;margin:0;border:0;}
+        body,html{height: 100%; position: relative; color: #000;}
+        input {font-size:16px; font-family:helvetica, san-serif; outline:none;}
+        /* herder */
+        .header-model{background:url(../imgn/mobi/h-bg.png);color:#fff;padding:6px;box-shadow: 0 2px 5px #333;font-size:1.3em;}        
+        .tc{text-align:center;}
+        .login-win{margin:0 3%;min-width:300px}
+        .login-win h2{color:#828282;margin:25px 0;font-size:26px;}
+        .login-form{border:1px solid #cccccc;border-radius:2px;-webkit-border-radius:2px;padding:5px 0 5px 0}
+        .login-input{margin:10px 4%;font-weight:bolder;text-indent:20px;border:1px solid #cccccc;height:42px; border-radius:2px;-webkit-border-radius:2px}
+        .login-input input{padding:0 4px;margin-left:5px;border:0;height:40px;font-weight:normal;width:auto;vertical-align: middle;}
+        .login-input img{vertical-align: middle;height:100%}
+        .login-input .v-img{height:100%;}
+        .login-win button{border:0;background:#017ee5;margin-top:30px;width:100%;font-size:30px;color:white;text-align:center;line-height:55px;height:55px;font-weight:bolder;text-shadow:1px 2px #002a4c;cursor:pointer}
+        </style>
+<script language="javascript" src="/js/md5.js"></script>
+    </head>
+    <body style="background: #f3f3f3;"><script id=myjs language="javascript">var js=1;var sss='cpass';</script>
+        <div class="header-model tc rel">
+            {+$webname+}-修改密码 <span class="abs btn-h btn-r back">返回</span>
+        </div>
+        <div class="login-win">
+            <h2 class="h2_font">
+               {+$username+}
+            </h2>
+            <div class="login-input">
+                原密码 <input id="pass0" name="oldpasswd" type="password" required="required" class="ico_mobile" autocomplete="off" placeholder="原始密码" title="原始密码">
+            </div>
+            <div class="login-input">
+                新密码<input type="password" id='pass1'  maxlength="16" value="" />
+            </div>
+            <div class="login-input">
+                新密码<input type="password" id='pass2'  maxlength="16" value="" />
+            </div>
+           <button class="xg">修改密码</button>
+        </div> 
+        </form>
+    </body>
+</html>
+
+

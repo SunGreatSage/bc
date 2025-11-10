@@ -1,0 +1,54 @@
+{+include file='header2.html'+}
+	
+	
+<style>
+a {
+    color: #3e34fc;
+}
+</style>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='err';</script>
+<div class="jt-container">
+	<div class="top_info">
+		<span class="title">注单异常查询</span><span class="right">&nbsp;<input name="button1" type="button" class="query btn2 delall" value="删除选定">&nbsp;<input name="button1" type="button" class="query btn2 delall"  value="删除全部"></span>
+	</div>
+<div class="s_main">	
+<table style="border-collapse:unset"  class="list data_table table_center   nowtb" >
+<thead>
+  <tr class="bt">
+  <th><input type="checkbox" class="clickall" /></th>
+  <th><strong>功能</strong></th>
+  <th><strong>类型</strong></th>
+  <th><strong>是否处理</strong></th>
+  <th><strong>彩种</strong></th>
+   <th><strong>期数</strong></th>
+   <th><strong>下注编号</strong></th>
+   
+   <th><strong>下注类别</strong></th>
+   <th><strong>盘口</strong></th>
+   <!--th>小盘</th-->
+   <th><strong>状态</strong></th>
+   <th><strong>投注内容</strong></th>
+   <th><strong>下注金额	</strong></th>
+   <th><strong>赔率</strong></th>
+   <th><strong>退水(%)</strong></th>
+   <th><strong>会员账号</strong></th>
+   <th><strong>下注时间	</strong></th>
+  </tr>
+  </thead>
+ </table>
+ </div>
+</div>
+ <input type="hidden" class='sort' orderby='time' sorttype='DESC' page='1' xtype='2' con='' />
+<div id='test' style="margin-top:0px;"></div>
+<iframe name=sfrm id=sfrm style="display:none;"  ></iframe>
+<script language="javascript">
+layername= new Array();
+{+foreach item=i from=$layername key=key+}
+layername[{+$key+}]="{+$i+}";
+{+/foreach+}
+var layer =0 ;
+</script>
+</body>
+</html>

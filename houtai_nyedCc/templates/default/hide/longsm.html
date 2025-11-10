@@ -1,0 +1,15 @@
+{+assign var='th' value=$kj[0]['th'] +}
+<tr class="b">
+{+section name=i loop=$ths+} 
+<th>{+$ths[i].bname+}</th>
+{+/section+}
+</tr>
+
+{+foreach item=i from=$kj+}
+<tr>
+   {+assign var='m' value=$i['m'] +}
+   {+foreach item=j from=$m+}
+    <th>{+$j+}s</th>
+   {+/foreach+}
+</tr>
+{+/foreach+}

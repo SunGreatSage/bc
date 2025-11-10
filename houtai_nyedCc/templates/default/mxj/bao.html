@@ -1,0 +1,66 @@
+{+include file='header.html'+}
+
+    </head>
+      <body class="playnav"><script id=myjs language="javascript">var js=1;var sss='bao';</script>
+    <header class='header-model tc rel fw700' style="text-align:left"> 
+<select class="game sele"><option value="999">全部快开</option>
+         <option value="888" selected>全部彩种</option>
+         {+section name=i loop=$gamecs+}
+         
+           <option value="{+$gamecs[i].gid+}" >{+$gamecs[i].gname+}</option>
+          
+          
+         {+/section+} 
+      </select>
+      
+      <select class="week sele">
+         <option value="0" selected>本周</option>
+         <option value="1">上周</option>
+      </select>
+      <span class="abs btn-h btn-r back">返回</span>
+        </header>
+        <NAV class='nav-model fw700'>
+			<ul class='w100 tc'>
+				<li class='nav-li dc l-bg lib' >未结明细</li>
+				<li class='nav-li dc l-bg onselect bao' >账户历史</li>
+				<li class='nav-li dc l-bg kj'>开奖结果</li>
+			</ul>
+		</NAV>
+       
+        <div class="h-title hide">
+        <div class="left historyReback reback">后退</div>
+        <div class="right date" id="p_date" style="margin-left:10px;"></div>
+        <div class="right date pages"></div>
+        
+        </div>
+ <table class="flytb list hide">
+ <thead>
+  <Tr>
+   <th>时间</th>
+   <th>注数</th>
+   <th>金额</th>
+   <th>盈亏</th>
+  </Tr>
+  </thead>
+  <tbody class="con"></tbody>
+ </table>
+ 
+ <table class="xxtb list hide">
+ <thead>
+  <Tr>
+   <th>期数</th>
+   <th>时间</th>
+   <th>玩法</th>
+   <th>金额*赔率</th>
+   <th>盈亏</th>   
+  </Tr>
+  </thead>
+  <tbody class="con"></tbody>
+ </table>
+<STYLE type="text/css">
+.xxtb td.z1{background:#69F}
+.xxtb td.z3{background:#696}
+.xxtb td.he{background:#acf1a9}
+</STYLE>
+    </body>
+</html>

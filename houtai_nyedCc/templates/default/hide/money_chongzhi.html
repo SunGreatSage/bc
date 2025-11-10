@@ -1,0 +1,116 @@
+{+include file='headers.html'+}
+<link href="/css/default/user.css" rel="stylesheet" type="text/css">
+<link href="/css/default/jquery-ui.css" rel="stylesheet" type="text/css">
+<script language="javascript" src="/js/md5.js"></script>
+<script type="text/javascript" src="../js/ui/jquery-ui.js"></script>
+<script type="text/javascript" src="../js/ui/dialog-hi.js"></script>
+<script type="text/javascript" src="../js/jquery.ui.datepicker-zh-CN.js"></script>
+<style type="text/css">
+.td100{width:110px !important;}
+.tleft{text-align:left !important; padding-left:3px;}
+.tright{text-align:right !important; padding-right:3px;}
+.hide{display:none;}
+#dialog label{color:Red}
+.statusbtn{width:60px !important;}
+</style>
+</head>
+<body style="overflow:hidden">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='money_chongzhi';</script>
+
+
+
+<div class="main">
+		<div class="top_info">
+			<span class="title"><label>充值管理</label></span>
+			<div class="center">
+				<div class="query_panel">
+					<span class="input_panel">
+					<label>状态：<select id="" name="status" class="status">
+			<option value="-1" selected="selected">全部</option>
+				<option value="0" {+if $status=='0'+}selected{+/if+}>待处理</option>
+				<option value="1" {+if $status=='1'+}selected{+/if+}>成功</option>
+				<option value="2" {+if $status=='2'+}selected{+/if+}>失败</option>
+</select>
+
+</label> <label>搜索：</label>&nbsp;&nbsp;<label>账号或名称：</label><input name="name" class="input" id="username">&nbsp;&nbsp;<label>开始日期:</label><input class="input" id="sdate" value="{+$sdate+}">&nbsp;&nbsp;<label>结束日期:</label><input class="input" id="edate" value="{+$edate+}">
+					</span> <input type="button" value="查找" class="query searchbtn">
+                    {+if $hide==1+}<input type="button" value="删除选中" class="del searchbtn">{+/if+}
+     <input type="hidden" name="fid"  id="fid" value="" />
+
+				</div>
+				
+   
+			</div>
+			<div class="right">
+				
+			</div>
+		</div>
+		<div class="contents">
+			<div class="user_list">
+				<table class="data_table list user_tb" >
+					<thead>
+						<tr>
+                            <th><input type="checkbox" class="all" /></th>
+                            <th>提交时间</th>
+                            <th>类型</th>
+							<th class="td100">用户名(姓名)</th>                             
+                            <th>金额</th>
+                             <th>手续费</th>
+                             <th>入账方式</th>
+                             <th>收款银行[户名]</th>                   
+                             <th>入账时间</th>
+                             <th class="td100">状态</th>
+                             <th>提交人</th>                             
+                             <th>受理人</th>
+                             <th>受理时间</th>
+                             <th>详情</th>
+                           
+						</tr>
+					</thead>
+					<tbody>
+                  {+section name=i loop=$marr+}
+						<tr uid='{+$marr[i].userid+}' username='{+$marr[i].username+}'>
+                        <td><input type="checkbox" value="{+$marr[i].id+}" /></td>
+                        <td class="tjtime">{+$marr[i].tjtime+}</td>
+                        <td class="mtype">{+$marr[i].mtype+}</td>
+                        <td class="username">{+$marr[i].username+}({+$marr[i].tname+})</td>
+                        <td class="money tleft">{+$marr[i].money+}</td>
+                        <td class="sxfei tleft">{+$marr[i].sxfei+}</td>
+                        <td class="fs">{+$marr[i].fs+}</td>
+                        <td class="bank">{+$marr[i].bank+}({+$marr[i].sname+})</td>
+                        <td class="time">{+$marr[i].cuntime+}</td>
+                        <td class="status" v='{+$marr[i].status+}'><input type='button' value='{+$marr[i].status+}' class="statusbtn input s{+$marr[i].ustatus+}" v='{+$marr[i].ustatus+}' /></a></td>
+                        <td class="tjname">{+$marr[i].tjname+}</td>                        
+                        <td class="clname">{+$marr[i].clname+}</td>
+                        <td class="cltime">{+$marr[i].cltime+}</td>
+                        <td><a href='javascript:void(0);' class="xiangqing">详情</a></td>
+                        <td class="hide cuntime">{+$marr[i].cuntime+}</td>
+                        <td class="hide snum">{+$marr[i].snum+}</td>
+                        <td class="hide uname">{+$marr[i].uname+}</td>
+                        <td class="hide unum">{+$marr[i].unum+}</td>
+                        <td class="hide bz">{+$marr[i].bz+}</td>
+                        <td class="hide ms">{+$marr[i].ms+}</td>
+                        <td class="hide pass">{+$marr[i].pass+}</td>
+                        <td class="hide mtype">{+$marr[i].mtype+}</td>
+						</tr>
+                  {+/section+}		           
+					</tbody>
+				</table>
+                
+				<div class="page"><div class="page_info" upage='{+$upage+}' pcount='{+$pcount+}' rcount='{+$rcount+}'>
+<span class="record">共 <span>{+$rcount+}</span> 条记录</span>
+<span class="page_count">共 <span>{+$pcount+}</span> 页</span>
+<span class="page_control">
+
+</span>
+</div>
+</div>
+			</div>
+		</div>
+	</div>
+    
+    <div id="statusPanel" class="popdiv" style="position:absolute; display: none;"><div class="title">修改订单状态<i></i></div><div class="statuslist"><label><input name="ustatus" type="radio" value="1">成功</label><label><input name="ustatus" type="radio" value="2">失败</label></div></div>
+<script language="javascript">
+
+</script>
+</body></html>

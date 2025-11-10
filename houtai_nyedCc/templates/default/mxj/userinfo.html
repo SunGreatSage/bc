@@ -1,0 +1,106 @@
+<style>
+.main-content > div {
+      padding: 0.5em;
+}
+</style>
+<div class="contact_type1 mini">
+    <div class="contact_info1" style="border-bottom: 1px solid rgb(224, 224, 224);">
+        <div class="contact_name1">
+            会员账号
+        </div>
+        <div class="contact_name1">
+            {+$username+}
+        </div>
+    </div>
+    <div class="contact_info1" style="border-bottom: 1px solid rgb(224, 224, 224);">
+        <div class="contact_name1">
+            所属盘口
+        </div>
+        <div class="contact_name1">
+            {+$panstr+}盘
+        </div>
+    </div>
+    <div class="contact_info1" style="border-bottom: 1px solid rgb(224, 224, 224);">
+        <div class="contact_name1">
+            默认盘口
+        </div>
+        <div class="contact_name1">
+            <select id = "abcd" class="abcd">
+                    {+foreach item=i from=$span+}<OPTION value="{+$i+}" {+if ($i==$defaultpan)+}selected{+/if+}>{+$i+}盘</OPTION>{+/foreach+}
+            </select>&nbsp;&nbsp;<button class="button qd ABC_btn">切换</button>
+        </div>
+    </div>
+    <div class="contact_info1" style="border-bottom: 1px solid rgb(224, 224, 224);">
+        <div class="contact_name1">
+            账户状态
+        </div>
+        <div class="contact_name1" >
+            {+$status+}
+        </div>
+    </div>
+{+if $fudong==1+}
+{+else+}
+    <div class="contact_info1" style="border-bottom: 1px solid rgb(224, 224, 224);">
+        <div class="contact_name1" style="color: #885f14;">
+            {+if $moneytype eq 1+}现金{+else+}信用{+/if+}额度 
+        </div>
+        <div class="contact_name1" >
+            {+$kmaxmoney+} (余额：{+$kmoney+})
+        </div>
+    </div>
+{+/if+}
+</div>
+<div class="sub_se" style="margin-top:0.5em; text-align:center; padding:0; border:none;">
+                        <select id="lotteryName">
+						  {+section name=i loop=$game+} 
+                                <option value="{+$game[i].gid+}">{+$game[i].gname+}</option>
+								{+/section+}
+                        </select>
+                    </div>
+{+assign var='dp' value=$defaultpan|@strtolower+}
+<div class="personal-info-scroll">
+    {+section name=i loop=$game+}
+    {+assign var=pan value=$game[i].pan+}
+      {+section name=j loop=$pan+}
+    <div class="g{+$game[i].gid+} conlist">
+        <div class="no_date1">
+            <div class="nd_div1">
+                {+$pan[j].name+}
+            </div>
+        </div>
+        <div class="info_table_title1 {+if $pan[j].ab==1+}ab{+/if+}">
+            <div class="ir_4">
+                {+$defaultpan+}盘退水<br>
+
+                <span style="color: #f22000;">
+                 {+if $pan[j].ab==1+}
+                     {+assign var="tmp" value="points`$dp`a"+}
+                     {+$pan[j].$tmp+}%<BR>
+                     {+assign var="tmp" value="points`$dp`b"+}
+                     {+$pan[j].$tmp+}%
+                 {+else+}
+                     {+assign var="tmp" value="points`$dp`0"+}
+                     {+$pan[j].$tmp+}%
+                 {+/if+}
+                </span>
+            </div>
+            <div class="ir_4">
+                单注最低<br>
+                <span style="color: #f22000;">{+$pan[j].minje+}</span>
+            </div>
+            <div class="ir_4">
+                单注最高<br>
+                <span style="color: #f22000;">{+$pan[j].maxje+}</span>
+            </div>
+            <div class="ir_4">
+                单期最高<br>
+                <span style="color: #f22000;">{+$pan[j].cmaxje+}</span>
+            </div>
+        </div>
+        <div class="rough_lines">
+        </div>
+    </div>
+      {+/section+}
+    {+/section+}
+
+</div>

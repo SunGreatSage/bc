@@ -1,0 +1,111 @@
+ <table class="tinfo wd100 usertb" >
+   <tr>   
+      <th>用戶名</th><TD><label>{+$username+}</label>(<label>{+$name+}</label>)</td>
+      
+      </tr>
+      <tr><th>原密码</th><td><input type='password' id="pass0" class='in'  />&nbsp;&nbsp;注：如无需修改密码,密码项可以留空</td>
+      </tr>
+   
+      <TR><Th>新密码</Th><TD><input type='password' id="pass1" class='in' /></TD></TR>
+      <tr><Th>确认新密码</Th><TD><input type='password' id="pass2" class='in' /></TD></TR>
+      
+      {+if $moneytype==1+}
+ 
+   <TR>
+    <th>开户行：</th>
+    <TD><label>{+$bank+}</label></td>
+   </tr>  
+
+
+   <TR>
+    <th>户名：</th>
+    <TD><label>{+$bankname+}</label></td>
+   </tr>  
+
+   <TR>
+    <th>银行帐号：</th>
+    <TD><label>{+$banknum+}</label></td>
+   </tr>  
+   
+      
+      
+      {+/if+}
+    
+      <tr><th>默认盘</th><td ><select class="pan">
+         {+foreach item=i from=$pan+}
+           <option value="{+$i+}" {+if $i==$defaultpan+}selected{+/if+}>{+$i+}</option>
+         {+/foreach+}
+      </select></td>
+      </tr>
+      <tr>
+      <th>默认彩种</th><td ><select class="morengid">
+         {+section name=i loop=$gamecs+}
+           <option value="{+$gamecs[i].gid+}" {+if $gamecs[i].gid==$morengid+}selected{+/if+}>{+$gamecs[i].gname+}</option>
+         {+/section+}
+      </select></td>
+      </tr>
+      
+        <tr><th>快速选择金额</th><td >
+      <select class="fastje">
+            <option value='0' {+if $fastje==0+}selected{+/if+}>关闭</option>
+             <option value='1' {+if $fastje==1+}selected{+/if+}>开启</option>
+      </select>
+     
+      </td>
+      </tr>
+      <tr  style="display:none" >
+      <th>赔率变动提醒</th><td >      <select class="plwarn">
+            <option value='0' {+if $plwarn==0+}selected{+/if+}>关闭</option>
+             <option value='1' {+if $plwarn==1+}selected{+/if+}>开启</option>
+      </select>
+      &nbsp;&nbsp;赔率变动提醒:只限香港彩,且[特肖连,连码,不中,生肖连,尾数连,过关]不会提醒！
+      </td></tr>
+    
+      <th>[低频]信用额度</th><td><label>{+$maxmoney+}</label>&nbsp;&nbsp;可用&nbsp;(<label>{+$money+}</label>)</td> 
+      </tr><TR>
+      <th>[快开]信用额度</th><td><label>{+$kmaxmoney+}</label>&nbsp;&nbsp;可用&nbsp;(<label>{+$kmoney+}</label>)</td> 
+   </tr>
+ 
+
+ 
+   </table> 
+
+<table class="tinfo fasts wd100">
+<tbody>
+<tr>
+  <td> {+foreach item=i from=$je+} <span>{+$i+}</span> {+/foreach+} </td>
+ </tr>
+ <tr>
+  <th>快速选择金额:
+   <input type="text" class="in fastje" style="width:40px;" />
+   <input type="button" class="btn fastadd" value="增加" />
+   <input type="button" class="btn fastdel" value="删除" />
+   <input type="button"  class="btn xg byellow" value="提交改动" />
+
+  </th>
+ </tr>
+ </tbody>
+</table>
+{+if $moneytype==1+}
+<table class="tinfo recordtb wd100 lhctb" style="margin-top:10px;">
+<tr>
+<th colspan="4" class="bt chu">帐户变动记录</th></tr>
+<th>时间</th><th>内容</th>
+</tr>
+{+section name=i loop=$ct+}
+<tr><td>{+$ct[i].time+}</td><td>{+$ct[i].action+}</td></tr>
+{+/section+}
+
+</table>
+{+/if+}
+
+<table class="tinfo recordtb wd100 lhctb" style="margin-top:10px;">
+<tr>
+<th colspan="4"  class="bt chu">登陆记录</th></tr>
+<th>登陆时间</th><th>IP</th><th>来源</th><th>备注</th>
+</tr>
+{+section name=i loop=$l+}
+<tr><td>{+$l[i].time+}</td><td>{+$l[i].ip+}</td><td>{+$l[i].addr+}</td><td>{+$l[i].ifok+}</td></tr>
+{+/section+}
+
+</table>

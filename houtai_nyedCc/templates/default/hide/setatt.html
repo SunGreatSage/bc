@@ -1,0 +1,164 @@
+{+include file='header2.html'+}
+<link href="/default/css/control.css" rel="stylesheet" />
+<link href="/default/css/Site.css" rel="stylesheet" />
+<link href="/default/css/jquery.loadmask.css" rel="stylesheet" />
+<script src="/js/sitetool.js?v=004"></script>
+<script src="/js/jquery.loadmask.js?v=004"></script>
+<style>
+.hide{display:none;}
+</style>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='setatt';</script>
+<div class="jt-container">
+	<div class="top_info">
+		<span class="title" style="color:#000000">各盘差分、参数</span>
+		
+		<div class="center" ><div id="cmcontrol">退水最大值：<input id="quick_a1" style="width:60px">&nbsp;&nbsp;赔率加减值：<input id="quick_a2" style="width:60px">&nbsp;&nbsp;赚赔最大值：<input id="quick_a3" style="width:60px">&nbsp;&nbsp;<select id="quick1" style="float: none;" >
+                        <option value="0">选择盘差项目</option>
+                        <option value="b">B盘差分</option>
+                        <option value="c">C盘差分</option>
+                        <option value="d">D盘差分</option>
+                    </select>
+					<select style="float: none;" id="quick2">
+                        <option value="">--</option>
+                        <option value="1">1</option>
+                        <option value="0.5">0.5</option>
+                        <option value="0.1">0.1</option>
+                        <option value="0.05">0.05</option>
+                        <option value="0.01">0.01</option>
+                        <option value="0">0</option>
+                        <option value="-0.01">-0.01</option>
+                        <option value="-0.05">-0.05</option>
+                        <option value="-0.1">-0.1</option>
+                        <option value="-0.5">-0.5</option>
+                        <option value="-1">-1</option>
+                    </select>
+		<input type="button" value="确定" id="quickbtn" class="button btn2">
+		 &nbsp; &nbsp; &nbsp; &nbsp;
+		  <input type="button" data-ignore="1" value="保存"  class="button btn1 send" />
+		  <input type="button" data-ignore="1" value="重置"  class="button btn1" />
+		  <input type="button" gid="{+$gid+}" class="button btn7 yiwotongbu" value="以我同步其他彩" >
+		</div>
+	</div>
+	<span class="right">&nbsp;&nbsp;<a class="back" onclick="javascript:history.back(-1);" href="javascript:void(0);">返回</a></span>
+	</div>
+	<div class="s_main">	
+			<div id="p_para" class="contents param_panel input_panel tab_panel">
+
+                        <table class="layout" templatecode="HK6">
+                            <tbody><tr>
+							{+if $config.slowtype==1+}
+                                <td height="30" colspan="2" align="left">
+								{+section name=i loop=$game+}
+                                        {+if $game[i].fast==0+}<span loto="MCHK6" group="HK6" class="g{+$game[i].gid+} group_tap" gid='{+$game[i].gid+}'>{+$game[i].gname+}</span>{+/if+}
+								 {+/section+}
+                                    
+                                </td>
+								{+/if+}
+                            </tr>
+							</tbody>
+							</table>
+							 </div>
+		<div id="con_six" class="hover param_panel">
+    <table class="layout">
+        <tr>
+            <td class="panel">
+                <table class="list table_ball setatt2 patt ">
+<thead>
+<TR style="display: none;"> <Th colspan="10"></Th><th colspan="4">模式1<input type="button" class="btn1 btnf modetb" v='1' value="同步其他模式" /></th>  <th colspan="4" class="hide">模式2<input type="button" class="btn1 btnf modetb" v='2' value="同步其他模式" /></th><th colspan="4" class="hide">模式3<input type="button" class="btn1 btnf modetb" v='3' value="同步其他模式" /></th><th colspan="4"  class="hide">模式4<input type="button" class="btn1 btnf modetb" v='4' value="同步其他模式" /></th><th colspan="4"  class="hide">模式5<input type="button" class="btn1 btnf modetb" v='5' value="同步其他模式" /></th></TR>
+  <TR>
+   <th  style="display: none;"><input type="checkbox"  class="all" /></th>
+     <th  class='hide' >ID</th><th  style="display: none;">大类</th><th rowspan="2">种类</th><th rowspan="2">退水最大值</th><th rowspan="2" style="display: none;" >退水调节差</th><th rowspan="2" style="display: none;">赔率调节差</th><th rowspan="2">赔率加减值<span style="color: red;">(控盘)<span class="title"></th><th rowspan="2" style="color: olivedrab;" >赚赔最大值</th><th rowspan="2" style="display: none;">补货赔率调整</th><th rowspan="2" style="display: none;">补货赔率调整开关</th>
+     <th class="hide">A盘</th><th>B盘差分</th><th>C盘差分</th><th>D盘差分</th><th>AB盘差</th>
+     <th class="hide" >A盘差</th><th class="hide">B盘差</th><th class="hide">C盘差</th><th class="hide">D盘差</th><th class="hide">AB差</th>
+     <th class="hide">A盘差</th><th class="hide">B盘差</th><th class="hide">C盘差</th><th class="hide">D盘差</th><th class="hide">AB差</th>
+     <th class="hide">A盘差</th><th class="hide">B盘差</th><th class="hide">C盘差</th><th class="hide">D盘差</th><th class="hide">AB差</th>
+     <th class="hide">A盘差</th><th class="hide">B盘差</th><th class="hide">C盘差</th><th class="hide">D盘差</th><th class="hide">AB差</th>
+     
+
+	</TR>
+	<tr>
+                                                    <th>降(正减负加)</th>
+
+                                                    <th>降(正减负加)</th>
+
+                                                    <th>降(正减负加)</th>
+
+                                                    <th>特/正</th>
+
+                                                </tr>
+	</thead>
+<tbody class="tablelist">
+  {+section name=i loop=$cs+}
+     <TR>
+     <td style="display: none;"><input type="checkbox" /><input type="button" class="btn1 btnf patttb" value="同选中" /></td>
+     <td class='hide'>{+$cs[i].class+}</td>
+        <td class="bcs"  style="display: none;" >{+$cs[i].bcname+}</td>
+        <th class="para_pjName" >{+$cs[i].name+}</th>
+         <td style="display: none;">{+$cs[i].points+}</td>
+        <td style="display: none;">{+$cs[i].pointsatt+}</td>
+        <td class='peilvatt'>{+$cs[i].peilvatt+}</td>
+        <td>{+$cs[i].peilvatt1+}</td>
+        <td>{+$cs[i].maxatt+}</td>
+        <td style="display: none;">{+$cs[i].flypeilv+}</td>
+        <td style="display: none;">{+$cs[i].flyifok+}[0/1]</td>
+
+        <td class='hide'>{+$cs[i].a1+}</td>
+        <td class='pc'>{+$cs[i].b1+}</td>
+        <td class='pc'>{+$cs[i].c1+}</td>
+        <td class='pc'>{+$cs[i].d1+}</td>
+		{+if ($cs[i].name=='特碼' || $cs[i].name=='正特')+}
+        <td class='pc'>{+$cs[i].ab1+}</td>
+		{+else+}
+		<td></td>
+		{+/if+}
+        
+        <td class='hide'>{+$cs[i].a2+}</td>
+        <td class='hide'>{+$cs[i].b2+}</td>
+        <td class='hide'>{+$cs[i].c2+}</td>
+        <td class='hide'>{+$cs[i].d2+}</td>
+        <td class='hide'>{+$cs[i].ab2+}</td>
+        
+        <td class='hide'>{+$cs[i].a3+}</td>
+        <td class='hide'>{+$cs[i].b3+}</td>
+        <td class='hide'>{+$cs[i].c3+}</td>
+        <td class='hide'>{+$cs[i].d3+}</td>
+        <td class='hide'>{+$cs[i].ab3+}</td>
+        
+        <td class='hide'>{+$cs[i].a4+}</td>
+        <td class="hide">{+$cs[i].b4+}</td>
+        <td class="hide">{+$cs[i].c4+}</td>
+        <td class="hide">{+$cs[i].d4+}</td>
+        <td class="hide">{+$cs[i].ab4+}</td> 
+        
+        <td class='hide'>{+$cs[i].a5+}</td>
+        <td class="hide">{+$cs[i].b5+}</td>
+        <td class="hide">{+$cs[i].c5+}</td>
+        <td class="hide">{+$cs[i].d5+}</td>
+        <td class="hide">{+$cs[i].ab5+}</td>
+     </TR>
+  {+/section+}
+  </tbody>
+</table>
+	</td>
+
+        </tr>
+        <tr>
+	<td height="30" colspan="2" align="center">
+		<div class=" data_footer control">
+			<input type="button" value="保存" class="button send bnt_1">
+			<input type="button" value="重置" class="button cancel bnt_2">
+		</div>
+		 </td>
+        </tr>
+		 </table>
+</div>
+</div>
+</div>
+<script language="javascript">
+var gid={+$gid+};
+</script>
+<div id='test'></div>
+</body>
+</html>

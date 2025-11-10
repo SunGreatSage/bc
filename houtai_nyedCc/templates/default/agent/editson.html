@@ -1,0 +1,40 @@
+{+include file='header.html'+}
+<script language="javascript" src="/js/md5.js"></script>
+<style type="text/css">
+.addtb{width:210px;display:none;position:absolute;background:#fff}
+.addtb td{text-align:left;}
+
+.conwidth{width:400px;}
+.add_tb td{width:35%;height:30px;line-height:30px;text-align:left;padding-left:20px;}
+.add_tb th{width:15%;height:30px;line-height:30px;}
+.add_tb {background:#fff}
+
+</style>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='editson';
+</script>
+<div class="xbody1">
+    <table class="tinfo wd100">
+  <TR>
+  {+section name=i loop=$field_arr+}
+   <th style="width:150px;">{+$field_arr[i].name+}</th>
+   {+/section+}
+   </TR>     
+   {+$data+}
+   </table>
+   <table class="page tinfo wd100" style="margin-top:20px;">
+    {+$pstr+}
+   </table>
+    <table class="tinfo addtb">
+      <TR><Th>子帐号</Th><TD><label id='user0'>{+$username+}</label><input type="text" id='user1' maxlength="1" class="txt1" /><input type="hidden" id='action' value="add" /></TD></TR>
+      <TR><Th>密码</Th><TD><input type="password" id='pass1x' class="intext" /></TD></TR>
+      <TR><Th>重复密码</Th><TD><input type="password" id='pass2x' class="intext" /></TD></TR>
+      <TR><th colspan="2" class="tcenter"><input type="button" id='addbtn' class="btn1 btnf" value="添加" /><input type="button" id='closebtn' class="btn1 btnf" value="关闭" /></th></TR>
+   </table>
+   <input type="hidden" value="{+$uid+}" name='uid' id='uid' />
+</div>
+<div id='test'></div>
+</body>
+</html>

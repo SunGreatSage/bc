@@ -1,0 +1,55 @@
+/*------------------------- 整体样式 -------------------------*/
+body{
+	font-family:Microsoft YaHei;
+	font-size:14px;
+	color:#313131;
+	margin:0;
+	padding:0;
+}
+
+div,form,img,ul,ol,li,dl,dt,dd{
+	margin:0;
+	padding:0;
+	border:0;
+	list-style:none;
+}
+
+a{
+	text-decoration:none;
+    color: #333;
+}
+
+a:hover{
+	color:#fff;
+}
+
+textarea:focus, input:focus{
+    outline: 0;
+}
+
+.Crown {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    display: inline-block;
+    margin-right: 3px;
+    background: url(./Crown.gif) no-repeat;
+}
+
+.Essential {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    display: inline-block;
+    margin-right: 3px;
+    background: url(./Essential.gif) no-repeat;
+}
+
+.container{
+	width:100%;
+}
+
+.reg_msg {
+    text-align: center;
+}
+/*------------------------- 整体样式 -------------------------*/

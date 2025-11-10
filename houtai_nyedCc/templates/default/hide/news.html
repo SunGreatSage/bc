@@ -1,0 +1,130 @@
+{+include file='header2.html'+}
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='news';</script>
+<div class="jt-container">
+	<div class="top_info">
+		<span class="title">系统公告发布</span>
+		<span class="right">&nbsp;&nbsp;<a class="back" onclick="javascript:history.back(-1);" href="javascript:void(0);">返回</a></span>
+	</div>
+	<div class="user_list s_main">
+	<form method="POST" style="margin:0">
+		<input type="hidden" value="addnews" name="xtype">
+			<table style="border-collapse:unset;" class="data_table list info_table">
+			<thead>
+	 <tr><th colspan="2">公告发布</th></tr>
+	   </thead>
+				<tbody>
+            <tr>
+            <td class="txt-right txt-paddin-right w30" style="background: #f6f6f6;" >公告内容</td>
+            <td class="txt-left txt-paddin-left">
+                <div>
+                  <textarea cols="80" rows="5" id=content name="content"></textarea> 
+                </div>
+                <div style="margin-top: 10px;" ><select name=wid style="display: none;">
+        <OPTION value="0">所有公司</OPTION>
+        {+section name=k loop=$web+}
+        <OPTION value="{+$web[k].wid+}">{+$web[k].webname+}</OPTION>
+        {+/section+}
+        </select> <input type="submit"  value="发布公告" class="bnt_1 button"></div></td>
+            </tr>
+            </tbody>
+			</table>
+			
+		<table style="border-collapse:unset;margin-top: 10px;" class="data_table list table_center news_tb">
+			
+		<thead>
+		<tr>
+			<th style="width: 70px;">
+				<input type="checkbox" id="clickall">全选
+			</th>
+			<th style="width: 70px;">
+				序  号
+			</th>
+			<th style="width: 250px;">
+				新增日期
+			</th>
+            <th style="display: none;">
+				公司
+			</th>
+           <th style="width: 70px;display: none;">
+				参数
+			</th>
+			<th style="width: 70px;">
+				启用
+			</th>
+			<th style="width: 100px;">
+				可见
+			</th>
+			<th style="width: 70px;">
+				滚动
+			</th>
+			<th style="width: 70px;">
+				弹出
+			</th>
+			<th class="conwidth">
+				内容
+			</th>
+			
+			<th style="width: 150px;">
+				<input type="button" class="btn7 btnf dels" id="delall"  style="width: 70px;" value="删除选中">
+			</th>
+		</tr>
+        </thead>
+		<tbody>
+         {+section name=i loop=$news+}
+		<tr>
+			<td>
+				<input class='chk' type="checkbox" value='{+$news[i].id+}' />
+			</td>
+			<td>
+				{+$news[i].id+}
+			</td>
+			<td>
+				<input type="text" class="time" value='{+$news[i].time+}' />
+			</td>
+            <td style="display: none;">
+               <select class=wid>
+                <OPTION {+if $news[i].wid==0+}selected{+/if+} value="0">所有公司</OPTION>
+        {+section name=k loop=$web+}
+        <OPTION {+if $web[k].wid==$news[i].wid+}selected{+/if+} value="{+$web[k].wid+}">{+$web[k].webname+}</OPTION>
+        {+/section+}
+        </select>
+            </td>
+           <td style="display: none;">
+				<input type="checkbox" class="cs" value='1' {+if $news[i].cs==1+}checked{+/if+} />
+			</td> 
+			<td>
+				<input type="checkbox" class="ifok" value='1' {+if $news[i].ifok==1+}checked{+/if+} />
+			</td>
+			<td>
+			  <SELECT class="agent">
+                <OPTION value="2" {+if $news[i].agent==2+}selected{+/if+}>所有</OPTION>
+                <OPTION value="1" {+if $news[i].agent==1+}selected{+/if+}>代理</OPTION>
+                <OPTION value="0" {+if $news[i].agent==0+}selected{+/if+}>会员</OPTION>
+              </SELECT>
+			
+            </td>
+			<td>
+				<input type="checkbox" class="gundong" value='1' {+if $news[i].gundong==1+}checked{+/if+} />
+			</td>
+			<td>
+				<input type="checkbox" class="alert" value='1' {+if $news[i].alert==1+}checked{+/if+} />
+			</td>
+			<td class="conwidth">
+				<textarea   cols="50" class="con" rows="3">{+$news[i].content+}</textarea>
+			</td>
+			
+			<td>
+			<input type="button" class="btn1 btnf edit" value="修改">
+			</td>
+		</tr>
+{+/section+}
+</tbody>
+		</table>
+	</form>
+</div>
+</div>
+<div id="test">
+</body>
+</html>

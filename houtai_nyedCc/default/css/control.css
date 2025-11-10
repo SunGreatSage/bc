@@ -1,0 +1,228 @@
+@CHARSET "UTF-8";
+
+/*.top_info .title { color: #339100; }*/
+
+.top_info #gameName { margin: 0 10px; color: #5a3500; font-weight: bold; }
+
+.top_info #cdClose { color: #344b50; font-weight: bold; }
+
+.top_info #cdDraw { color: red; font-weight: bold; }
+
+.top_info .bresult { margin-left: 15px; }
+
+.top_info .period { float: left; color: #5a3500; font-weight: bold; }
+
+#drawInfo { float: left; text-align: right; margin-right: 15px; height: 27px; line-height: 27px; margin-top: 4px; }
+
+#drawInfo .draw_number { font-weight: bold; color: #bd0000; margin-right: 5px; }
+
+#drawInfo .draw_number span { color: #5b3600; }
+
+#drawInfo ul { float: right; margin: 0; padding: 0; list-style: none; overflow: hidden; }
+
+#drawInfo li { float: left; }
+
+.top_info select, .top_info #cdRefresh, .top_info #refreshInteval { float: left; }
+
+.top_info .right select, .top_info .right input { margin-top: 8px; }
+
+.top_info #cdRefresh { display: block; width: 80px; text-align: right; margin-right: 5px; color: black; }
+
+.top_info #cdRefresh span { color: #5a3500; }
+
+.top_info #cdRefresh input { padding: 0; color: #555; }
+
+.main .data_table td, .main .data_table th { padding: 0; height: 27px; text-align: center; padding: 2px 3px; }
+
+.main .data_table thead th, .data_table .head th { height: 25px; text-align: center; color: black; }
+
+.data_table .foot { background: white; }
+
+.data .item th { width: 14%; background: #fffbf0; }
+
+.data_table .amount a { color: #299a26; }
+
+.data_table .risk { line-height: normal; }
+
+.data_table .risk a { color: #555; }
+
+.data_table .risk .high { color: red; }
+
+.data_table .risk div, .data_table .odds div { height: 18px; line-height: 18px; }
+
+.data_table .risk div span { float: left; display: inline-block; background: url("images/k3t.gif"); width: 29px; height: 16px; font-size: 0; text-indent: -9999px; margin-top: 1px; }
+
+.data_table .risk div .t2 { background-position: center; }
+
+.data_table .risk div .t3 { background-position: bottom; }
+
+.data_table .ball th, .data_table .item .odds { color: #5a3500; font-size: 15px; font-family: Arial, Helvetica, Verdana, Geneva, sans-serif; }
+
+.data_table .item .odds { color: #bd0000; }
+
+.main .data .oddsCtl { width: 20px; }
+
+.data .oddsCtl a { display: block; width: 19px; height: 20px; text-indent: -9999px; font-size: 0; cursor: pointer; }
+
+.data .oddsCtl .add { background: url("../images/add.png") no-repeat; }
+
+.data .oddsCtl .sub { background: url("../images/sub.png") no-repeat; }
+
+.main .data_table .oddsCtl,
+.main .table_ball .oddsCtl { width: 20px; }
+
+.data_table .oddsCtl a, .table_ball .oddsCtl a { display: block; width: 19px; height: 20px; text-indent: -9999px; font-size: 0; cursor: pointer; }
+
+.data_table .oddsCtl .add, .table_ball .oddsCtl .add { background: url("../images/add.png") no-repeat; }
+
+.data_table .oddsCtl .sub, .table_ball .oddsCtl .sub { background: url("../images/sub.png") no-repeat; }
+
+.data .foot_total { text-align: center; }
+
+.data .game_total { text-align: left; margin-left: 0px; margin-top: 5px; }
+
+.lt_BJPK10 .game_total { margin-top: 100px; }
+
+.main .total { color: #339166; font-weight: bold; }
+
+.data_table .foot span { font-weight: bold; }
+
+.data .max_risk { color: red; font-weight: bold; }
+
+.data .min_risk { font-weight: bold; }
+
+.type_total a, .type_total a:hover { /*color: #344b50;*/ text-decoration: none; }
+
+.type_total a span { color: #5a3500; }
+
+.layout .panel { padding: 0 2px; vertical-align: text-bottom; }
+
+.layout .type_total, .layout .type_total table { width: 110px; font-family: "宋体"; }
+
+.layout .type_total td { background: #fff; text-align: left; }
+
+.layout #yilou, .layout #yilou table { width: 50px; }
+
+.layout #yilou th { border-left: none; color: #5a3500; }
+
+.layout #yilou .head th { color: #555; }
+
+#yilou .max { color: red; }
+
+.layout #changlong, .layout #changlong table { width: 135px; }
+
+.layout #changlong thead th { font-weight: bold; }
+
+.layout #changlong tbody th { width: 88px; background: #edf5fc; text-align: left; padding-left: 3px; color: #5a3500; font-weight: normal; }
+
+.layout #changlong tbody td { width: 35px; color: red; }
+
+.layout .nt thead th { border-top: none; }
+
+.layout #historyResult { width: 185px; }
+
+#historyResult table { width: auto; }
+
+#historyResult .period { padding: 0 4px; }
+
+#historyResult .other { width: 30px; }
+
+#historyResult .tie { color: #299a26; }
+
+#historyResult .D { color: red; }
+
+.period_close .data .item td, .period_close .data .item th { background: #eee; }
+
+.control .input { width: 100px; }
+
+#backPanel { border-top: 1px solid #B0C47A; border-left: 1px solid #B0C47A; border-right: 1px solid #B0C47A; background: white; width: 145px; overflow: hidden; position: absolute; z-index: 10; }
+
+#backPanel .title { background: url("images/bg2.jpg") repeat-x; text-align: center; font-weight: bold; height: 22px; line-height: 22px; color: black; border-bottom: 1px solid #B0C47A; }
+
+#backPanel .input { width: 65px; margin-top: 2px; }
+
+#backPanel span { padding-left: 3px; }
+
+#backPanel label { display: block; float: left; width: 45px; text-align: center; border-right: 1px solid #B0C47A; }
+
+#backPanel div { clear: both; border-bottom: 1px solid #B0C47A; height: 24px; line-height: 24px; }
+
+#backPanel .bottom { text-align: center; }
+
+#backPanel .odds { color: #5a3500; }
+
+.lt_PK10 .layout .type_total td { height: 27px; padding-left: 3px; background: #ecffec; }
+
+.lt_KLSF .table_zh, .lt_KL8 .table_zh { width: 650px; margin: 0 auto; }
+
+.lt_KLSF .data_table .ball19 th, .lt_KLSF .data_table .ball20 th, #yilou .b19 th, #yilou .b20 th { color: red; }
+
+.lt_PK10 .data_table .ball1 th { color: #90926a; }
+
+.lt_PK10 .data_table .ball2 th { color: #3a84c1; }
+
+.lt_PK10 .data_table .ball3 th { color: #0e111a; }
+
+.lt_PK10 .data_table .ball4 th { color: #db7e31; }
+
+.lt_PK10 .data_table .ball5 th { color: #4bc2c0; }
+
+.lt_PK10 .data_table .ball6 th { color: #210569; }
+
+.lt_PK10 .data_table .ball7 th { color: #616370; }
+
+.lt_PK10 .data_table .ball8 th { color: #be0d17; }
+
+.lt_PK10 .data_table .ball9 th { color: #82454a; }
+
+.lt_PK10 .data_table .ball10 th { color: #206538; }
+
+.lt_KL8 .data_table .ball th { color: #7044b6; }
+
+.main .data_footer .note { font-weight: bold; }
+
+.main .data_footer .calc { color: #7300aa; }
+
+.main .data_footer span { display: inline-block; height: 30px; }
+
+.main .data_footer input { }
+
+.data_table .subhead { background: #F6FED3; }
+
+#details { width: 750px; margin: auto; }
+
+#details .title { border: 1px solid #B0C47A; margin: 5px 0; text-align: center; height: 25px; line-height: 25px; }
+
+#details .title .input { width: 68px; }
+
+#detailName { color: red; font-weight: bold; }
+
+#details .data_table .quickamount { width: 70px; }
+
+#details .data_table .quickamount input { width: 68px; }
+
+#details .data_table .quickresult { width: 70px; }
+
+#details .data_table .op { width: 35px; }
+
+#oddsControl { position: absolute; float: left; }
+
+/*.layout .table_ball tbody tr.selected th,.layout .table_ball tbody tr.selected td{background: none repeat 0 0 #FFC214;}*/
+.layout .table_ball tbody tr th.selected,.layout .table_ball tbody tr td.selected,#main .table_ball td.selected { background: none repeat 0 0 #FFC214; }
+.data_footer { /*border: 1px solid #dad4cb;*/ padding: 3px 5px; margin: 5px 0 0 0; line-height: 30px; background: #fff; }
+.data_footer #oddsSetting div { margin-left: 12px; float: left; }
+.data_footer #oddsSetting .oddsControl span { float: left; display: block; }
+.data_footer #oddsSetting .oddsCtl { margin-top: 5px; margin-left: 2px; }
+.data_footer .oc0 { background: url(../images/add.png) no-repeat; float: left; }
+.data_footer .oc1 { background: url(../images/sub.png) no-repeat; float: left; }
+.data_footer .oddsCtl { width: 19px; height: 20px; }
+.main .data_footer input[type="text"] { border: 1px solid #d8c28a; padding: 2px; }
+.main .data_footer input[type="button"], .main .data_footer input[type="reset"] { margin: 0 2px; padding: 2px 5px; background: url("../images/btn_bg1.png") repeat-x; border: 1px solid #831d07; border-radius: 2px; color: #fff; }
+.bottomTable{
+    width: 100%;
+z-index:99999999;  _position:absolute; /* for IE6 */ 
+ position:fixed;
+            bottom:0;
+ 
+ }
+#lhcIntimesheet .data_table td, #lhcIntimesheet .data_table th { padding: 0; height: 22px; text-align: center; padding: 2px 3px; }

@@ -1,0 +1,617 @@
+{+include file='header.html'+}
+<script src="/js/md5.js" language="javascript"></script>
+<script src="/js/default/jsusern/makeuser.js" language="javascript"></script>
+{+if $gid==100+}
+<script src="/js/default/jsusern/lhcuser.js" language="javascript"></script>
+{+else+}
+<script src="/js/default/jsusern/ssuser.js" language="javascript"></script>
+{+/if+}
+<link href="/imgn/user.css" rel="stylesheet" />
+<style>
+.toptb .logotd{padding:0;background:url(../imgn/{+$wid+}.jpg) no-repeat;}
+.game3 label{display:block;float:left;border:1px solid  #CFF;text-align:left;padding-left:1px;margin:1px;cursor:pointer;overflow:hidden;font-size:13px;color:#366;}
+.game3 label.s{background:#F00;font-weight:bold;color:#FFF;font-size:13px;}
+.imgsmall{width:14px;height:14px;border:none}
+label.qius{text-align:center;display:block;float:left;}
+label.qiu101{background:url('../img/no_00.gif');text-align:center;width:26px;height:26px;display:block;float:left;line-height:26px;font-weight:bold}
+label.qiu1031{background:url('../img/no_00.gif');text-align:center;width:26px;height:26px;display:block;float:left;line-height:26px;font-weight:bold}
+label.qiu1032{background:url('../img/no_00.gif');text-align:center;width:26px;height:26px;display:block;float:left;line-height:26px;font-weight:bold}
+
+.qiua{margin:auto;float:none;width:26px;height:26px;background:url(../imgn/ball_blue1.png);line-height:26px;text-align:center}
+.qiub{margin:auto;float:none;width:26px;height:26px;background:url(../imgn/ball_red1.png);line-height:26px;text-align:center}
+.qiua1{margin:auto;float:none;width:20px;height:20px;background:url(../imgn/ball_blue2.png);line-height:20px;text-align:center}
+.qiub1{margin:auto;float:none;width:20px;height:20px;background:url(../imgn/ball_red2.png);line-height:20px;text-align:center}
+
+
+.qiuaa{margin:auto;float:left;width:26px;height:26px;background:url(../imgn/ball_red1.png);line-height:26px;text-align:center;margin-right:3px;}
+.qiuba{margin:auto;float:left;width:26px;height:26px;background:url(../imgn/ball_blue1.png);line-height:26px;text-align:center;margin-right:3px;}
+.qiuca{margin:auto;float:left;width:26px;height:26px;background:url(../imgn/ball_green1.png);line-height:26px;text-align:center;margin-right:3px;}
+
+.qiuab{margin:auto;float:none;width:26px;height:26px;background:url(../imgn/ball_red1.png);line-height:26px;text-align:center}
+.qiubb{margin:auto;float:none;width:26px;height:26px;background:url(../imgn/ball_blue1.png);line-height:26px;text-align:center}
+.qiucb{margin:auto;float:none;width:26px;height:26px;background:url(../imgn/ball_green1.png);line-height:26px;text-align:center}
+
+.skj div{float:left;margin-left:1px;}
+.status label{color:#F00}
+td.byellow{background:#95DDFF}
+
+.qiured{font-weight:bold; color:White;  float:none;  margin:0px auto;width:21px; height:21px; line-height:21px; font-size:13px; text-align:center; background:#FB0200 url(../imgn/bgbm.gif) no-repeat left top;background-color:#FB0200;}
+.qiublue{font-weight:bold; color:White;  float:none;  margin:0px auto; width:21px; height:21px; line-height:21px; font-size:13px; text-align:center; background:#FB0200 url(../imgn/bgbm.gif) no-repeat left top;background-color:#0000FE; background-position:-42px top;}
+.qiugreen{font-weight:bold; color:White;  float:none;  margin:0px auto; width:21px; height:21px; line-height:21px; font-size:13px; text-align:center; background:#FB0200 url(../imgn/bgbm.gif) no-repeat left top;background-color:#007F04; background-position:-21px top;}
+.qiured1{font-weight:bold; color:White;  float:left;  width:21px; height:21px; line-height:21px; font-size:13px; text-align:center; background:#FB0200 url(../imgn/bgbm.gif) no-repeat left top;background-color:#FB0200;margin-right:3px;}
+.qiublue1{font-weight:bold; color:White;  float:left;  width:21px; height:21px; line-height:21px; font-size:13px; text-align:center; background:#FB0200 url(../imgn/bgbm.gif) no-repeat left top;background-color:#0000FE; background-position:-42px top;margin-right:3px;}
+.qiugreen1{font-weight:bold; color:White;  float:left;  width:21px; height:21px; line-height:21px; font-size:13px; text-align:center; background:#FB0200 url(../imgn/bgbm.gif) no-repeat left top;background-color:#007F04; background-position:-21px top;margin-right:3px;}
+</style>
+</head><body>
+<script language="javascript" id='myjs'>
+$(function(){myready();})
+top.document.title = document.title;
+var sss='make';
+var js=0;
+function json_encode_js(aaa) {
+	var i, s, a, aa = [];
+	if (typeof(aaa) != "object") {
+		alert("ERROR json");
+		return
+	}
+	for (i in aaa) {
+		s = aaa[i];
+		a = '"' + i + '":';
+		if (typeof(s) == 'object') {
+			a += json_encode_js(s)
+		} else {
+			a += '"' + s + '"'
+		}
+		aa[aa.length] = a
+	}
+	return "{" + aa.join(",") + "}"
+}
+function obj2str(o) {
+	var r = [];
+	if (typeof o == "string") return "\"" + o.replace(/([\'\"\\])/g, "\\$1").replace(/(\n)/g, "\\n").replace(/(\r)/g, "\\r").replace(/(\t)/g, "\\t") + "\"";
+	if (typeof o == "object") {
+		if (!o.sort) {
+			for (var i in o) r.push(i + ":" + obj2str(o[i]));
+			if ( !! document.all && !/^\n?function\s*toString\(\)\s*\{\n?\s*\[native code\]\n?\s*\}\n?\s*$/.test(o.toString)) {
+				r.push("toString:" + o.toString.toString())
+			}
+			r = "{" + r.join() + "}"
+		} else {
+			for (var i = 0; i < o.length; i++) {
+				r.push(obj2str(o[i]))
+			}
+			r = "[" + r.join() + "]"
+		}
+		return r
+	}
+	return o.toString()
+}
+function getResult(num, n) {
+	return Math.round(num * Math.pow(10, n)) / Math.pow(10, n)
+}
+function getresult(num, n) {
+	return num.toString().replace(new RegExp("^(\\-?\\d*\\.?\\d{0," + n + "})(\\d*)$"), "$1") + 0
+}
+function err() {
+	if ($(".sendtb:hidden").length != 1 & $(".sendtb .print:visible").length != 1) {
+		alert("è¯·æ³¨æ„:\r\n\r\næ‚¨æ­¤æ¬¡æŠ•æ³¨æœ‰å¯èƒ½éƒ¨åˆ†ç”Ÿæ•ˆ,ç”±äºæ‚¨ç›®å‰ç½‘ç»œæƒ…å†µä¸å¥½!\r\n\r\nå¦‚æœæ‚¨å¦å¼€ä¸€ä¸ªçª—å£é‡æ–°ç™»é™†,è¯·åŠ¡å¿…å…ˆå…³é—­æœ¬çª—å£,å¹¶åœ¨ç™»é™†åæ£€æŸ¥ä¸‹æ³¨çŠ¶å†µ!\r\n\r\næ‚¨ä¹Ÿå¯ä»¥ç‚¹å‡»<åˆ·æ–°èµ”ç‡>æŒ‰é’®æ¥ä¸­æ–­æœ¬æ¬¡æŠ•æ³¨,å¹¶è¯·ç¨åæ£€æŸ¥ä¸‹æ³¨çŠ¶å†µ,\r\n\r\nè°¢è°¢!")
+	}
+}
+
+</script>
+<FORM id='form' name='form' >
+<div class="top">
+ <table class='toptb' cellpadding="0" cellspacing="0" border="0">
+  <tr>
+   <td rowspan="3" class="logotd"><div class="logo">
+     <h1><span><!--{+$webname+}--></span></h1>
+    </div></td>
+    
+   <td width="100%" class="game3 {+if $gamecs|@count==1+} hide{+/if+}" >
+      {+section name=i loop=$gamecs+}
+    <label gid={+$gamecs[i].gid+} class='{+$gamecs[i].class+}{+if $gid==$gamecs[i].gid+} s{+/if+}' >{+if $gid==$gamecs[i].gid+}{+$gamecs[i].gname+}{+else+}{+$gamecs[i].sgname+}{+/if+}</label>
+     {+/section+}
+  </td>
+  </tr>
+  <Tr>
+   <td ><div class="menu">
+     <ul class="big">
+      <li class="lib">
+       <div><span><a href="#">æœªç»“æ˜ç»†</a></span></div>
+      </li>
+      <li class="bao">
+       <div><span><a href="#">æŠ¥è¡¨</a></span></div>
+      </li>
+      <li class="uinfo" >
+       <div><span><a href="#">ä¿¡ç”¨èµ„æ–™</a></span></div>
+      </li>      
+      <li class="edit" >
+       <div><span><a href="#">èµ„æ–™æ›´æ”¹</a></span></div>
+      </li>
+      <li  class="kj">
+       <div><span><a href="#">å¼€å¥–ç»“æœ</a></span></div>
+      </li>
+      <li  class="rule">
+       <div><span><a href="#">æ¸¸æˆè§„åˆ™</a></span></div>
+      </li>
+      <li class="newsall" >
+       <div><span><a href="#">ç³»ç»Ÿæ¶ˆæ¯</a></span></div>
+      </li>
+      {+if $gid==100+}
+      <li class="kjnow" >
+       <div><span><a href="#">å¼€å¥–ç›´æ’­</a></span></div>
+      </li>
+      {+/if+}
+      <li class="logout" >
+       <div><span class="twoTxt"><a href="#">ç™»å‡º</a></span></div>
+      </li>
+     <!-- <li style="width:500px;">
+      
+      </li>-->
+     </ul>
+    </div></td>
+  </Tr>
+  <tr>
+   <td width="100%" style="text-align:right;"><div class='main'>
+     <ul>
+      {+if $gid!=100+} <li class="menus"><span><a href='javascript:void(0)' bid=''>ä¸»ç›˜åŠ¿</a></span></li>{+/if+}
+      {+if $gid==107+} <li class="menus"><span><a href='javascript:void(0)' bid='15'>æ’å1~5</a></span></li>
+      <li class="menus"><span><a href='javascript:void(0)' bid='610'>æ’å6~10</a></span></li>
+      {+/if+}
+      {+if $gid==100+}
+          {+section name=i loop=$b+}
+             {+if $smarty.section.i.index==3+}
+                <li class="menus"><span><a href='javascript:void(0)' bid='1-6'>æ­£ç‰¹1~6</a></span></li>
+             {+/if+}
+             <li class="menus"><span><a href='javascript:void(0)' bid='{+$b[i].bid+}'>{+$b[i].name+}</a></span></li>
+          {+/section+}
+          
+      {+elseif ($gid!=151 & $gid!=152)+}    
+          {+section name=i loop=$b+}
+      
+             <li class="menus"><span><a href='javascript:void(0)' bid='{+$b[i].bid+}'>{+$b[i].name+}</a></span></li>
+          {+/section+}
+      {+/if+}
+      
+     </ul>
+    </div></td>
+  </tr>
+ </table>
+</div>
+<div class="bottom" >
+<table   style="float:left;width:1260px;" border="0"  cellpadding="0" cellspacing="0" >
+ <tr>
+ 
+ <td  class="tinfo linfo {+$class+}tb"  valign="top" ><!--left-->
+  <table class="uinfo">
+   <tr>
+    <th colspan="2" class="bt">æ‚¨ çš„ å¸ æˆ· ä¿¡ æ¯ï¼š</th>
+   </tr>
+   <tr>
+    <th style="width:40%">ä¼š å‘˜ å¸ å·:</th>
+    <td>{+$username+}</td>
+   </tr>
+ {+if $fudong==1+}
+    <tr>
+    <th class="fastm">[ç°é‡‘]ä¿¡ ç”¨ é¢ åº¦:</th>
+    <td class="fastm moneym">{+$maxmoney+}</td>
+   </tr>
+   <tr class="hide">
+    <th class="fastm">[ç°é‡‘]å·² ç”¨ é¢ åº¦:</th>
+    <td class="fastm moneyuse">{+$moneyuse+}</td>
+   </tr>
+   <tr>
+    <th class="fastm">[ç°é‡‘]å¯ ç”¨ é¢ åº¦:</th>
+    <td class="fastm money">{+$money+}</td>
+   </tr>
+ {+else+}  
+   {+if $gid==100+}
+   <tr>
+    <th class="slow">[ä½é¢‘]ä¿¡ ç”¨ é¢ åº¦:</th>
+    <td class="slowe moneym">{+$maxmoney+}</td>
+   </tr>
+   <tr>
+    <th class="slow">[ä½é¢‘]å·² ç”¨ é¢ åº¦:</th>
+    <td class="slow moneyuse">{+$moneyuse+}</td>
+   </tr>
+   <tr>
+    <th class="slow">[ä½é¢‘]å¯ ç”¨ é¢ åº¦:</th>
+    <td class="slow money">{+$money+}</td>
+   </tr>
+   {+else+}
+   <tr>
+    <th class="fastm">[å¿«å¼€]ä¿¡ ç”¨ é¢ åº¦:</th>
+    <td class="fastm moneym">{+$maxmoney+}</td>
+   </tr>
+   <tr>
+    <th class="fastm">[å¿«å¼€]å·² ç”¨ é¢ åº¦:</th>
+    <td class="fastm moneyuse">{+$moneyuse+}</td>
+   </tr>
+   <tr>
+    <th class="fastm">[å¿«å¼€]å¯ ç”¨ é¢ åº¦:</th>
+    <td class="fastm money">{+$money+}</td>
+   </tr>
+   {+/if+}
+  {+/if+} 
+   <tr>
+    <th>å½“ å‰ æ¸¸ æˆ:</th>
+    <td>{+$gname+}</td>
+   </tr>
+   <tr>
+    <th>å½“ å‰ æœŸ æ•°:</th>
+    <td class="qishu">{+$thisqishu+}</td>
+   </tr>
+
+  </table>
+  <table  style="width:232px;display:none" class="tinfo">
+   <tr>
+    <td colspan="2" style="text-align:center"><input type="button" value="æ¸…ç©º" class="cancel" style="font-weight:bold;color:#F96;margin-right:10px;" />
+     <input type="button" value="æŠ•-æ³¨" class="exe" title="è¯•è¯•å›è½¦é”®" style="font-weight:bold;color:#D50000;margin-right:10px;" />
+     <input type="button" value="é•¿é¾™" class="longbtn" style="font-weight:bold;color:blue" /></td>
+   </tr>
+  </table>
+  
+  <table class="last15 tinfo">
+   <tr>
+    <th colspan="5" class="bt">æœ€æ–°åç¬”ä¸‹æ³¨è®°å½•
+     <input type="button" value="å…³" class='btn1 btnf closelast15' /></th>
+   </tr>
+   <tr>
+   <Th>æœŸæ•°</Th>
+    <Th>å†…å®¹</Th>
+    <Th >èµ”ç‡</Th>
+    <Th >é‡‘é¢</Th>
+    <Th >æ—¶é—´</Th>
+   </tr>
+  </table>
+  
+  {+if ($gid!=100  & $gid!=151 & $gid!=152)+}
+  <table class="tinfo longl">
+   <tr>
+    <th class="{+$class+} longlth hide">{+$gname+}</th>
+   </tr>
+   <tr>
+    <td  class="{+$class+} longlth"><input type="button" class="updatel red chu" value="æ›´æ–°"  /> 
+    {+if ($gid==101 | $gid==111 | $gid==113 | $gid==115 | $gid==108 | $gid==109 | $gid==110 | $gid==112 | $gid==117 | $gid==163 | $gid==116 | $gid==118 | $gid==119 )+}
+     
+     <input type="button" class="hm tem click" value="å·ç " />
+     <input type="button" class="ds tem" value="å•åŒ" />
+     <input type="button" class="dx tem" value="å¤§å°" />
+     <input type="button" class="zh tem" value="è´¨åˆ" />
+     {+elseif ($gid==103 | $gid==133 | $gid==135 | $gid==131 | $gid==132  | $gid==136)+}
+     <input type="button" class="hm tem click" value="å·ç " />
+     <input type="button" class="ds tem" value="å•åŒ" />
+     <input type="button" class="dx tem" value="å¤§å°" />
+     <input type="button" class="hds tem" value="åˆå•åŒ" />
+     </td>
+   </tr>
+   <tr>
+    <td  class="{+$class+} longlth"><input type="button" class="wdx tem" value="å°¾å¤§å°" />
+     <input type="button" class="fw tem" value="æ–¹ä½" />
+     <input type="button" class="zfb tem" value="ä¸­å‘ç™½" />
+     {+elseif ($gid==121 | $gid==123 | $gid==125 | $gid==127  | $gid==129)+}
+     <input type="button" class="hm tem click" value="å·ç " />
+     <input type="button" class="ds tem" value="å•åŒ" />
+     <input type="button" class="dx tem" value="å¤§å°" />
+     {+elseif ($gid==107)+}
+     <input type="button" class="hm tem click" value="å·ç " />
+     <input type="button" class="ds tem" value="å•åŒ" />
+     <input type="button" class="dx tem" value="å¤§å°" />
+     <input type="button" class="zh tem" value="è´¨åˆ" />
+    
+        
+     {+/if+}
+      </td>
+   </tr>
+   <tr>
+    <td><div class="longldiv"></div></td>
+   </tr>
+  </table>
+  {+/if+}
+  </td>
+ <!--left-->
+ <td class="con1"  valign="top"></td>
+ <td  id="con" valign="top">
+ 
+ <!--con-->
+ <table border="1" bordercolor="#CFCFFF" cellpadding="2" cellspacing="2"  class="newsmarquee" >
+  <tr>
+   <td bgcolor="#af88ff" nowrap="nowrap"><font color="#ffffff">&nbsp;&nbsp;å³æ—¶è®¯æ¯&nbsp; &nbsp;</font></td>
+   <td  valign="middle" width="69%" style="max-width:529px;"><marquee scrollamount="3" onMouseOver="this.stop();" onMouseOut="this.start();"  style="max-width:529px; overflow:hidden" >
+    </marquee></td>
+    <td width="30%" style="overflow:hidden">
+    <div class="status" qs='{+$thisqishu+}'>&nbsp;&nbsp;
+     <span class="panstatus" s='{+$panstatus+}'><span>{+if $panstatus==1+}è·ç¦»å…³ç›˜:{+else+}è·ç¦»å¼€ç›˜:{+/if+}</span>
+     <label class="time0" style="font-size:13px;font-weight:bold">{+$pantime+}</label>
+     </span>
+     {+if $gid==100+}
+     <span s='{+$otherstatus+}' class="otherstatus hide"><span>{+if $otherstatus==1+}è·æ­£ç å…³ç›˜:{+else+}è·ç¦»æ­£ç å¼€ç›˜:{+/if+}</span>
+     <label class="time1" style="font-size:13px;font-weight:bold">{+$othertime+}</label>
+     </span>
+     {+/if+}
+     </div>
+    </td>
+  </tr>
+ </table>
+ <table class="titles headtitle smenu {+$class+}" cellpadding="0" cellspacing="0" >
+  <tr>
+   <Td style="text-align:LEFT;" class=""></td>
+   <TD style="width:60%;text-align:right;font-weight:bolder">
+    <select class="abcd{+if $cpan==1+} hide{+/if+}">
+    {+foreach item=i from=$pan+}
+       <OPTION value="{+$i+}">{+$i+}ç›˜</OPTION>
+    {+/foreach+}
+    </select>
+    
+
+    &nbsp;
+    <SELECT class="ab{+if $gid!=100+} hide{+/if+}">
+    <OPTION value="A">ç‰¹ç¢¼A</OPTION>
+    <OPTION value="B">ç‰¹ç¢¼B</OPTION>
+    </SELECT>
+    <input type="button" value="æ¸…ç©º" class="cancel btn2 btnf" style="font-weight:bold;" />
+    <input type="button" value="åˆ·æ–°" class="reload btn3 btnf" />
+    <input type="button" value="å‹¾é€‰" class="fastg btn2 btnf" title="åœ¨å‹¾é€‰æ¨¡å¼ä¸‹ï¼Œç›´æ¥æŒ‰é€å‡ºå³å¯å®ŒæˆæŠ•æ³¨ï¼" style="font-weight:bold;" />
+    
+    </TD>
+  </tr>
+ </table>
+ {+if $gid!=100+}
+  <table border="0" style='border-color:#eee;background:#fff' cellpadding="2" cellspacing="2"  class="statustb tinfo" >
+  <tr>
+  <td valign="middle" width="20%" class='chu red' style="font-size:15px;">ä»Šæ—¥è¾“èµ¢:&nbsp;<label  style="color:green" class="synow">{+$synow+}</label></td>
+   <td  valign="middle" width="80%" style='padding-right:2px;height:26px;line-height:26px;' class="skj">
+    </td>
+  </tr>
+ </table>
+ {+/if+}
+ <table class="tinfo fastgtb">
+  <tr>
+   <td style="width:75%">
+   
+   {+if ($gid==101 | $gid==111 | $gid==113 | $gid==115 | $gid==108 | $gid==109 | $gid==110 | $gid==112)+}
+   <div class="v c101v c108v c109v c110v c111v c112v c113v c115v"><input style="" value="å•" class="fastv" type="button" title="1,3,5,7,9" />
+     <input style="" value="åŒ" class="fastv" type="button" title="0,2,4,6,8" />
+     <input value="å¤§" class="fastv" type="button"  title="5,6,7,8,9" />
+     <input value="å°" class="fastv" type="button" title="0,1,2,3,4">
+     <input value="è´¨" class="fastv" type="button" title="1,2,3,5,7" />
+     <input style="" value="åˆ" class="fastv" type="button" title="0,2,4,6,8"  />
+     <input value="0" class="fastv" type="button" />
+     <input value="1" class="fastv" type="button" />
+     <input value="2" class="fastv" type="button" />
+     <input value="3" class="fastv" type="button" />
+     <input value="4" class="fastv" type="button" />
+     <input value="5" class="fastv" type="button" />
+     <input value="6" class="fastv" type="button" />
+     <input value="7" class="fastv" type="button" />
+     <input value="8" class="fastv" type="button" />
+     <input value="9" class="fastv" type="button" />
+    <!-- <input value="å¯¹" class="fastv" type="button"  />-->
+    </div>
+    {+elseif ($gid==103 | $gid==133 | $gid==135 | $gid==131 | $gid==132  | $gid==136)+}
+    <div class="v c103v c133v c135v c131v c132v c136v"><input style="" value="å•" class="fastv" type="button" title="1,3,5,7,9,11,13,15,17,19" />
+     <input style="" value="åŒ" class="fastv" type="button"  title="2,4,6,8,10,12,14,16,18,20" />
+     <input value="å¤§" class="fastv" type="button" title="11,12,13,14,15,16,17,18,19,20" />
+     <input value="å°" class="fastv" type="button" title="1,2,3,4,5,6,7,8,9,10" />
+     <input value="åˆå•" class="fastv" type="button" title="1,3,5,7,9,10,12,14,16,18" />
+     <input style="" value="åˆåŒ" class="fastv" type="button" title="2,4,6,8,11,13,15,17,19,20" />
+     <input value="å°¾å¤§" class="fastv" type="button" title="5,6,7,8,9,15,16,17,18,19" />
+     <input value="å°¾å°" class="fastv" type="button" title="1,2,3,4,10,11,12,13,14,20" />     
+     <input value="ä¸œ" class="fastv blue" type="button" title="1,5,9,13,17" />
+     <input value="å—" class="fastv blue" type="button" title="2,6,10,14,18" />
+     <input value="è¥¿" class="fastv blue" type="button" title="3,7,11,15,19" />
+     <input value="åŒ—" class="fastv blue" type="button" title="4,8,12,16,20" />
+     <input value="ä¸­" class="fastv orange" type="button" title="1,2,3,4,5,6,7" />
+     <input value="å‘" class="fastv orange" type="button" title="8,9,10,11,12,13,14" />
+     <input value="ç™½" class="fastv orange" type="button" title="15,16,17,18,19,20" />
+
+    </div>
+    {+elseif ($gid==121 | $gid==123 | $gid==125 | $gid==127  | $gid==129)+}
+    <div class="v c121v c123v c125v c127v c129v"><input style="" value="å•" class="fastv" type="button" title="1,3,5,7,9" />
+     <input style="" value="åŒ" class="fastv" type="button"   title="2,4,6,8,10"  />
+     <input value="å¤§" class="fastv" type="button"  title="6,7,8,9,10"   />
+     <input value="å°" class="fastv" type="button"  title="1,2,3,4,5"  />
+    </div>
+    {+elseif ($gid==117 | $gid==163 | $gid==116 | $gid==118 | $gid==119 )+}
+   <div class="v c107v c117v c163v c116v c118v c119v"><input style="" value="å•" class="fastv" type="button"  title="1,3,5,7,9"   />
+     <input style="" value="åŒ" class="fastv" type="button"  title="2,4,6,8,10"   />
+     <input value="å¤§" class="fastv" type="button"  title="6,7,8,9,10"   />
+     <input value="å°" class="fastv" type="button"  title="1,2,3,4,5"   />
+     <input value="è´¨" class="fastv" type="button"  title="1,2,3,5,7"   />
+     <input value="åˆ" class="fastv" type="button"  title="4,6,8,9,10"  >
+    </div>
+    {+elseif ($gid==100)+}
+       <div class="v c100v" >
+         
+         <input value="å–®" class="fastv" type="button"  />
+         <input value="é›™" class="fastv" type="button"  />
+         <input value="å¤§" class="fastv" type="button"  />
+         <input value="å°" class="fastv" type="button"  />
+         <input value="åˆå–®" class="fastv" type="button"  />
+         <input value="åˆé›™" class="fastv" type="button"  />
+         <input value="å°¾å¤§" class="fastv" type="button"  />
+         <input value="å°¾å°" class="fastv" type="button"  />
+         <input value="ç´…" class="fastv red" type="button"  />
+         <input value="è—" class="fastv blue" type="button"  />
+         <input value="ç¶ " class="fastv lv" type="button"  />
+         <input value="å®¶ç•œ" class="fastv" type="button"  />
+         <input value="é‡ç¸" class="fastv" type="button"  />
+         <input value="å‰" class="fastv" type="button"  />
+         <input value="å¾Œ" class="fastv" type="button"  />
+         <input type="checkbox" value="1" class="tmode"  />å–åŒ <input type="checkbox" value="2" class="tmode"   />å–æ€»
+         <BR />
+         <input value="0å°¾" class="fastv" type="button"  />
+         <input value="1å°¾" class="fastv" type="button"  />
+         <input value="2å°¾" class="fastv" type="button"  />
+         <input value="3å°¾" class="fastv" type="button"  />
+         <input value="4å°¾" class="fastv" type="button"  />
+         <input value="5å°¾" class="fastv" type="button"  />
+         <input value="6å°¾" class="fastv" type="button"  />
+         <input value="7å°¾" class="fastv" type="button"  />
+         <input value="8å°¾" class="fastv" type="button"  />
+         <input value="9å°¾" class="fastv" type="button"  />
+         <input value="0å¤´" class="fastv" type="button"  />
+         <input value="1å¤´" class="fastv" type="button"  />
+         <input value="2å¤´" class="fastv" type="button"  />
+         <input value="3å¤´" class="fastv" type="button"  />
+         <input value="4å¤´" class="fastv" type="button"  />
+         <input value="åé€‰" class="fastv btnf red" type="button"  />
+         <input value="å…¶ä»–" class="fastv btnf chu" type="button" title='ç‚¹å‡»å…³é—­æˆ–æ‰“å¼€'  /> <br />
+         <input value="é¼ " class="fastv fv" type="button"  />
+         <input value="ç‰›" class="fastv fv" type="button"  />
+         <input value="è™" class="fastv fv" type="button"  />
+         <input value="å…”" class="fastv fv" type="button"  />
+         <input value="é¾" class="fastv fv" type="button"  />
+         <input value="è›‡" class="fastv fv" type="button"  />
+         <input value="é¦¬" class="fastv fv" type="button"  />
+         <input value="ç¾Š" class="fastv fv" type="button"  />
+         <input value="çŒ´" class="fastv fv" type="button"  />
+         <input value="é›" class="fastv fv" type="button"  />
+         <input value="ç‹—" class="fastv fv" type="button"  />
+         <input value="è±¬" class="fastv fv" type="button"  />
+        
+         <input value="é‡‘" class="fastv fvh hide" type="button"  />
+         <input value="æœ¨" class="fastv fvh hide" type="button"  />
+         <input value="æ°´" class="fastv fvh hide" type="button"  />
+         <input value="ç«" class="fastv fvh hide" type="button"  />
+         <input value="åœŸ" class="fastv fvh hide" type="button"  /><BR />
+         <input value="ç´…å–®" class="fastv red fvh hide" type="button"  />
+         <input value="ç´…é›™" class="fastv red fvh hide" type="button"  />
+         <input value="ç´…å¤§" class="fastv red fvh hide" type="button"  />
+         <input value="ç´…å°" class="fastv red fvh hide" type="button"  />
+         <input value="è—å–®" class="fastv blue fvh hide" type="button"  />
+         <input value="è—é›™" class="fastv blue fvh hide" type="button"  />
+         <input value="è—å¤§" class="fastv blue fvh hide" type="button"  />
+         <input value="è—å°" class="fastv blue fvh hide" type="button"  />
+         <input value="ç¶ å–®" class="fastv lv fvh hide" type="button"  />
+         <input value="ç¶ é›™" class="fastv lv fvh hide" type="button"  />
+         <input value="ç¶ å¤§" class="fastv lv fvh hide" type="button"  />
+         <input value="ç¶ å°" class="fastv lv fvh hide" type="button"  />
+         
+
+         
+       </div>
+    {+/if+}
+    
+    </td>
+    <td style="width:25%">é‡‘é¢
+    <input value="" class="fastgje in zje" size="3" type="text"  autocomplete="off"  />
+    <input  class="fastgsend" value="é€å‡º" type="button"  title="åœ¨å‹¾é€‰æ¨¡å¼ä¸‹ï¼Œç›´æ¥æŒ‰é€å‡ºå³å¯å®ŒæˆæŠ•æ³¨ï¼--è¯•è¯•å›è½¦é”®"  />
+    <input type="button" value="æŠ•-æ³¨" class="exe btn2 btnf"  title="è¯•è¯•å›è½¦é”®"  style="font-weight:bold;color:#D50000" />
+    </div>
+ 
+  
+  </td>
+  
+  </tr>
+  
+ </table>
+
+ <table class="make {+$class+}" cellpadding="0" cellspacing="0"  >
+ </table>
+
+ <table class="duoexetb tinfo wd100 hide">
+    <tr>
+     <td style="text-align:left;"><input type="button" mode=1 class="btn3 mode click" value="æ™®é€šæ¨¡å¼" />
+      <input type="button"  mode=2 class="btn3 mode" value="æ‹–å¤´æ¨¡å¼"  />
+      <input mode=3 type="button" class="btn3 mode" value="ç”Ÿè‚–å°ç¢°" />
+      <input mode=4 type="button" class="btn3 mode" value="å°¾æ•¸å°ç¢°" />
+      <input mode=5 type="button" class="btn3 mode" value="æ··å’Œå°ç¢°" /></td>
+     <td style="text-align:right"><!--å…±<label class="zs">0</label>æ³¨&nbsp;&nbsp;æ€»é‡‘é¢<label class="sumje">0</label>å…ƒ&nbsp;&nbsp;-->å–®è¨»é‡‘é¡:
+      <input type="text" class="in duoje" />
+      <input type="button" class="btn2 exe" value="æŠ•|è¨»" />
+      <input type="button" class="btn2 cancel" value="æ¸…ç©º" /></td>
+    </tr>
+ </table>
+ <table style="margin-top:5px;width:100%;" class='ggmesstb hide'><tr><td style="text-align:right;width:100%">    
+ æ€»èµ”ç‡:<label class="ggpeilv red">0</label>&nbsp;&nbsp;&nbsp;
+ è¿‡å…³é‡‘é¢:<input value="" class="ggje in" size="3" type="text"  autocomplete="off"  />
+    <input  class="exe red" value="ç¡®å®š" type="button" />    
+</td></tr>
+    <tr>
+     <td style="text-align:left;">â€» è¯´æ˜:æ¯ä¸ªå¼€å¥–å·ç è‡³å¤šé€‰æ‹©äºŒé¡¹ç©æ³•ï¼&nbsp;&nbsp;&nbsp;</td>
+   </table><table class="tu tinfo hide" cellpadding="0" cellspacing="0"  >
+ <tr><th></th></tr>
+ <tr><td></td>
+ </table>
+ <table style="margin-top:5px;width:100%;" class='exetb'><tr><td style="text-align:right;width:100%">    
+ å¿«é€Ÿé‡‘é¢ <input value="" class="fastgje in zje" size="3" type="text"  autocomplete="off"  />
+    <input  class="fastgsend" value="é€å‡º"  title="åœ¨å‹¾é€‰æ¨¡å¼ä¸‹ï¼Œç›´æ¥æŒ‰é€å‡ºå³å¯å®ŒæˆæŠ•æ³¨ï¼---è¯•è¯•å›è½¦"  type="button" />    
+    <input type="button" value="ç¡®å®š"  title="è¯•è¯•å›è½¦é”®"  class="exe btn2 btnf" style="font-weight:bold;color:#D50000" />
+     <input type="button" value="å‹¾é€‰"  title="åœ¨å‹¾é€‰æ¨¡å¼ä¸‹ï¼Œç›´æ¥æŒ‰é€å‡ºå³å¯å®ŒæˆæŠ•æ³¨ï¼"  class="fastg btn2 btnf" style="font-weight:bold;color:green" />   
+    <input type="button" value="æ¸…ç©º" class="cancel btn2 btnf" style="font-weight:bold;" /></td></tr></table>
+    <table class="tinfo messtb" style="width:100%;float:left;margin-top:5px;">
+    <tr>
+     <td style="text-align:left;"><label class="blue">â€» å¿«é€Ÿä¸‹æ³¨æ³•A:
+      (ï¼‘) é¼ æ ‡ç‚¹å‡»"é¡¹ç›®"æˆ–"èµ”ç‡"ï¼Œä½¿å¯¹åº”é‡‘é¢æ¡†å˜ä¸ºæµ…è“è‰²ï¼&nbsp;&nbsp;&nbsp;
+      (ï¼’) è¾“å…¥å¿«é€Ÿé‡‘é¢&nbsp;&nbsp;&nbsp;
+      (ï¼“) æŒ‰ä¸‹[é€å‡º]æŒ‰é’®
+      <Br />â€» å¿«é€Ÿä¸‹æ³¨æ³•B:
+      (ï¼‘) è¾“å…¥å¿«é€Ÿé‡‘é¢ï¼&nbsp;&nbsp;&nbsp;
+      (ï¼’) ç‚¹å‡»è¦æŠ•æ³¨çš„é¡¹ç›®å¯¹åº”çš„è¾“å…¥æ¡†&nbsp;&nbsp;&nbsp;
+       </label>
+      <Br />
+      â€» åœ¨å‹¾é€‰æ¨¡å¼ä¸‹ï¼Œç›´æ¥æŒ‰é€å‡ºå³å¯å®ŒæˆæŠ•æ³¨ï¼
+      {+if $gid==100+}
+      <br />â€» "å–åŒ"ï¼šå–ç›¸åŒçš„å·ç ï¼Œå¦‚'0å¤´'å’Œ'ç»¿'çš„å…±åŒå·ç æœ‰05ã€06;
+      <br />â€» "å–æ€»"ï¼šå–æ€»å…±çš„å·ç ï¼Œå¦‚'0å°¾'å’Œ'1å¤´'çš„æ€»å…±å·ç æœ‰10ã€11ã€12ã€13ã€14ã€15ã€16ã€17ã€18ã€19ã€20
+      ã€30ã€40;{+/if+}
+      </td>
+      </tr>
+   </table>
+ 
+ 
+ 
+ </td>
+ 
+ <!--con-->
+ <td  class="info" valign="top" >
+
+{+if $gid==100+}
+ {+if $fastinput==1+}
+ <table class="tinfo fasttext {+$class+}tb">
+ <tr><th class="bt">è¶…å¿«æ·è¾“å…¥</th></tr>
+   <tr><td style="width:100%;text-align:left;">
+    <textarea cols="30" rows="8"></textarea>  
+  </td></tr>
+  <tr><th><input type="button" class="sendtext" value="æŠ•-æ³¨" />&nbsp;<input type="button" class="textclear" value="æ¸…ç©º" />&nbsp;<input type="button" class="textsm" value="è¯´æ˜" />&nbsp;<input type="button" class="textcloses" value="å…³é—­" /></th></tr>
+ <tr><th>è¯·ä¸¥æ ¼æŒ‰ç…§æ ¼å¼è¾“å…¥ï¼ç‚¹å‡»[è¯´„Ét	ŠÙÆD$ ë¶¶™p N ˆ\$Š™pŸN @„ÒtŠÊ2Òë¶Š‘p N Š‰pŸN F:Ùu\ŠL$ëª„Ét_^]¸   [Ã„Òt_^]ƒÈÿ[Ã;Çu;õt"¹   ;Çu	‹ı‹ÆƒÉÿ;Çsd$ €8 u@;Çrö_^]3À[Ãs÷Ù_^]‹Á[Ã_¶Ã^¶É]+Á[ÃÌÌÌÌÌÌÌ‹L$‹T$‹D$U‹l$VW<4(;Ïs-I ;Æs8¶¶’pŸN ˆ¶Š’p N @„Òt;Æsˆ@A;ÏrÖ;Æs+ğVj Pè·@ ƒÄ_^‹Å]ÃÌÌÌÌÌÌÌÌÌÌÌÌÌÌ‹D$W‹|$èâüÿÿ‰D$;øse‹L$SUV‹t$ ‹¶¶›pŸN ‹êƒå?)¯İ‹êÁåİ3Ú‰ƒ¶¶šp N ‹)…Ût‹‹Âƒà?Å¯Ã‹ÚÁãÃ3Â‰ƒ‹D$G;ør©^][_ÃÌÌÌ‹T$‹L$ŠˆAB„ÀuöAÿÃÌÌÌÌÌÌÌÌÌÌ‹D$‹L$‹T$PQRÿìƒ ÃÌÌÌÌÌÌÌÌÌÌ‹D$V‹t$ˆ0øÿÿ…öt6‰FXƒù;w	‹…ğßU ë¡pV PV_Rèÿÿÿ‹D$PÆ_  Vè|ÿÿÿƒÄ^Ã£Pú‚ ƒù;w‹…ğßU Phà÷‚ è[ÿÿÿƒÄ^Ã¡pV Phà÷‚ èFÿÿÿƒÄ^ÃÌ‹D$3É‰HXˆH_‹
+„¢N Q_  Pè"ÿÿÿƒÄÃÌÌÌÌÌÌÌÌÌÌÌÌÌÌ‹T$‹D$V‹t$L$QR‰FXF_hÿ  Pèœ‡  ‹L$ QÆ_  VèÛşÿÿƒÄ^ÃÌÌÌÌÌÌì  ¡ju 3Ä‰„$  ‹„$   ‹Œ$,  SUV‹1‰D$‹„$4  ‹W‰D$$‰L$ ‰t$…öt€> u‹
+äy} ‰L$‹ñ…Ût0¹àbL ‹ÃŠ:u„ÒtŠP:QuƒÀƒÁ„Òuä3ÀëÀƒØÿ…Àu»H£L j Vh@£L Sh<£L T$<hÿ  RÆ„$C   è ‹-Ğƒ ‹=Ìƒ ƒÄÇD$    ëI j h   @jj j h   ÀD$@PÿÕ‹ğƒşÿ…Á   ÿ×=ç   uZ‹Œ$4  iÉè  QT$,RÿÈƒ …Àtn‹D$@ƒød‰D$|¨ÿ×‹T$‹
+€¢N P¡tÿU R‹T$SPQhá  RèsşÿÿƒÄÆéÀ   ÿ×‹
+tÿU ‹€¢N P‹D$P‹D$SQRhá  PèCşÿÿƒÄƒÈÿé   ÿ×‹L$‹pÿU P¡€¢N Q‹L$SRPhà  QèşÿÿƒÄƒÈÿëbj j D$$PVÇD$,    ÿÄƒ …Àu4VÿÀƒ ÿ×‹L$‹xÿU P¡€¢N Q‹L$SRPhâ  QèÃıÿÿƒÄƒÈÿë‹T$$‹D$‹L$ ‰‰‹Æ‹Œ$(  _^][3ÌèA. Ä  ÃƒìT¡ju 3Ä‰D$P‹D$X‹L$\S3ÛU‹¨L  ‰D$<V‹Å‰L$<W‰\$4‰\$$‰\$<‰\$(‰\$‰\$0‰\$8‰\$ ‰\$,‰\$‰\$HëI Š@„Òuù+ÁƒÀ jPèŒ¢  ‹ğƒÄ;ó„Æ  ‰\$ë	¤$    ‹ÿ‹T$‹š”¢N j h¤mL USVè7õ  ‹øhÀ£L WèêûÿÿƒÄVj h  ÿèƒ ‰D$4…À…µ   ‹D$ƒÀ‰D$ƒør­ÇD$ö  3ÛVè¢  ‹t$ƒÄ;ót
+ÿÌƒ ‰D$‹D$4‹-Àƒ ;ÃtPÿÕ‹D$$;ÃtPÿÕ‹D$(;ÃtPÿäƒ ‹D$<;ÃtPÿÕ;ó„T  şü  …ş  ‹T$¡àÿU ‹L$DRWP¡€¢N PVQè!üÿÿƒÄ_^]ƒÈÿ[‹L$P3Ìè¶, ƒÄTÃh°£L Wè
+ûÿÿƒÄVj h  ÿèƒ ‰D$$…Àu
+ÇD$÷  é2ÿÿÿh £L WèÜúÿÿƒÄVj jÿàƒ ‰D$<…Àu
+ÇD$ø  éÿÿÿjj j jPÿÜƒ ‰D$(…Àu
+ÇD$ù  éàşÿÿ‹D$4PÿØƒ …Àu
+ÇD$ş  éÄşÿÿ‹L$p‹T$$iÉè  QRÿÔƒ …Àt
+ÇD$ı  éşÿÿ‹L$(‹j
+D$LPRè?` j h¤mL D$\Ph¤mL USVèfó  ‹øh˜£L WèúÿÿƒÄ0Vj jÿàƒ ‰D$…ÀukÇD$ú  ‹\$8ÿÌƒ ‰D$…ÛtSÿÀƒ ‹D$0‹Àƒ …ÀtPÿÓ‹D$,…ÀtPÿÓ‹D$ …ÀtPÿÓ‹D$…ÀtPÿäƒ ‹D$…À„ëıÿÿPÿÓéãıÿÿh„>  j j jPÿÜƒ ‰D$…Àu
+ÇD$û  évÿÿÿhˆ£L Wèfùÿÿ‹-èƒ ƒÄVj h  ÿÕ‰D$0…Àu
+ÇD$ü  éCÿÿÿh|£L Wè3ùÿÿƒÄVj h  ÿÕ‹Ø…Ûu
+ÇD$ü  éÿÿÿhl£L WèùÿÿƒÄVj h  ÿÕ‰D$ …Àu
+ÇD$ü  éïşÿÿh`£L WèÛøÿÿƒÄVj h  ÿÕ‰D$,…Àu
+ÇD$ü  éÂşÿÿhL£L Wè®øÿÿƒÄVj h  ÿÕ‹è…íu
+ÇD$ü  é—şÿÿSÿØƒ ‹L$,‹T$ ‹D$0UQ‹L$$R‹T$ SPQRèGŒ ‹L$\ƒÄ‰é¤üÿÿ‹|$@éüÿÿ–0øÿÿƒú;w	‹µğßU ë¡pV ‹L$‹€¢N QP‹D$LRVPèùÿÿƒÄ_^]ƒÈÿ[‹L$P3Ìè¤) ƒÄTÃ‹L$`‹D$_^][3Ìè) ƒÄTÃÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌV‹t$…ötFj PèÜó  Vè¦  ƒÄ^ÃÌV‹t$W3ÿ9¾”  t†˜  WPè³ó  ƒÄW˜  h    Qèşğ  ƒÄ‰¾”  ‰¾è  ‰¾ô  ‰¾ˆ  _^ÃhÜ£L è3A ƒÄ…Àt4¹Ğ£L Š:u„ÒtŠP:QuƒÀƒÁ„Òuä3ÀëÀƒØÿ…Àu¸   Ã3ÀÃÌÌÌÌÌÌÌÌW‹|$…ÿ„   V‹w…ötFGQ9†¸  u
+Ç†¸      ƒ¾€  u(‹°  ‹Qj VÿÒÇ†€      ‹¶¸  ƒÄ…ötÆ‹GPèÜşÿÿƒÄƒ ^tO(j Qè·ò  ƒÄ‹W Rè{  Wèu  ƒÄ_Â ÌÌÌÌÌÌÌÌÌÌÌÌÌÌQƒ~, ujjèĞœ  jj jP‰F,èa‹ ƒÄ‹D$jPèr  ƒÄ‰$…Àt‹V,$QRè› ƒÄ„Àu3ÀYÃ‹$Pè  ƒÄ¸   YÃÌÌÌÌÌÌÌÌÌÌÌÌÌW‹ø3À…ÿt,Vjh  èZœ  ‹ğWVèq— jVè	  V‹øèÁœ  ƒÄ‹Ç^_ÃÌÌÌÌÌÌÌÌÌì  ¡ju 3Ä‰„$  ‹Œ$(  ‹„$$  UV‹´$(  WT$‰T$ºl,L ‰L$j L$Q‰T$‰T$ T$RL$$Q¿   P‰|$$ÇD$4    èão  ƒÄ9|$„«  ‹l$‹EƒÅ…À„™  d$ Pèú]  ƒÄ„À…v  ‹E €8-…j  €x-…`  j=Pè˜ ƒÄ3ÿ€8 txÆ  ‹E j_Pèö— ƒÄ€8 tj_PÆ -èã— ƒÄ€8 uí‹U j ƒÂh<£N Rèhè  HƒÄƒø!‡  ÿ$…Í@ …ÿ„ó  Wèä* ƒÄ‰Féâ  …ÿ„Ú  ‹F$Pèj›  jWè¢›  ƒÄ‰F$é¾  ƒN ÆF]é±  …ÿ„©  ‹N Qè9›  jWèq›  ƒÄ‰F é  ÇF   …ÿ„~  Wèo* ƒÄ‰én  …ÿ„f  ‹VRèöš  jWè.›  ƒÄ‰FéJ  Wè}ıÿÿƒÄé<  …ÿ„4  ‹FPèÄš  jWèüš  ƒÄ‰Fé  …ÿ„  ‹N(Qè š  jWèØš  ƒÄ‰F(éô  …ÿu¿ ¤L Wèœ  éà  ƒNé×  ‹V@Règš  jWèŸš  ƒÄ‰F@é»  ‹FDPèKš  jWèƒš  ƒÄ‰FDéŸ  ‹NHQè/š  jWègš  ƒÄ‰FHéƒ  ‹VLRèš  jWèKš  ƒÄ‰FLég  ‹FPPè÷™  jWè/š  ƒÄ‰FPéK  ‹N8QèÛ™  jWèš  ƒÄ‰F8é/  ‹V<Rè¿™  jWè÷™  ƒÄ‰F<é  N   é  …ÿtWèô( ƒÄ…Àufÿÿÿéê  N€   éŞ  …ÿ„Ö  WèÇ( ƒÄ‰FXéÅ  j hL£N Wèæ  ƒÄ‰F…À‡ª  Whà£L èÎ ƒÀ@PèC" ƒÄjè' ‹FT;Œ¢N t	Pè™  ƒÄjWèI™  ƒÄ‰FTée  N   éY  N   éM  ÆFléD  …ÿtWè1( ƒÄ÷ØÀ÷ØˆFmé)  ¸   ˆFmé  ‹ÇPŠ@„Éuù+Â=   rˆ   j D$(WPè=” ƒÄ…À…é   PL$(Q”$,  Rè¯‚  ‹†„   ƒÄ…Àt
+‹ PèZ˜  ƒÄëj0jèÌ—  ƒÄ‰†„   Œ$$  jQèt˜  ‹–„   ƒÄ‰é‹   ‹†„   …Àt‹@Pè˜  ƒÄëj0jèƒ—  ƒÄ‰†„   …ÿtjWè.˜  ‹„   ƒÄ‰AëG‹„   3À‰Aë:ƒ¾„    uj0jèA—  ƒÄ‰†„   …ÿt
+Wè' ƒÄ…Àt¸   ‹–„   ˆB‹EƒÅ…À…kûÿÿ‹D$PèA[  ‹Œ$(  ƒÄ_^]3Ìè'" Ä  Ã‹ÿìÈ@ É@ )É@ 6É@ ZÉ@ aÉ@ yÉ@ É@ «É@ ÏÉ@ óÉ@ Ê@ Ê@ ,Ê@ HÊ@ dÊ@ œÊ@ ¸Ê@ ÔÊ@ aÉ@ àÊ@ ñÊ@ €Ê@ 	Ë@ "Ë@ [Ë@ ‚Ë@ Ë@ Ë@ šË@ £Ë@ ËË@ \Ì@ ­Ì@ ÌÌÌÌÌÌÌÌÌÌÌÌ‹L$‹D$SW\3Ò3ÿ;Ët,V‹t$ëI ‹…Àu‰ë
+…Òt+ÂH‰‹‹şƒÁƒÆ;Ëuß^_[ÃÌÌÌÌÌÌÌÌÌÌÌƒì,SU‹l$@V‹t$HköTVUèøé  3ÛƒÄ‰D$H;Ãu,‹D$@Pè‘÷ÿÿ‹
+€¢N ‹T$@QhØ  Rè›ïÿÿƒÄ^]3À[ƒÄ,ÃWVSPèf/ ‹D$`ƒÄ©   „§  ‹D$D‹8;û„Ç  ‹t$L3É8L$P•ÁƒÁ‰L$ƒÆ‹T$‹GRPL$ Qèÿÿÿ‹W‹\$$‹SPUèëë  ‹L$4‰F‹W‹BQPUèÖë  ‹L$D‰‹W‹BQPUèÂë  ‹L$T‰Fø‹W‹BQPUè­ë  ‹L$d‰Fü‹W‹BQPUè˜ë  ‹L$t‰Fğ‹W‹BƒÄHQPUè€ë  ‹L$(‹T$,‰Fô‹D$0‰N$‹L$4‰V‹T$8ƒÄƒ|$0‰^(‰F ‰N‰V…   ‹G‹@·‰N8‹P‰V¶H‰N<·P‰V0¶@	‰F4‹Áƒø	ƒøuƒø
+t=ö   uN0 €  €|$P t#‹Gƒx t‹\$4‹HSQUèäê  ƒÄ‰F‰^,ëÇF    ÇF    ‹?ƒÆT…ÿ…¯şÿÿéZ  ‹T$DRèÏõÿÿ¡€¢N ‹L$DPhë  QèÚíÿÿƒÄ_^]3À[ƒÄ,Ã‹T$D‹:;û„   ‹t$L3É8L$P•Áƒà‰D$ƒÁ‰L$ƒÆ‹T$‹GRPL$ Qè]ıÿÿ‹W‹PUè±ê  ‰Fü‰‹O‹QRUèŸê  ‰Fô‹G‹H‹âÿÿÿ ‰V‹G‹H¶¸èYL ‰F‰F‹D$4‰F ‰F$‹D$8‰V@‰^,‰^(‰F‹O‹QƒÄ9\$t·‰F4‹O‹Q¶Bë¶‰F4‹O‹Q¶B‰F8‹F@ƒø	ƒøuƒø
+t=ö   uN4 €  8\$Pt!‹G9Xt‹HQUèñé  ‹T$4ƒÄ‰F‰V0ë‰^‰^‹?ƒÆT;û…ÿşÿÿ‹D$DPèuôÿÿ‹D$PƒÄ_^][ƒÄ,ÃÌÌÌÌÌÌj j j è5Ø  …Àt3ÀÂ V‹t$…öu8j0hÈ  èw’  ‹ğƒÄ…öu¡€¢N PhØ  Vè=ìÿÿƒÄ3À^Â Æ†„  ëhÈ  j Vèş+ ƒÄÇ†ø     ‹
+¢N ‰  ‹„¢N R†_  Pè²ëÿÿ  €   ‹
+Œ¢N ƒÄ‰L  Ç†\     Æ†e  Æ†…   ‹Æ^Â ÌÌÌÌÌÌÌÌÌÌÌ‹D$VèVõÿÿ‹t$‰†8  ‹D$èCõÿÿ‰†<  ‹D$è4õÿÿ‰†@  ‹D$è%õÿÿ‰†D  ‹D$…Àu‰†H  2À^Â jPè3’  ƒÄ‰†H  2À^Â ÌÌÌÌ‹†8  SW‹¾l  PèÌ‘  ‹<  QèÀ‘  ‹–@  Rè´‘  ‹†D  Pè¨‘  ‹H  Qèœ‘  3ÛƒÄ;ût‹Rè+® ƒÄ‹†l  Pè|‘  ƒÄ_‰8  ‰<  ‰@  ‰D  ‰H  ˆT  ‰l  [ÃÌÌÌÌÌÌÌÌÌÌÌÌ‹D$‹ …Àt‹€ˆ  …ÀtPè6¨ ƒÄÂ 3ÀÂ ÌÌÌÌÌÌÌÌÌÌÌƒìSU‹l$V‹°ˆ  »   ‰\$…öu‹L$^]‹ÃÇL¥L [ƒÄÃ…íu‹T$^]‹ÃÇ0¥L [ƒÄÃWVèBš ‹øƒÄ‰|$…ÿu‹D$ Ç ¥L éõ   Vèàš ƒÄ…Àt‹L$ Çä¤L éÙ   Wètš jÿ‹ğj
+Vè¨  ƒÄ…À}‹T$ Ç¬¤L é±   PVè»  ƒÄ…Àu‹D$ Ç €¤L é”   Pè  ‹ğƒÄ…öu‹L$ Ç`¤L ëyVè$  ƒÄ‹ØPŠ@„Éuù+ÂV‹øè  ƒÄ;Çt‹T$ Ç<¤L ë?‹Í‹Ãd$ Š:u„ÒtŠP:QuƒÀƒÁ„Òuä3ÀëÀƒØÿ…Àu‰D$‹D$ Ç ¤L ‹|$‹\$…ÿt	WèG™ ƒÄ_^]‹Ã[ƒÄÃÌÌÌÌÌÌÌÌÌÌƒ=¡L  V¾¡L t$‹‹
+hN ‹QWPh N ÿÒƒÄ…Àt=ƒÆƒ> uİWj hÌ¥L hQ  èËæ  ƒÄh@jL j hœ¥L hQ  è²æ  ƒÄ¸@jL ^Ã‹Fƒè tƒè‹FtîPj hd¥L ë¹‹F^ÃÌÌÌÌÌÌÌÌÌƒìD¡ju 3Ä‰D$@Wÿìƒ Phì¥L D$j@PèÙp  ƒÄ|$è=ÿÿÿ‹ø‹†4  …Àt	Pè»  ƒÄjWèğ  3ÉƒÄ…À”Á‰†4  _‹Á‹L$@3ÌèL ƒÄDÃÌÌÌÌÌÌÌÌÌÌÌÌÌÌ‹†0  S‹ĞY} …Àt£ĞY} ‹†4  jj PèºßÿÿƒÄ‰†  …Àt9WjhÔœL è ßÿÿ‹øƒÄ…ÿt‹  WQèŠÑÿÿƒÄ„Àt‰¾  _‰ĞY} [Ã‰ĞY} [ÃÌÌÌÌÌÌÌÌÌÌÌÌì  ¡ju 3Ä‰„$   V‹´$  ‹†4  …Àu4jh@jL è  ƒÄ‰†4  …ÀuS¸   ^‹Œ$   3Ìèg Ä  Ã¹ô¥L Š:u„ÒtŠP:QuƒÀƒÁ„Òuä3ÀëÀƒØÿ…Àu	èrşÿÿ…Àu­èéşÿÿƒ¾   …•   ‹†0  …Àt?‹
+|ÿU ‹€¢N P‹†4  PQRhã  VèAçÿÿƒÄ¸   ^‹Œ$   3ÌèÔ Ä  ÃD$PèyØÿÿ‹–4  ¡|ÿU L$Q‹
+€¢N RPQhã  VèõæÿÿƒÄ¸   ^‹Œ$   3Ìèˆ Ä  Ã‹Œ$  ^3Ì3Àèp Ä  ÃÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌU‹ìƒì¡ju 3Å‰Eü‹ESVW‹x‹Ùƒ³  èª1 ‹t  ‹Äj0QP‰EøèöØ  ‹ğƒÄF…ÛuˆFëU÷‡Ü   €  t9ûÿ   ~.‹€¢N Rhë  Wè‘åÿÿƒÄ¸   eì_^[‹Mü3ÍèÓ ‹å]ÃˆF‹ESPVè÷% ƒÄó‹]‹C…Àu¸èYL hÀ   PVèwØ  ƒÄ@÷‡à     t‹  f‹f‰ƒÀ÷‡à     t‹K‹QhÀ   RPè:Ø  ƒÄ@‹Mø‹—°  j j+ÁP‹BQj j jWÿĞƒÄ ¾Àeì_^[‹Mü3Íè- ‹å]ÃÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌU¬$dşÿÿì  ¡ju 3Å‰…˜  ‹…¤  SV‰EŒ‹…¨  W‹ù‹w‰EÑ  ‰}”èN0 ‹  É¢ 	Ü  ‹†Ü  ‹Ü©   t
+   ‰†Ü  ƒ¾8   u$ƒ¾<   uƒ¾@   uƒ¾D   u	ƒ¾H   tÆ†T  €¾T   ¹   t	Ü  ƒ tƒÜ  ‹–à  Êßõÿÿ!–Ü  ‹†Ü  ©   t0‰‹F,‰C‹–  ŠˆC3À‰C	‰C
+‰C‰C‰Cf‰CˆC{ ë f‹Ğf‰¶F,ˆC‹V,ÁêˆS¶F.ˆC{…Ü  „B  ‹Ï+ËQSVè†Ã ƒÄ„À…  VèUÂ ƒÄ„À…û   ‹†H  ‹D  UˆR‹–@  P‹†<  Q‹8  RPQè.º ƒÄ…Àu!‹UˆRè· ‹
+€¢N P¡˜ÿU PQhê  éÕ  ‹ø  U€R‹QRP‰†l  è|¶ ƒÄ…Àt=‹M€h   E˜PQèÃ˜ ¡˜ÿU ‹
+€¢N U˜RPQhê  VÆ…—   è`ãÿÿƒÄ é€  ÷†Ü     @t\‹†p  U„RP‹èøÿÿƒÄ…ÀtC‹M„‹˜ÿU ¡€¢N QRPhê  VèãÿÿƒÄé7  è ‹‹ V ¡€¢N Qh ¦L RPé
+  ‹†t  €8 tj0PWè\Õ  ƒÄë	WèQŒ  ƒÄWèÈ³ ‹ø‹EƒÄG…Àt4÷†à   €  Pt‹MŒˆQGWè" ƒÄ}ë‹UŒRWèo" ƒÄ}ëÆ G‹E”‹@…Àt/ö†à  t&hÀ   PWèäÔ  ‹M”‹Q@jR‹øèƒˆ  ƒÄ‰†Œ  ÷†à     t‹E”‹H‹QhÀ   RWè©Ô  ƒÄ@‹ø+ûWSVèyÁ ƒÄ„ÀuVèLÀ ƒÄ„Àu3Àë.è ‹ ‹
+ V ‹€¢N Phü¥L QRhİ  VèÛáÿÿƒÄ¸   ¥tÿÿÿ_^[‹˜  3Íèg Åœ  ‹å]ÃÌÌÌV‹t$ƒ~$ u2ƒ~( ‹L$t‹D$PVèàúÿÿƒÄÿF$^Ã‹T$QR‹ÎèüÿÿƒÄÿF$^ÃW‹~ƒ¿´   u,‹D$‹L$PQWè¶À ƒÄ„ÀuWè‰¿ ƒÄ„Àu3ÀÿF$_^Ã¿   è6 ‹¡ V ‹
+€¢N R‹Vhü¥L PQhİ  Rè
+áÿÿÿF$ƒÄ‹Ç_^ÃÌÌƒì¡ju 3Ä‰D$3ÀV‹t$$‰‰FW‹|$$‰F‹‡  Hƒø‡®   ÿ$…„Ş@ Ç   ‹_‰F^‹L$3ÌèY ƒÄÃÇ   ‹_‰N^‹L$3Ìè= ƒÄÃ‹T$RD$PQÇD$   ÿÌƒ …ÀuP3Òfƒ|$”ÂB‰‹_‰F^‹L$3Ìèú ƒÄÃÇ   ‹O_‰N^‹L$3Ìèİ ƒÄÃÇ   ‹—Œ  ‰V‹L$_^3Ìè½ ƒÄÃI Éİ@

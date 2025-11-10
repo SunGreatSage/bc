@@ -1,0 +1,83 @@
+{+include file='header.html'+}
+
+    </head>
+  <body class="playnav"><script id=myjs language="javascript">var js=1;var sss='uinfo';</script>
+    <header class='header-model tc rel fw700' style="text-align:left"> 
+<select class="game sele">
+   {+section name=i loop=$game+}
+      
+      
+      <option value="{+$game[i].gid+}">{+$game[i].gname+}</option>
+      
+      
+   {+/section+}
+      </select>
+      <span class="abs btn-h btn-r back">返回</span>
+        </header>
+
+<table class="wd100 list usertb" >
+   <tr>   
+      <th>用戶名</th><TD ><label>{+$username+}</label>[<label>{+$name+}</label>]</td>
+      
+      </tr>
+
+    
+      <tr>
+      <th>[低频]额度</th><td><label>{+$maxmoney+}</label>&nbsp;&nbsp;可用&nbsp;（<label>{+$money+}</label>）</td>
+      </tr><TR>
+      <th>[快开]额度</th><td><label>{+$kmaxmoney+}</label>&nbsp;&nbsp;可用&nbsp;（<label>{+$kmoney+}</label>）</td> 
+   </tr>
+ 
+  
+  <tr><td colspan="2">两面包括所有单双、大小、合单双、合大小、大小尾、六肖、总分大小、总分单双、龙虎</td></tr>
+   </table> 
+
+<table  class="wd100 list cs2">
+  <thead> <Tr>
+    <th rowspan="2"  style="display:none">彩种</th> 
+    <th rowspan="2"> 类别 </th>
+    <th rowspan="2" style="display:none">保底<BR />赔率</th>
+    <th rowspan="2">单项<BR />最大(万)</th>
+    <th rowspan="2">每注<BR />最大(万)</th>
+    <th rowspan="2">每注<BR />最低</th>
+    {+foreach item=i from=$span+}
+    <th  class="{+$i+} p" colspan="2">{+$i+}盘<BR />退水%</th>
+    {+/foreach+} </Tr>
+   <tr> {+foreach item=i from=$span+}
+    <th class="a p">A</th>
+    <th class="a p">B</th>
+    {+/foreach+} </tr></thead>
+   {+section name=i loop=$game+} 
+   {+assign var=pan value=$game[i].pan+}
+   {+section name=j loop=$pan+}
+   <tr gid='{+$game[i].gid+}' class="gametr">
+    <td class="{+$pan[j].class+}" gid='{+$game[i].gid+}'  style="display:none">{+$game[i].gname+}</td>
+    <td class="{+$pan[j].class+}" gid='{+$game[i].gid+}'>{+$pan[j].name+}</td>
+    <td>{+$pan[j].cmaxje+}</td>
+    <td>{+$pan[j].maxje+}</td>
+    <td>{+$pan[j].minje+}</td> 
+    {+if $pan[j].abcd==1+}
+        {+foreach item=k from=$span+}   
+           {+assign var='m' value=$k|@strtolower+}
+           {+if $pan[j].ab==1+}
+               {+assign var="tmp" value="points`$m`a"+}
+               <td>{+$pan[j].$tmp+}</td>
+               {+assign var="tmp" value="points`$m`b"+}
+               <td>{+$pan[j].$tmp+}</td>
+           {+else+}
+                {+assign var="tmp" value="points`$m`0"+}
+                <td colspan="2">{+$pan[j].$tmp+}</td>
+            {+/if+} 
+        {+/foreach+}
+    {+else+}
+         {+assign var="tmp" value=$span|@count+}
+         {+assign var="tmp2" value=$tmp*2+}
+         <td colspan="{+$tmp2+}">{+$pan[j].pointsa0+}</td>
+    {+/if+}
+    </tr>
+   {+/section+}
+   {+/section+}
+  </table>
+
+    </body>
+</html>

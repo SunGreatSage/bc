@@ -1,0 +1,72 @@
+{+include file='header.html'+}
+<style>
+td, th {
+	height:30px;
+	line-height:30px;
+}
+select {
+	width:80px;
+}
+.e tr:hover {
+	background:#DEEFD8
+}
+.l tr:hover {
+	background:#DEEFD8
+}
+</style>
+</head><body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='record';
+</script>
+<div class="xbody1">
+
+ <table class="tinfo wd100">
+   <Tr>
+   <th> </th>
+   <TD colspan="8">&nbsp;</TD>
+  </Tr>
+ <tr>
+  <td valign="top"><table class="wd100 e">
+   <tbody>
+    <tr>
+    <th>用户名</th>
+     <th>操作时间</th>
+     <th>操作者</th>
+     <th>操作IP</th>
+     <th>状态</th>
+    </tr>
+    
+    {+section name=i loop=$e+}
+        <tr>
+        <td>{+$e[i].username+}</td>
+     <td>{+$e[i].moditime+}</td>
+     <td>{+$e[i].modiuser+}</td>
+     <td>{+$e[i].modiip+}</td>
+     <td>{+$e[i].action+}</td>
+    </tr>
+    {+/section+}
+    </tbody>
+  </table></td>
+  <td valign="top"><table  class="wd100 l">
+   <tbody>
+    <tr>
+     <th>登陆时间</th>
+     <th>IP</th>
+     <th>备注</th>
+    </tr>
+    
+        {+section name=i loop=$l+}
+        <tr>
+     <td>{+$l[i].time+}</td>
+     <td>{+$l[i].ip+}</td>
+     <td>{+$l[i].ifok+}</td>
+    </tr>
+    {+/section+}
+    </tbody>
+  </table></td>
+ </tr>
+</table>
+</div>
+<div id='test'></div>
+</body>
+</html>

@@ -1,0 +1,74 @@
+{+include file='header2.html'+}
+<style type="text/css">
+	tr:hover{background:#deedfe}
+	</style>
+</head>
+<body id="topbody">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=0;var sss='twoyan';
+</script>
+<style>
+#divLargerImage
+{
+    display: none;
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin: auto;
+    z-index: 99;
+}
+
+#divOverlay
+{
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #CCC;
+    opacity: 0.6;
+    width: 100%;
+    height: 100%;
+    z-index: 98;
+}
+</style>
+
+<div class="jt-container">
+    <div class="top_info">
+        <span class="title">MFA验证设置</span>
+    </div>
+    <div class="s_main">
+
+        <div class="s_main">
+            <table class="data_table info_table table_ball">
+                <thead><tr><th colspan="2">MFA验证设置</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <th style="width: 40%">MFA验证</th>
+                        <td class="t_left">
+                            <select id="ValidType">
+                                <option value="0" selected=&#x27;selected&#x27;>不启用 </option>
+                                <option value="1" >启用 </option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>MFA二维码</th>
+                        <td class="t_left">
+                                <span>未启用</span>
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot><tr><td colspan="2" style="color:red;">启用或更换MFA需使用MFA应用程序进行扫码绑定<br />iPhone请到AppStore应用商店中搜索下载-Google Authenticator、Android请到主流应用商店中搜索下载-谷歌动态口令/身份验证器</td></tr></tfoot>
+            </table>
+            <div class="data_footer control">
+                <input class="button btn1" type="button" onclick="save();" value="暂时关闭" />
+                <!--input class="button btn1" type="button" onclick="refresh();" value="更换MFA" /-->
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="user-scalable=yes, width=1225, target-densityDpi=device-dpi" />
+<title>{+$webname+}</title>
+<link rel="stylesheet" href="/js/jquery/new/jqueryuib.min.css" />
+<link rel="stylesheet" href="/default/css/adminbd.min.css" />
+<link rel="stylesheet" href="/default/css/Skins/blue/skinbd.min.css" />
+<script language="javascript" src="/js/jquery-1.8.3.min.js"></script>
+<script language="javascript" src="/js/jquerybundle.min.js"></script>
+<script language="javascript">
+function hideinfo(){ if(event.srcElement.tagName=="A"){
+   window.status=event.srcElement.innerText}
+}
+document.onmouseover=hideinfo; 
+document.onmousemove=hideinfo;
+var globalpath = "{+$globalpath+}";
+
+</script>
+
+ <style>
+        .ios {
+            -webkit-overflow-scrolling: touch;
+            overflow: auto;
+        }
+
+.menus{width:160px;background:url(/css/default/img/menu.png);text-align:center;cursor:pointer;float:left;}
+.games {
+    display: none;
+    position: absolute;
+    height: 28px;
+    background: #FFF;
+    z-index: 99;
+    width: 100%;
+}
+        .clear {
+            clear: both;
+        }
+
+        .clearfix:after {
+            content: " ";
+            display: block;
+            clear: both;
+        }
+		.upkj{float:left;font-weight:bold;color:#000;}
+		li.dropdown-menu-sub-indicator2 a.cur {
+    width: 60px;
+    display: inline-block !important;
+	border-right: 1px solid #b6bec7;
+}
+.dropdown-menu-shadow2 li {
+    min-width: 70px;
+    border: 1px solid #efd8a1 !important;
+    border-bottom: 1px solid #ddd !important;
+    border-top: none !important;
+    padding: 3px !important;
+    background: #fff !important;
+}
+    </style>
+	
+<!--link href="/css/default/ball.css" rel="stylesheet" type="text/css" /-->
+</head>
+<body id="topbody" style="overflow-y: hidden;">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='top';</script>
+<ul class="games" id='nav'>
+  {+section name=i loop=$gamecs+}
+     <li > <a gid={+$gamecs[i].gid+}  gname={+$gamecs[i].gname+}  fenlei={+$gamecs[i].fenlei+} {+if $gid==$gamecs[i].gid+}class='xz'{+/if+} href='javascript:void(0)'>{+$gamecs[i].gname+}</a></li>
+  {+/section+}
+</ul>
+<div class="jt-container">
+    <div class="header clear">
+    <div class="top_w">
+       <div class="logo">
+            <img src="/logo.png" style="width:160px;height:60px" />
+        </div>
+		
+        <div class="top_menu">
+        <div class="expire_info" style="display: none;">
+              <div class="menus"></div><div class="status"><span style="margin-left:5px;"><label class=qishu>{+$qishu+}</label>期</span>  <span class="panstatus" s='{+$panstatus+}' style="margin-left:5px;"><span>{+if $panstatus==1+}距关盘:{+else+}距开盘:{+/if+}</span><label class="time0">{+$pantime+}</label></span>{+if $gid==100+}<span s='{+$otherstatus+}' class="otherstatus hide" style="margin-left:5px;"><span>{+if $otherstatus==1+}距正码关盘:{+else+}距正码开盘:{+/if+}</span><label class="time1">{+$othertime+}</label></span>{+/if+}&nbsp;<input type="button" value="关盘" class="s1 qzclose"  />      </div><Div style="float:left;">
+<label class='upqishu chu blue' m='{+$upkj+}'>{+$upqishu+}</label><span class="hei">期开奖:</span></Div><div class="upkj"></div>
+        </div>
+                {+if $slib==1+}<a href="javascript:void(0);" class="hover lib control" i=0 x="slib">即时注单</a>{+/if+}
+				{+if $libset==1+}<a href="javascript:void(0);" i=1 x="libset">注单预警</a>{+/if+}
+                {+if $suser==1+}<a href="javascript:void(0);" x='suser'  i=2>用户管理</a>{+/if+}
+				<a href="javascript:void(0);"  i=3 x="credit">个人管理</a>
+				{+if $zshui==1+}<a href="javascript:void(0);"  i=4 x="zshui">赔率设置</a>{+/if+}
+				{+if ($hide==1)+}<a href="javascript:void(0);" target="frame"  i=5  x="sysconfig">系统设置</a>{+/if+}
+                {+if $baox==1+}<a href="javascript:void(0);" target="frame" x="baox" i=6>报表查询</a>{+/if+}
+                <a href="javascript:void(0);" target="frame"  i=7 x="longs">开奖结果</a>
+                 {+if $online==1+}<a href="javascript:void(0);" target="frame"  i=8 x="online">在线统计</a>{+/if+}								
+                <a href="javascript:void(0);" x="logout">退出系统</a>
+    </div>
+		<div class="info_box vertical-container">
+            <div>
+                    <p id="onlineTotal">在线会员：<label class="online">{+$onlinenum+}</label></p>
+                    <p>公司：{+$name+}</p>
+            </div>
+        </div>
+
+
+    </div>
+    
+	 <div class="sub_w" >
+		 <div class="submenudiv" style="display: none;min-width: 1536px;" >
+
+            <div class="change_tit">当前选中：</div>
+            <div id="lotteryInfo"></div>
+            <div id="lotterys" style="display: none;" >
+                                 {+section name=i loop=$gamecs+}
+    <a gid='{+$gamecs[i].gid+}'  fenlei='{+$gamecs[i].fenlei+}'  class='{+$gamecs[i].class+} g{+$gamecs[i].gid+}' >{+$gamecs[i].gname+}</a>
+     {+/section+}
+
+            </div>
+			<ul class="MCHK6" style="display: block;">
+                        </ul>
+        </div>
+		
+			 {+if $libset==1+}<div class="submenudiv" style="display: none;" > 
+      <div class="change_tit">当前选中:<span>注单预警</span></div>
+             <ul>
+			    
+			 <li><a href="javascript:void(0)" target="frame" u='libset' type='warn' >预警金额设置</a></li>
+			 {+if $err==1+} <li><a href="javascript:void(0)" target="frame" u='err' type='show'>注单异常查询</a></li>
+			 <li><a href="javascript:void(0)" target="frame" u='data' type='show'>数据单检测</a></li>  {+/if+}
+			 
+        </ul>
+		</div> 
+		 {+/if+}	
+		        {+if $suser==1+} <div  class="submenudiv" style="display: none;" >
+                    <div class="change_tit">当前选中:<span>用户管理</span></div>
+                    <ul>
+                            <li><a  href="javascript:void(0)" class="usermenu userzsdl">直属代理<span id="directAgentCount">(0)</span></a></li>
+                            <li><a  href="javascript:void(0)" class="usermenu userqbdl">所有代理<span id="allAgentCount">(0)</span></a></li>
+							 <li><a  href="javascript:void(0)" class="usermenu userzshy">直属会员<span id="directMemberCount">(0)</span></a></li>
+                            <li><a  href="javascript:void(0)" class="usermenu userqbhy">全部会员<span id="allMemberCount">(0)</span></a></li>
+<ul  class="dropdown-menu"  style="font-size: 0px;">
+	<li class="dropdown-menu-sub-indicator" style="font-size: 12px;display: inline-block;cursor: pointer;">
+                <a style="display: inline" class="accessible cur" target="frame" >选择用户级别<span class="dropdown-menu-sub-indicator">»</span></a>
+                    <ul class="dropdown-menu-shadow" style="visibility: hidden; display: none;">
+                    </ul>
+    </li>
+	 </ul>
+	
+<li id="userMenuDiv" class="last">
+<span>当前位置：</span>
+<div class="lv">
+    <ul  id="drownMenu" class="dropdown-menu"  style="font-size: 0px;">
+
+                    <li style="font-size: 12px;">
+                <a href="javascript:void(0)"  style="display: inline" class="one">{+$name+} (公司)</a>
+            </li>
+
+    </ul>
+  
+ 
+        </div>
+		
+		</li>
+                    </ul>
+                </div>
+				{+/if+}
+				
+						 <div class="submenudiv" style="display: none;" > 
+      <div class="change_tit">当前选中:<span>个人管理</span></div>
+             <ul>
+			    
+			 <li><a href="javascript:void(0)" target="frame" u='credit' type='show' >信用资料</a></li>
+			 {+if $online==1+}
+            <li><a href="javascript:void(0)" target="frame" u='history' type='show'>日志查询</a></li>
+            {+/if+}
+			{+if $xxtz2==1+}
+			 <li><a href="javascript:void(0)" target="frame" u='caopan' type='show' >管理员账号</a></li>
+			 {+/if+}
+			 <li><a href="javascript:void(0)" target="frame" u='changepass2' type='show'>变更密码</a></li>
+			 
+        </ul>
+		</div> 
+		
+		 {+if $zshui==1+}<div class="submenudiv" style="display: none;" > 
+ <div class="change_tit">当前选中:<span>赔率设置</span></div>
+        <ul>
+			    
+			 <li><a href="javascript:void(0)" target="frame" u='zshui' type='ptype' >默认赔率</a></li>
+			 <li><a href="javascript:void(0)" target="frame" u='zshui' type='setattshow' >各盘差分、参数</a></li>
+			 <li><a href="javascript:void(0)" target="frame" u='zshui' type='show' >公司退水</a></li>
+			 <li><a href="javascript:void(0)" target="frame" u='libset' type='auto' >降赔设置</a></li>
+			 
+        </ul>
+		</div> 
+		 {+/if+}		
+{+if ($hide==1)+}		 
+						<div class="submenudiv" style="display: none;" > 
+      <div class="change_tit">当前选中:<span>系统管理</span></div>
+             <ul>
+			 <li><a href="javascript:void(0)" target="frame" u='sysconfig' type='show'>系统设置</a></li>
+			
+            {+if $kj==1+}
+			<li><a href="javascript:void(0)" target="frame" u='game' type='show'>开盘设定</a></li> 
+            <li> <a href="javascript:void(0);" target="frame" u="kj" type='show'>开奖管理</a></li>
+            {+/if+} 
+            {+if $zshui==1+}
+            <li><a href="javascript:void(0)" target="frame" u='zshui' type='ma'>玩法属性</a></li>
+            {+/if+}
+            {+if $news==1+}
+            <li><a href="javascript:void(0)" target="frame" u='news' type='show'>系统公告</a></li>   
+            {+/if+}
+			
+            <li><a href="javascript:void(0)" target="frame" u='xxtz2' type='show'>注单明细</a></li>
+            
+			{+if $now==1+}
+			<li ><a href='javascript:void(0);' u='betinfo' type="show">注单备份</a></li>
+			<li ><a href='javascript:void(0);' u='mailbox' type="show">备份邮箱设置</a></li> {+/if+}
+			<li><a href="javascript:void(0)" target="frame" u='webconfig' type='show'>自动维护</a></li>
+			 <li><a href="javascript:void(0)" target="frame" u='zshui' type='gameset'>彩种管理设置</a></li>
+        </ul>
+		</div> 
+ {+/if+}	
+
+				
+		    {+if $baox==1+} <div  class="submenudiv" style="display: none;">
+<div class="change_tit2 baotit">公司报表查询 </div>
+<span class="top_back back back1"  uid="0" style="cursor: pointer;" > 返回</span>
+<span class="top_back back back2"  style="cursor: pointer;display: none;"> 返回</span>
+
+                </div>{+/if+}
+				
+				
+<div  class="submenudiv" style="display: none;">
+                      <div class="change_tit2">开奖结果</div>
+               <div class="kj_s"></div>
+                </div>
+				
+				
+				
+				<div  class="submenudiv" style="display: none;">
+                      <div class="change_tit2">在线统计</div>
+                </div>
+		
+		
+
+				
+		
+		
+
+      
+    </div> 
+
+   </div> 
+      
+	   <div id="middle-content" class="middle-content clear" style="height: 624px;">
+
+            <div class="main-content floatL">
+                <div class="main-content-in">
+                    <div id="content" class="content ios" >
+                        <iframe id="frame" name="frame" src="/hide/new.php" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+	<div class="foot_box">
+            <marquee direction="left" align="bottom" id="notices" height="30" width="90%" onmouseout="this.start()" onmouseover="this.stop()" scrollamount="2" scrolldelay="1" style="text-align:left"></marquee>
+            <a href="javascript:void(0)" class="more_c more"  target="frame">更多&gt;</a>
+
+            <div class="global_notice" title="重新加载">
+                <img class="no_data" src="/default/warning/notice_icons.png?cache=" style="display: inline;">
+            </div>
+
+            
+            <div class="global_notice_media"></div>
+
+        </div>
+		
+      </div> 
+
+			{+if $cnews>0+}
+{+section name=i loop=$news2+} 	
+<div id="dialogNotice_{+$news2[i].id+}" class="word_wrap ui-dialog-content ui-widget-content" style="display: none; width: auto; min-height: 0px; max-height: none;">{+$news2[i].content+}</div>
+{+/section+}
+{+/if+}
+    
+<script language="javascript" id='zhishu'>
+var ngid={+$gid+};
+var fenlei = {+$fenlei+};
+var layer={+$layer+};
+ma = [];
+     ma['紅'] = new Array(01,02,07,08,12,13,18,19,23,24,29,30,34,35,40,45,46); 
+     ma['藍'] = new Array(03,04,09,10,14,15,20,25,26,31,36,37,41,42,47,48); 
+     ma['綠'] = new Array(05,06,11,16,17,21,22,27,28,32,33,38,39,43,44,49); 
+
+</script>
+</body>
+</html>

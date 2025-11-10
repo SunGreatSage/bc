@@ -1,0 +1,57 @@
+
+
+<div class="scrollable backgroundcolorlightpink ng-scope others myitem">
+<div class="scrollable-content overthrow">
+
+<div class="container-fluid cn textcenter"> <!--container-->
+	<div id="history_lastweek">
+	    <div class="row graybg ">
+	    	<div class="padding10 clearfix">
+	    		<div class="col-xs-2">会员</div>
+	            <div class="col-xs-2" style="display:none;">QQ<BR />电话</div>
+	            <div class="col-xs-4">资金<BR />余额</div>
+	            <div class="col-xs-4">赚取<BR />退水</div>
+	        </div>
+		</div>
+
+{+section name=i loop=$user+}        
+		    <div class="row graylightbg borderbtmred">
+		    	<div class="padding10 clearfix" uid='{+$user[i].userid+}'>
+		    		<div class="col-xs-2 valign"><label>{+$user[i].username+}</label><BR />({+$user[i].tname+})</div>
+		            <div class="col-xs-2 valign"  style="display:none;">{+$user[i].qq+}<BR />{+$user[i].tel+}</div>
+		            <div class="col-xs-4 valign">{+$user[i].kmaxmoney+}<BR />{+$user[i].kmoney+}</div>
+		            <div class="col-xs-4 cnbig fontbold valign "><label>{+$user[i].liushui+}</label><a href="javascript:void(0)" class="eshui"><BR />更改</a>
+                    <input type="text" style="width:60px;" value='{+$user[i].liushui+}' /><a href="javascript:void(0)" class="eshuitj"><br />修改</a>&nbsp;<a href="javascript:void(0)" class="eshuiqx">取消</a>
+                    </div>
+		        </div>
+			</div>
+{+/section+}
+	    
+          <div class="col-sm-12 pagination page_info" rcount='{+$rcount+}' psize='{+$psize+}' tpage='{+$tpage+}'>
+            <div class="col-sm-4">
+              <div class="previous pull-left previous-btn">
+                <span aria-hidden="true">&lt;&lt; </span>前一页
+                
+              </div>
+            </div>
+            <div class="col-sm-4 textcenter">
+              <div><input class="pageNum needsclick" type="number" max="1" min="1" value="{+$tpage+}" length="4" ></div>
+            </div>
+            <div class="col-sm-4">
+              <div class="next pull-right next-btn">
+                  后一页<span aria-hidden="true"> &gt;&gt;</span> 
+                
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-12 pagination textcenter pagestatus">
+              <div>共 {+$rcount+} 笔记录 共 {+$pcount+} 页</div>
+          </div>
+
+	</div>
+
+	
+</div><!--container-->
+ <div class="gap100" style="height:200px;"></div> 
+    </div>
+</div>

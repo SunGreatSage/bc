@@ -1,0 +1,100 @@
+{+include file='header2.html'+}
+<style type="text/css">
+.data_table .flag{width:70px;}
+.data_table input{width:70px;}
+.data_table td{height:30px;}
+.pantb td{text-align:center}
+input.s1{padding:1.5px;}
+label{color:red}
+</style>
+</head>
+<body id="topbody">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='times';
+</script>
+
+<div class="main">
+	<div class="top_info">
+		<span class="title">开关盘时间调整</span><span class="right"></span>
+	</div>
+		<div class="contents param_panel">
+			<div class="game_class">
+				<ul>
+{+if $config.fasttype==1+}
+<li><span>快开彩</span>
+{+section name=i loop=$game+}
+    {+if $game[i].fast==1+}<a href="javascript:void(0)" class="g{+$game[i].gid+}"  gid='{+$game[i].gid+}'>{+$game[i].gname+}</a>{+/if+}
+ {+/section+}
+</li>
+{+/if+}
+{+if $config.slowtype==1+}
+<li><span>低频彩</span>
+{+section name=i loop=$game+}
+    {+if $game[i].fast==0+}<a href="javascript:void(0)" class="g{+$game[i].gid+}" gid='{+$game[i].gid+}'>{+$game[i].gname+}</a>{+/if+}
+ {+/section+}
+</li>
+{+/if+}
+				</ul>
+			</div>
+ 
+			<table class="layout pantb">
+			<tbody>
+			<tr>
+				
+				<td class="panel">
+					<table class="list data_table at_0">
+					<thead>
+<tr><th>期数</th><th>开盘时间</th><th>关盘时间</th><th>状态</th></tr>
+					</thead>
+					<tbody>
+ {+section name=i loop=$kj+}
+  <tr><th>{+$kj[i].qishu+}</th><td>{+$kj[i].opentime+}</td><td>{+$kj[i].closetime+}</td><td>{+$kj[i].zt+}</td></tr>
+ {+/section+}
+   					</tbody>
+					</table>
+ <div class="page"><div class="page_info"  page='{+$page+}' pcount='{+$pcount+}'>
+<span class="record">共 <span>{+$rcount+}</span> 条记录</span>
+<span class="page_count">共 <span>{+$pcount+}</span> 页</span>
+<span class="page_control">
+
+</span>
+</div>
+</div>
+				</td>
+                <td class="panel">
+					<table class="list data_table at_0">
+					<thead>
+					<tr>
+<th>彩种</th> <th>开盘</th> <th>开盘时间推迟[秒]</th><th>关盘时间提前[秒]</th>
+					</thead>
+					<tbody>
+                    
+    {+section name=i loop=$game+}
+     <TR gid={+$game[i].gid+} class="times">
+     <th>{+$game[i].gname+}</th>
+     <td><input type="checkbox" value=1 {+if $game[i].io==1+}checked{+/if+} /></td>
+      <td><input type="text" value='{+$game[i].o+}' class="o" /></td>
+      <td><input type="text" value='{+$game[i].c+}' class="c" /></td>
+     </TR>
+  {+/section+}
+   					</tbody>
+					</table>
+    	<div class="control"><BR />
+	<input type="button" value="保存" class="button send"><input type="button" value="取消" class="button" style="display:none">
+		</div>
+				</td>
+			</tr>
+			</tbody>
+			</table>
+		</div>
+
+</div>
+
+
+</div>
+<div id='test'></div>
+<script language="javascript">
+var gid={+$gid+};
+</script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>资金管理</title>
+		
+		<link rel="stylesheet" href="../css/default/xj/jquery-ui.css">
+        <link rel="stylesheet" href="../css/default/master.css">
+        <link rel="stylesheet" href="../css/default/style.css">
+        <link rel="stylesheet" href="../css/default/daviddeposit.css">
+        <link rel="stylesheet" href="../css/default/davidwithdraw.css">
+        <link rel="stylesheet" href="../css/default/margin.css">
+        <script language="javascript" src="/js/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" src="../js/ui/jquery-ui.js"></script>
+<script type="text/javascript" src="../js/ui/dialog-hi.js"></script>
+<script type="text/javascript" src="../js/jquery.ui.datepicker-zh-CN.js"></script>
+    </head>
+<body>
+<script type="text/javascript" id="myjs">var mulu='{+$mulu+}';
+var js=1;
+var sss="mem_jyjl";
+</script>
+			<div class="content" style="height:1150px">
+<div class="memberheader">
+	<div class="useravatar floatleft">
+		<img src="../css/default/img/userlogo.jpg" width="84" height="83" alt="" />
+	</div>
+	<div class="memberinfo floatleft">
+		<h1 class="floatleft">
+			<script language="javaScript">
+				now = new Date(), hour = now.getHours()
+				if (hour < 6) {
+					document.write("凌晨好")
+				} else if (hour < 9) {
+					document.write("早上好")
+				} else if (hour < 12) {
+					document.write("上午好")
+				} else if (hour < 14) {
+					document.write("中午好")
+				} else if (hour < 17) {
+					document.write("下午好")
+				} else if (hour < 19) {
+					document.write("傍晚好")
+				} else if (hour < 22) {
+					document.write("晚上好")
+				} else {
+					document.write("夜里好")
+				}
+			</script>
+		 <span class="blue">{+$xing+}  </span>
+
+		</h1>
+		<div class="balance floatleft">
+			<div class="balancevalue floatleft">
+				中心钱包 : <span class="blue"><span class="balanceCount">{+$money+}</span></span>
+			</div>
+			<div class="floatright margintop7 marginright10 marginleft5 pointer">
+				<a onclick="location.reload()" href="javascript:;"><img src="../css/default/img/btnrefresh.jpg"
+					width="16" height="17" alt="" /> </a>
+			</div>
+
+		</div>
+		<div class="gap5"></div>
+		<p></p>
+		<p>最后登录：{+$lastlogintime+}</p>
+	</div>
+</div>
+            	<div class="membersubnavi">
+                      		<div class="subnavi blue">
+                            	<a href="member.php?xtype=zxcz">充值</a>
+                            </div>
+                            <div class="subnavi blue">
+                            	<a href="member.php?xtype=zxtk">提款</a>
+                            </div> 
+                            <div class="subnavi blue">
+                            	交易历史
+                            	<div class="subnaviarrow"></div>
+                            </div>
+               	</div>
+               	
+               	 <div class="transaction-setting-container">
+          <table class="setting-table">
+            <tbody>
+              <tr>
+                <td>交易类型：</td>
+                <td>
+                <select name="mtype" id="mtype" class="province floatleft select1">
+				<option value="-1" selected="selected">全部</option>
+				<option value="0">充值</option>
+				<option value="1">提款</option>
+				</select>
+                </td>
+                <td colspan="2">&nbsp;
+                  
+                </td>
+              </tr>
+
+              <tr>
+                <td>单据状态：</td>
+                <td>
+                <select name="status" id="status" class="province floatleft  select1">
+				<option value="-1" selected="selected">全部</option>
+				<option value="2">待处理</option>
+				<option value="1">成功</option>
+				<option value="0">失败</option>
+				</select>
+                </td>
+                <td colspan="2">&nbsp;
+                  
+                </td>
+              </tr>
+
+              <tr>
+                <td>起止日期：</td>
+                <td>
+                  <div class="date"><input id="sdate" value="" type="text" ><img src="../css/default/img/calendar.png"></div>
+                  <div class="date"><input id="edate" value="" type="text" ><img src="../css/default/img/calendar.png"></div>
+                </td>
+                <td class="alignRight">搜索关键字：</td>
+                <td><div class="search"><input id="keyword" value="" type="text"><button type="button" class="btn btn-red search" >搜索</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="duration-setting-container">
+        </div>
+
+        <div class="records">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width:10%">时间</th>
+                <th style="width:10%">交易类型</th>
+                <th style="width:10%">金额</th>
+                <th style="width:8%">手续费</th>
+                <th style="width:30%">交易描述</th>
+                <th style="width:8%">单据状态</th>
+                <th style="width:8%">详情</th>
+                
+              </tr> 
+            </thead>
+            <tbody>
+            {+section name=i loop=$marr+}
+              <tr>
+                <td class="tjtime">{+$marr[i].tjtime+}</td>
+                <td class="mtype">{+$marr[i].mtype+}</td>
+                <td class="money">{+$marr[i].money+}</td>
+                <td class="sxfei">{+$marr[i].sxfei+}</td>
+                <td class="ms">通过 {+$marr[i].fs+} {+$marr[i].mtype+} {+$marr[i].money+}元 </td>
+				<td class="bz" style="display:none;">{+$marr[i].bz+}</td>
+                <td class="status">{+$marr[i].status+}</td>
+                <td><a href="javascript:;" class="xiangqing">详情</a></td>
+                <td style="display:none;" class="fs">{+$marr[i].fs+}</td>
+                <td style="display:none;" class="cuntime">{+$marr[i].cuntime+}</td>
+                <td style="display:none;" class="bank">{+$marr[i].bank+}</td>
+                <td style="display:none;" class="sname">{+$marr[i].sname+}</td>
+                <td style="display:none;" class="snum">{+$marr[i].snum+}</td>
+                <td style="display:none;" class="uname">{+$marr[i].uname+}</td>
+                <td style="display:none;" class="unum">{+$marr[i].unum+}</td>
+                <td style="display:none;" class="pass">{+$marr[i].pass+}</td>
+              </tr>
+             {+/section+} 
+			<tr><td colspan="10"><div class="page_info">
+<span class="record">共 {+$rcount+} 条记录</span>
+<span class="page_control" pcount='{+$pcount+}'>
+<a class="previous">前一页</a>
+{+foreach item=i from=$parr+}
+  {+if $i==$upage+}
+     <span class="current">{+$i+}</span>
+   {+else+}  
+     <a href='javascript:void(0);'>{+$i+}</a>
+  {+/if+}
+{+/foreach+}
+<a class="next">后一页</a>
+</span>
+</div>
+</td></tr>
+            </tbody>
+          </table>
+        </div>
+		  </div>
+</body>
+</html>

@@ -1,0 +1,43 @@
+{+include file='headers.html'+}
+</head>
+<body style="overflow:hidden">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='money_chongzhifs';</script>
+
+				<table class="data_table list bank" style="width:400px;">
+					<thead>
+						<tr>
+                            <th>类别</th>
+							<th>启用</th>
+						</tr>
+					</thead>
+					<tbody>
+            
+                     <tr>
+                     <td class='tcenter'>网银在线支付</td>
+                     <td  class='tcenter'><input type="checkbox" class="bankonline" {+if $bankonline==1+}checked{+/if+}  /></td>
+                     </tr>
+               
+                     <tr>
+                     <td class='tcenter'>微信在线支付</td>
+                     <td  class='tcenter'><input type="checkbox" class="weixin" {+if $weixin==1+}checked{+/if+}  /></td>
+                     </tr>
+                     <tr>
+                     <td class='tcenter'>支付宝在线支付</td>
+                     <td  class='tcenter'><input type="checkbox" class="alipay" {+if $alipay==1+}checked{+/if+}  /></td>
+                     </tr>
+                     
+                     <tr>
+                     <td class='tcenter'>银行卡/微信/支付宝转帐</td>
+                     <td  class='tcenter'><input type="checkbox" class="bankatm" {+if $bankatm==1+}checked{+/if+}  /></td>
+                     </tr>
+                           
+					<tr>
+                    <td colspan="2"  class='tcenter'>
+                       <input type="button" class="button save" value="保存" />
+                    </td>
+                    </tr>
+					</tbody>
+				</table>
+
+
+</body></html>

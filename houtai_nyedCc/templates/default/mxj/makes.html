@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Mobile</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=0.7, minimal-ui, width=360" id="viewport" />
+    <meta http-equiv="cleartype" content="on">
+    <meta name="apple-mobile-web-app-status-bar-style" content="yes" />
+    <link rel="stylesheet" href="../css/mobile/mobile-angular-ui-base1.css" />
+    <link rel="stylesheet" href="../css/mobile/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/mobile/mobile-bootstrap.css">
+    <link rel="stylesheet" href="../css/mobile/mobile-interface.css">
+<!--    <link rel="stylesheet" href="../css/mobile/jquery-ui.css">
+    <link rel="stylesheet" href="../css/mobile/mobile-cash.css">-->
+    <link rel="stylesheet" href="../css/mobile/mobile-game.css">
+    <link rel="stylesheet" href="../css/mobile/mobile-skin.css">
+<script language="javascript" src="/js/jquery-1.8.3.js"></script>
+<script language="javascript" src="/js/jquery.cookie.js"></script>
+<script src="/js/default/jsmxj/makeuser.js?date=2023" language="javascript"></script>
+<script src="/js/default/jsmxj/ssuser.js" language="javascript"></script>
+<script src="/js/public.js" language="javascript"></script>
+    <script type="text/javascript">
+    $(document).ready(function() { 
+      $('.infopanelrow .accounts:first').show();
+      if (screen.width > 360 && !navigator.userAgent.match("UCBrowser") && navigator.userAgent.match("Android")) {
+        $('body').css("zoom","0.7")
+      }
+    });
+    
+    
+    </script>
+    <style type="text/css">
+ .hide{display:none;}  
+ .peilv1.bg{background:#FF3} 
+ 
+ @font-face {
+    font-family: 'customiconmedium';
+    src: url('../css/mobile/fonts/customicon-webfont.eot');
+    src: url('../css/mobile/fonts/customicon-webfont.eot?#iefix') format('embedded-opentype'),
+         url('../css/mobile/fonts/customicon-webfont.woff2') format('woff2'),
+         url('../css/mobile/fonts/customicon-webfont.woff') format('woff'),
+         url('../css/mobile/fonts/customicon-webfont.ttf') format('truetype'),
+         url('../css/mobile/fonts/customicon-webfont.svg#customiconmedium') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+.customico {
+  font-family: 'customiconmedium';
+  font-size: 53px;
+  line-height: 40px;
+  margin-left: -5px;
+}
+    </style>
+
+<script type="text/javascript" src="../js/ui/jquery-ui.js"></script>
+<script type="text/javascript" src="../js/ui/dialog-hi.js"></script>
+  </head>
+  <body >
+<script id=myjs language="javascript">
+var js=0;var sss='make';</script>
+    <!-- Sidebars -->
+<div class="sidebar sidebar-left ng-scope">
+	<div class="ng-scope">
+		<div class="scrollable" style="padding-top: 70px;">
+			<div class="scrollable-header app-name cnbig pink headerbg">
+				<div class="margintop20 marginbtm20 marginleft20">
+					帐号：<span class="white"><span class="username">{+$username+}</span></span>
+				</div>
+			</div>
+			<div class="scrollable-content overthrow">
+				<div class="list-group">
+					<a class="list-group-item zhuye" href="javascript:void(0);"><i class="fa fa-home"></i>&nbsp;&nbsp;&nbsp;主页</a>
+                     {+if $moneytype==1+}
+                    <a class="list-group-item ucenter" href="javascript:void(0);"><div class="customico floatleft">C</div><div class="floatleft">&nbsp;&nbsp;&nbsp;个人中心</div></a>
+                    <a class="list-group-item cunqu" href="javascript:void(0);"><div class="customico floatleft">B</div><div class="floatleft">&nbsp;&nbsp;&nbsp;存款／取款</div></a>
+                    {+/if+}
+                    
+					<a class="list-group-item changepass" href="javascript:void(0);"><i class="fa fa-lock"></i>&nbsp;&nbsp;&nbsp;修改密码</a>
+                    <a class="list-group-item userinfo"><i class="fa fa-user"></i>&nbsp;&nbsp;&nbsp;个人资讯</a>
+					<a class="list-group-item lib" href="javascript:void(0);"><i class="fa fa-file-text-o"></i>&nbsp;&nbsp;&nbsp;未结明细</a>
+					<a class="list-group-item baoday" href="javascript:void(0);"><i class="fa fa-file"></i>&nbsp;&nbsp;&nbsp;今天已结</a>
+					<a class="list-group-item baoweek" href="javascript:void(0);"><i class="fa fa-files-o"></i>&nbsp;&nbsp;&nbsp;两周报表</a>
+                     {+if $moneytype==1+}
+                    <a class="list-group-item myitem" href="javascript:void(0);"><i class="fa fa-user"></i>&nbsp;&nbsp;&nbsp;我的团队</a>
+                    <a class="list-group-item itembao" href="javascript:void(0);"><i class="fa fa-files-o"></i>&nbsp;&nbsp;&nbsp;团队报表</a>
+                    {+/if+}
+					<a class="list-group-item longs" href="javascript:void(0);"><i class="fa fa-star-o"></i>&nbsp;&nbsp;&nbsp;开奖结果</a>
+					<a class="list-group-item rule" href="javascript:void(0);"><i class="fa fa-list-ol"></i>&nbsp;&nbsp;&nbsp;规则</a>
+                    {+if $moneytype==1+}
+					<a class="list-group-item kefu" href="{+$kfurl+}" target="_blank" >
+					<div class="customico floatleft">
+						A
+					</div>
+					<div class="floatleft">
+						&nbsp;&nbsp;&nbsp;在线客服
+					</div>
+					</a>
+                    {+/if+}
+				</div>
+				<div class="mobilemenubtn2 buttonredradius cn logout" style='width:200px;' >
+					退出
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+    <div class="app">
+      <!-- Navbars -->
+      <div class="navbar navbar-app navbar-absolute-top">
+         
+        <div class="navbar navbar-brand-center cn margintop10 toptitle" >
+              <div id="maintitle"></div>
+        </div>
+
+        <div class="navbar pull-right cn margintop10 marginright10 menus">
+                    <select class="dropdowncentermenu game">  
+                         {+section name=i loop=$gamecs+}                  
+                      		<option value="{+$gamecs[i].gid+}" {+if $gid==$gamecs[i].gid+}selected{+/if+}>{+$gamecs[i].gname+}</option>
+                         {+/section+}   
+                    </select>
+
+                    <select class="dropdowncentermenu2 menu" >
+      {+if $fenlei!=100+}<option  bid='' >主盘势</option>{+/if+}
+      {+if $fenlei==107+}<option bid='15'>排名1~10</option>{+/if+}
+      {+if $fenlei==121+}<option bid='15'>1~5球号</option>{+/if+}
+      {+if $fenlei==103+}<option bid='15'>1~8球号</option>{+/if+}
+      {+if ($fenlei!=151)+}    
+          {+section name=i loop=$b+}    
+             {+if ($fenlei==107)+} 
+               {+if ($b[i].name=='冠亚和' || $b[i].name=='番摊')+}<option value='{+$b[i].bid+}'>{+$b[i].name+}</option>{+/if+}
+               {+if ($b[i].name=='任选牛牛' & $pk10niu==1)+}<option value='{+$b[i].bid+}'>{+$b[i].name+}</option>{+/if+}
+             {+elseif ($fenlei==121)+} 
+               {+if ($b[i].name=='正码' | $b[i].name=='连码' || $b[i].name=='番摊')+}<option value='{+$b[i].bid+}'>{+$b[i].name+}</option>{+/if+}
+             {+elseif ($fenlei==103)+} 
+               {+if ($b[i].name!='总和龙虎')+}<option value='{+$b[i].bid+}'>{+$b[i].name+}</option>{+/if+}
+               {+elseif ($fenlei==100)+}
+                        <option value='{+$b[i].sid+}'>{+$b[i].name+}</option>
+             {+else+}
+             <option value='{+$b[i].bid+}'>{+$b[i].name+}</option>
+             {+/if+}   
+          {+/section+}
+      {+/if+}
+                    </select>
+                    
+        </div>
+        <div class="btn-group pull-left" id="menuBtn" >
+          <div ui-toggle="uiSidebarLeft" class="btn sidebar-toggle">
+            <div class="mobilemenubtn buttonredradius cn margintop10 renav" style="width: 85px;">菜单</div>
+          </div>
+        </div>
+
+
+  
+        <div class="infopanel user_info">
+          <div class="infopanelrow margintop5" id="account"> 
+            <div class="col-sm-8">
+                <!-- <div class="col-sm-6 dedu"><div class="pink">额度</div><div class="white margintop5 balance maxmoney">{+$maxmoney+}</div></div>-->
+                <div class="col-sm-6 dedu"><div class="pink">可用余额</div><div id="betting" class="white margintop5 betting money">{+$money+}</div></div>
+                <div class="col-sm-6 dedu"><div class="pink">未结算</div><div id="betting" class="white margintop5 betting moneyuse">{+$moneyuse+}</div></div>
+               <!-- <div class="col-sm-6 kedu"><div class="pink">额度</div><div class="white margintop5 balance kmaxmoney">{+$kmaxmoney+}</div></div>-->
+                <div class="col-sm-6 kedu"><div class="pink">可用余额</div><div id="betting" class="white margintop5 betting kmoney">{+$kmoney+}</div></div>
+                 <div class="col-sm-6 kedu"><div class="pink">未结算</div><div id="betting" class="white margintop5 betting kmoneyuse">{+$kmoneyuse+}</div></div>
+                <!--<div class="col-sm-6 fedu"><div class="pink">额度</div><div class="white margintop5 balance fmaxmoney">{+$kmaxmoney+}</div></div>-->
+                <div class="col-sm-6 fedu"><div class="pink">可用余额</div><div id="betting" class="white margintop5 betting fmoney">{+$kmoney+}</div></div>
+                
+                 <div class="col-sm-6 fedu"><div class="pink">未结算</div><div id="betting" class="white margintop5 betting fmoneyuse">{+$fmoneyuse+}</div></div>
+               
+            </div>
+            <div class="col-sm-4">
+              <div class="col-sm-12"><div class="pink">今日输赢</div><div id="bresult" class="white margintop5 synow">0</div></div>
+            </div>
+            </div>
+        </div>
+    
+      </div>
+     
+      <!-- App Body -->
+      <div class="app-body"  style="margin-top:136px;display:inherit">
+
+        <div class="app-content">
+        
+        
+          <ng-view>
+          
+     
+
+
+
+
+
+          
+<div class="container-fluid cn ng-scope zhuye">
+  <div class="row fixtop">
+      <div class="row  borderpink cnsmall gradientlightpink">
+            <div class="col-xs-12 padding5" style="padding:2px !important;" >
+                <div id="result_info" class="resultinfo deepred marginright15 marginleft10a floatleft  margintop5"  {+if $fenlei==161+}style="width:20%;height:80px;"{+/if+}><strong>{+$upqishu+}</strong>期</div>
+                <div id="result_balls"  {+if $fenlei==161+}style="width:75%;"{+/if+}></div>
+            </div>
+        </div>
+        
+        <div class="row cnsmall">
+            <div class="col-xs-5 padding5" style="width:180px;">
+                <div class="resultinfo green marginright15 marginleft10 floatleft vcenter2"><strong id="drawNumber" class="thisqishu">{+$thisqishu+}</strong><span class="deepred">期</span></div>
+            </div>    
+            <div class="col-xs-5 padding5">
+                <div class="marginright15 floatleft deepred vcenter2 openPanel panstatus"  s='{+$panstatus+}'  style="width:350px !important;margin-left:5px;"><i class="fa fa-refresh shuaxin"></i>&nbsp;&nbsp;{+if $panstatus==1+}距关盘:{+else+}距开盘:{+/if+}<span class="green"><strong id="cdClose" class='time0'>{+$pantime+}</strong></span></div>
+                {+if $fenlei==100+}
+                <div class="marginright15 floatleft deepred vcenter2 openPanel otherstatus hide"  s='{+$otherstatus+}' style="display: none;width:350px !important;"><i class="fa fa-refresh shuaxin"></i>&nbsp;&nbsp;{+if $panstatus==1+}距正码关盘:{+else+}距正码开盘:{+/if+} <span class="green"><strong id="cdClose" class="time1">{+$othertime+}</strong></span></div>
+                {+/if+}
+                <!--<div class="floatleft deepred vcenter2 closePanel" style="display: block;">距离开奖: <span class="red"><strong id="cdDraw">00:08</strong></span></div>-->
+            </div>  
+            
+            <div class="col-xs-2 padding5" style="margin-left:35px;display:none;">
+                <div class="pull-right deepred marginright5 vcenter2" style="width: 72px;"><i class="fa fa-refresh shuaxin"></i><!-- <span id="cdRefresh">2</span>秒</div>-->
+            </div>
+           
+    	</div>
+    </div>	
+</div>
+
+<div id="bet_panel" class="container-fluid cn bet_panel input_panel ng-scope bet_closed make" style="width:100%; height: 100%; padding-bottom: 94px; overflow:auto;-webkit-overflow-scrolling:touch">
+<div class="row abcdab"> 
+      <div class="col-xs-8 col-sm-8" style="width:100%">
+        
+<SELECT class="abcd dropdowncentermenu2 needsclick  pull-left" style="width:100px;background:url(../css/mobile/img/blue/dropdownab.jpg)" >
+    {+foreach item=i from=$pan+}
+       <option  value="{+$i+}" {+if ($i==$defaultpan)+}selected{+/if+} >{+$i+}盘</option>
+    {+/foreach+}
+ </SELECT>
+  <SELECT class="ab dropdowncentermenu2 needsclick  pull-left" style="width:100px;background:url(../css/mobile/img/blue/dropdownab.jpg);margin-left:5px;"   >
+      <option value="A" selected>a盘</option>
+      <option value="B">b盘</option>
+    </SELECT>
+   
+    
+    <div class='pull-right'><div class='submitticket mobilemenubtn2 gradientred xd'>下单 <i class='fa fa-arrow-circle-down'></i></div></div>
+    <div class='pull-right' style='display:none;'><div class='submitticket mobilemenubtn2 gradientred sx'>刷新 <i class='fa fa-refresh'></i></div></div>
+    <div class='pull-right'><div class='submitticket mobilemenubtn2 gradientred cancel'>重置 <i class='fa fa-refresh'></i></div></div>
+    </div>
+  </div>
+
+    <div class="gap100 clong"></div>
+    <div class="gap100"></div>
+</div>
+          </ng-view>
+        </div>
+      </div>
+
+    </div>
+    <!-- ~ .app -->
+    
+    
+
+    <div class="overlay2" ></div>
+    
+    <!-- submit ticket panel -->
+    <div class="uploadbet cn sendtb">
+<!--      <div class="submitbet-loading" >
+          <i class="fa fa-spinner fa-spin loading-spinner"></i>
+      </div>-->
+      <input name="mobileDrawNumber" type="hidden" value=""/>
+      <div class="row backgroundcolorpink">
+          <div class="padding10 clearfix">
+                <div class="floatleft marginleft20 valign3">金额
+                </div>
+                <div class="floatleft marginleft10"><input type="number" min="1" class="submitticketinput1 zje" id="hold_value"  pattern="\d*">
+                </div>
+
+                <div class="floatleft" style="width: 80px;"><input type="checkbox" class="submitticketinput1 yjctrl"   pattern="\d*">
+                </div>
+                <div class="floatleft marginleft20 valign3">预设
+                </div>
+                <div class="floatleft marginleft10">
+                 <input id="click_hold" type="checkbox" style="zoom:2;display:none;"> <!--预设<br>-->
+                  <!-- <div class="uploadbetbtn mobilemenubtnsmall buttonredradius cn">确认</div> -->
+                </div>
+            </div>
+        </div>
+        <div class="row textcenter darkred borderbtmred">
+          <div class="padding10 clearfix">
+              <div class="col-xs-4">玩法</div>
+                <div class="col-xs-2">赔率</div>
+                <div class="col-xs-4">金额</div>
+            </div>
+        </div>
+<div class="submitbetdetail borderbtmred nr" style="height: 400px;">
+
+
+</div>
+
+
+        <div class="row textcenter darkred" id="submitticket">
+          <div class="padding10 clearfix">
+              <div class="col-xs-5">注数： <span class="ticketnum">0</span></div>
+                <div class="col-xs-7">总金额: <span class="tickettotal">0</span></div>
+            </div>
+        </div>
+        
+        <div class="row textcenter">
+          <div class="padding10 textcenter clearfix" style="position:relative;">
+                <!-- <div class="mobilemenubtn buttonredradius2 cn inlineblock marginright20">取消</div> -->
+                <div class="uploadbetbtn mobilemenubtn buttonredradius cn inlineblock marginright20 exe">确认</div>
+            </div>
+        </div>
+       <div class="closebtn"><img src="../css/mobile/img/closebtn_1.jpg" alt=""></div>
+    </div>
+    <!-- submit ticket end -->  
+
+
+
+        <script type="text/javascript">
+       var style = '{+$class+}';
+var ngid= {+$gid+};
+
+var globalpath = '{+$globalpath+}';
+var fast={+$fast+};
+var fudong={+$fudong+};
+var kjurl='{+$kjurl+}';
+var fenlei='{+$fenlei+}';
+var pk10num = '{+$pk10num+}';
+var pk10ts = '{+$pk10ts+}';
+        </script>
+<script type="text/javascript" src="../js/mobile/jquery-ui.js"></script>
+<script type="text/javascript" src="../js/mobile/jquery.ui.datepicker-zh-CN.js"></script>
+<script type="text/javascript" src="../js/md5.js"></script>
+
+  </body>
+</html>

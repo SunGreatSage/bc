@@ -1,0 +1,83 @@
+
+<tr>
+ <td><table class="tinfo wd100 cs1">
+   <tr>
+    <td uid='{+$uid+}' fid='{+$fid+}'>【{+$username+}】退水设定</td>
+    <td style='width:100px;'><input type="button" class="btn1 btnf setpoints" value="提交" />
+     <input type="button" class="btn1 btnf close" value="关闭" /></td>
+   </tr>
+   <TR>
+    <Td colspan="2" style="text-align:left;padding-left:10px;"><label>一、如果修改代理级的退水，<Br />
+      1、改动后的退水大于改动前退水，该用户所有下线的退水维持不变。<BR />
+      2、改动后的退水[P]小于改动前的退水，所有下线的退水和[P]作比较，大于[P]，下线的退水为[P]，小于[P]，下线退水不变<BR />
+      二、如果修改占成，该用户的所有下级占成将归0。<BR />
+      三、如果修改代理级的单注最大限额，<Br />
+      1、改动后的值大于改动前值，该用户所有下线的（单注最大限额）维持不变。<BR />
+      2、改动后的值[M]小于改动前的值，所有下线的（单注最大限额）和[M]作比较，大于[M]，下线的(单注最大限额)为[M]，小于[M]，下线(单注最大限额)不变<br />
+      四、如果修改用户的（单注最低限额），该用户的所有下线的（单注最低限额）和该用户相同。 </label></Td>
+   </TR>
+  </table>
+  <table class="tinfo wd100 cs2">
+   <Tr>
+    <th rowspan="2"> <select id='game' style="width:100px;">
+      <option value="all">选择游戏</option>
+      
+      
+   {+section name=i loop=$game+}
+      
+      
+      <option value="{+$game[i].gid+}">{+$game[i].gname+}</option>
+      
+      
+   {+/section+}
+   
+     
+     </select>
+    </th>
+    <th rowspan="2"> 类别 </th>
+    <th rowspan="2">赔率差</th>
+    <th rowspan="2" style="display:none">保底赔率</th>
+    <th rowspan="2">单期最高</th>
+    <th rowspan="2">单注最高</th>
+    <th rowspan="2">单注最低</th>
+    {+foreach item=i from=$span+}
+    <th  class="{+$i+} p" colspan="2">{+$i+}盘退水</th>
+    {+/foreach+} </Tr>
+   <tr> {+foreach item=i from=$span+}
+    <th class="a p">A</th>
+    <th class="a p">B</th>
+    {+/foreach+} </tr>
+   {+section name=i loop=$game+} 
+   {+assign var=pan value=$game[i].pan+}
+   {+section name=j loop=$pan+}
+   <tr gid='{+$game[i].gid+}' class="gametr">
+    <td class="{+$pan[j].class+}" gid='{+$game[i].gid+}'>{+$game[i].gname+}</td>
+    <td class="{+$pan[j].class+}" gid='{+$game[i].gid+}'>{+$pan[j].name+}</td>
+    <td>{+$pan[j].peilvcha+}</td>
+    <td>{+$pan[j].cmaxje+}</td>
+    <td>{+$pan[j].maxje+}</td>
+    <td>{+$pan[j].minje+}</td> 
+    {+if $pan[j].abcd==1+}
+        {+foreach item=k from=$span+}   
+           {+assign var='m' value=$k|@strtolower+}
+           {+if $pan[j].ab==1+}
+               {+assign var="tmp" value="points`$m`a"+}
+               <td>{+$pan[j].$tmp+}</td>
+               {+assign var="tmp" value="points`$m`b"+}
+               <td>{+$pan[j].$tmp+}</td>
+           {+else+}
+                {+assign var="tmp" value="points`$m`0"+}
+                <td colspan="2">{+$pan[j].$tmp+}</td>
+            {+/if+} 
+        {+/foreach+}
+    {+else+}
+         {+assign var="tmp" value=$span|@count+}
+         {+assign var="tmp2" value=$tmp*2+}
+         <td colspan="{+$tmp2+}">{+$pan[j].points00+}</td>
+    {+/if+}
+    </tr>
+   {+/section+}
+   {+/section+}
+  </table></td>
+</TR>
+</Tr>

@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   {+if $rkey==0+}oncontextmenu="return false"{+/if+}><head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <!--避免IE使用兼容模式-->
+    <meta http-equiv=X-UA-Compatible content="IE=edge,chrome=1" />
+    <meta name="viewport" content="user-scalable=yes, target-densityDpi=device-dpi" />
+    <meta content="always" name="referrer" />
+    <meta name="renderer" content="webkit" />
+<title>Welcome</title>
+<link rel="stylesheet" href="/js/jquery/new/jqueryuib.min.css" />
+<link rel="stylesheet" href="/default/css/Skins/blue/skinbd.min.css" />
+<script language="javascript" src="/js/jquery-1.8.3.min.js"></script>
+<script language="javascript" src="/js/public.js"></script>
+<script language="javascript" src="/js/md5.js"></script>
+
+<script language="javascript">
+function hideinfo(){ if(event.srcElement.tagName=="A"){
+   window.status=event.srcElement.innerText}
+}
+document.onmouseover=hideinfo; 
+document.onmousemove=hideinfo;
+var globalpath = "{+$globalpath+}";
+function changeh(){
+    var obj = parent.document.getElementById("frame"); //取得父页面IFrame对象  
+	var h= document.body.clientHeight+500;
+    obj.style.height = h+"px"; //调整父页面中IFrame的高度为此页面的高度
+}
+
+</script>
+</head>
+<link rel="stylesheet" type="text/css" href="/default/css/main.css?v=004" />
+<link rel="stylesheet" type="text/css" href="/default/css/rule.css" />
+<body class='L_HK6 {+$skin+}'>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='rule';</script>
+<style>
+.tit_box {
+    background: #e6edf8;
+    color: #3c4454;
+}
+.bar_tit b {
+    color: #2161b3;
+    border-bottom: 2px solid #2161b3;
+}
+.bar_tit {
+    border-bottom: 2px solid #ddd;
+}
+.search select {
+    border: 1px solid #bbc4ce;
+}
+
+</style>  
+<div class="jt-container pad10">
+        <div class="bar_tit">
+            <b>活动规则 {+$sx+}</b>
+                    <div class="search">
+                        <span class="title">彩种选择</span>
+                        <span>
+                            <select id="lottery" name="lottery" class="game" >
+                                   {+section name=i loop=$game+}
+                                    <option value="{+$game[i].gid+}" {+if ($game[i].gid==$gid)+}selected{+/if+}>{+$game[i].gname+}</option>
+									{+/section+}
+                            </select>
+                        </span>
+                    </div>
+					</div>
+{+$g+}

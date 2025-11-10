@@ -1,0 +1,640 @@
+{+include file='header.html'+}
+<script src="/js/md5.js" language="javascript"></script>
+<link href="/imgn/user.css" rel="stylesheet" />
+<link href="/imgn/loto.css" rel="stylesheet" />
+<style>
+.toptb .logotd{padding:0;background:url(../imgn/{+$wid+}.jpg) no-repeat;}
+.game3 label{display:block;float:left;width:40px;border:1px solid  #63C;text-align:left;padding-left:1px;margin:1px;cursor:pointer;overflow:hidden;font-size:10pt;color:#000;background:#fff}
+.game3 label.s{background:#F9F}
+</style>
+</head><body>
+<script language="javascript" id='myjs'>
+var sfile='makeloto';
+function json_encode_js(aaa) {
+	var i, s, a, aa = [];
+	if (typeof(aaa) != "object") {
+		alert("ERROR json");
+		return
+	}
+	for (i in aaa) {
+		s = aaa[i];
+		a = '"' + i + '":';
+		if (typeof(s) == 'object') {
+			a += json_encode_js(s)
+		} else {
+			a += '"' + s + '"'
+		}
+		aa[aa.length] = a
+	}
+	return "{" + aa.join(",") + "}"
+}
+
+function obj2str(o) {
+	var r = [];
+	if (typeof o == "string") return "\"" + o.replace(/([\'\"\\])/g, "\\$1").replace(/(\n)/g, "\\n").replace(/(\r)/g, "\\r").replace(/(\t)/g, "\\t") + "\"";
+	if (typeof o == "object") {
+		if (!o.sort) {
+			for (var i in o) r.push(i + ":" + obj2str(o[i]));
+			if ( !! document.all && !/^\n?function\s*toString\(\)\s*\{\n?\s*\[native code\]\n?\s*\}\n?\s*$/.test(o.toString)) {
+				r.push("toString:" + o.toString.toString())
+			}
+			r = "{" + r.join() + "}"
+		} else {
+			for (var i = 0; i < o.length; i++) {
+				r.push(obj2str(o[i]))
+			}
+			r = "[" + r.join() + "]"
+		}
+		return r
+	}
+	return o.toString()
+}
+
+function xreload() {
+	if (document.frames) {
+		document.all["check"].src = 'check.php'
+	} else {
+		document.getElementById("check").contentWindow.location.href = 'check.php'
+	}
+	setTimeout(xreload, 55000)
+}
+
+
+
+function getResult(num, n) {
+	return Math.round(num * Math.pow(10, n)) / Math.pow(10, n)
+}
+
+function getresult(num, n) {
+	return num.toString().replace(new RegExp("^(\\-?\\d*\\.?\\d{0," + n + "})(\\d*)$"), "$1") + 0
+}
+function randarr(arrs) {
+	var rand = Math.round(Math.random() * 48) + 1;
+	if (in_array(rand, arrs)) {
+		return randarr(arrs)
+	} else {
+		return rand
+	}
+}
+function in_array(v, a) {
+	for (key in a) {
+		if (a[key] == v) return true
+	}
+	return false
+}
+
+function C(arr, num) {
+	var r = [];
+	(function f(t, a, n) {
+		if (n == 0) return r.push(t);
+		for (var i = 0, l = a.length; i <= l - n; i++) {
+			f(t.concat(a[i]), a.slice(i + 1), n - 1)
+		}
+	})([], arr, num);
+	return r
+}
+
+
+</script>
+<div class="top">
+ <table class='toptb' cellpadding="0" cellspacing="0" border="0">
+  <tr>
+   <td rowspan="3" class="logotd"><div class="logo">
+     <h1><span>
+      <!--{+$webname+}-->
+      </span></h1>
+    </div></td>
+   <td width="100%" style="height:27px;"  class="game3 game2">      {+section name=i loop=$gamecs+}
+    {+if $gamecs[i].ifok!='0'+} <label gid={+$gamecs[i].gid+} {+if $gid==$gamecs[i].gid+}class='s'{+/if+} >{+$gamecs[i].sgname+}</label>{+/if+}
+     {+/section+}</td>
+  </tr>
+  <Tr>
+   <td style="height:25px;"><div class="menu">
+     <ul class="big">
+      <li class="lib">
+       <div><span><a href="#">下注明细</a></span></div>
+      </li>
+      <li class="bao">
+       <div><span><a href="#">历史帐户</a></span></div>
+      </li>
+      <li class="zinfo" >
+       <div><span><a href="#">中奖名单</a></span></div>
+      </li>
+      <li  class="kj">
+       <div><span><a href="#">开奖结果</a></span></div>
+      </li>
+      <li  class="rule">
+       <div><span><a href="#">游戏规则</a></span></div>
+      </li>
+      <li class="changepassword" >
+       <div><span><a href="#">更改密码</a></span></div>
+      </li>
+      <li class="record" >
+       <div><span><a href="#">消息/记录</a></span></div>
+      </li>
+      <li class="logout" >
+       <div><span class="twoTxt"><a href="#">登出</a></span></div>
+      </li>
+            <li style="width:210px;"><div class="status">&nbsp;&nbsp;
+     <span class="panstatus" s='{+$panstatus+}'><span>{+if $panstatus==1+}距离关盘:{+else+}距离开盘:{+/if+}</span>
+     <label class="time0" style="font-size:16px;font-weight:bold">{+$pantime+}</label>
+     </span><span s='{+$otherstatus+}' class="otherstatus hide"><span>{+if $otherstatus==1+}距正码关盘:{+else+}距离正码开盘:{+/if+}</span>
+     <label class="time1">{+$othertime+}</label>
+     </span></div>
+      </li>
+
+     </ul>
+    </div></td>
+  </Tr>
+  <tr>
+   <td width="100%" style="text-align:right;height:28px;"><div class='main'>
+<ul>
+      <li class="menus"><span><a href='javascript:void(0)' bid=''>投注区</a></span></li>
+  
+     </ul>
+    </div></td>
+  </tr>
+ </table>
+</div>
+<div class="bottom" >
+ <table   style="float:left;width:1143px;"  cellpadding="0" cellspacing="0" >
+  <tr>
+   <td  class="linfo"  valign="top" ><!--left-->
+    <table class="uinfo">
+     <tr>
+      <th colspan="2" class="th0">您 的 帐 户 信 息：</th>
+     </tr>
+     <tr>
+      <th>会 员 帐 号:</th>
+      <td>{+$username+}</td>
+     </tr>
+     <tr>
+      <th class="slow">[低频]信 用 额 度:</th>
+      <td class="slowe maxmoney">{+$maxmoney+}</td>
+     </tr>
+     <tr>
+      <th class="slow">[低频]已 用 额 度:</th>
+      <td class="slow money ">{+$money+}</td>
+     </tr>
+     <tr>
+      <th class="fastm hide">[快开]信 用 额 度:</th>
+      <td class="fastm kmaxmoney hide">{+$kmaxmoney+}</td>
+     </tr>
+     <tr>
+      <th class="fastm hide">[快开]已 用 额 度:</th>
+      <td class="fastm kmoneyuse hide">{+$kmoneyuse+}</td>
+     </tr>
+     <tr>
+      <th class="fastm hide">[快开]可 用 额 度:</th>
+      <td class="fastm kmoney hide">{+$kmoney+}</td>
+     </tr>
+     <tr>
+      <th>当 前 游 戏:</th>
+      <td>{+$gname+}</td>
+     </tr>
+     <tr>
+      <th>当 前 期 数:</th>
+      <td class="qishu">{+$thisqishu+}</td>
+     </tr>
+    </table>
+    <table  style="width:232px;display:none">
+     <tr>
+      <td colspan="2" style="text-align:center"><input type="button" value="清空" class="cancel" style="font-weight:bold;color:#F96;margin-right:10px;" />
+       <input type="button" value="投|注" class="exe" style="font-weight:bold;color:#D50000;margin-right:10px;" />
+       <input type="button" value="长龙" class="longbtn" style="font-weight:bold;color:blue" /></td>
+     </tr>
+    </table>
+    <table class="last15 tinfo">
+     <tr>
+      <th class="th0">最新十名会员下注记录<input type="button" class="reload" value="刷新" />
+       </th>
+     </tr>
+     <tr>
+
+     </tr>
+    </table></td>
+   <!--left-->
+   <td class="con1"  valign="top"></td>
+   <td  id="con" valign="top"><!--con-->
+    <table border="1" bordercolor="#CFCFFF" cellpadding="2" cellspacing="2" width="700" class="newsmarquee" >
+     <tr>
+      <td bgcolor="#af88ff" nowrap="nowrap"><font color="#ffffff">&nbsp;&nbsp;即时讯息&nbsp; &nbsp;</font></td>
+      <td  valign="middle" width="99%"><marquee scrollamount="3" onMouseOver="this.stop();" onMouseOut="this.start();">
+       </marquee></td>
+     </tr>
+    </table>
+    
+    <table class="make wd100" cellpadding="0" cellspacing="0"  >
+     <tr>
+      <td><table class='mtb tinfo'>
+        <tr>
+         <script language="javascript">
+for(i=1;i<=9;i++){
+   for(j=0;j<5;j++){
+      var m=i+j*10;
+	  if(m<10) m= '0' +m; 
+	  document.write("<TD m="+m+" class='m m"+m+"'><label>"+m+"&nbsp;</label></td>");
+   }   
+   document.write("</tr><tr>");
+}
+  </script>
+        <TR>
+         <td m='10' class="m m10"><label>10&nbsp;</label></td>
+         <td m='20' class="m m20"><label>20&nbsp;</label></td>
+         <td m='30' class="m m30"><label>30&nbsp;</label></td>
+         <td m='40' class="m m40"><label>40&nbsp;</label></td>
+         <TD></TD>
+        </TR>
+       </table>
+       <div class="mdiv">
+       <table class='m1tb tinfo'>
+        <tr><th rowspan="11">胆</th>
+         <script language="javascript">
+for(i=1;i<=9;i++){
+   for(j=0;j<5;j++){
+      var m=i+j*10;
+	  if(m<10) m= '0' +m; 
+	  document.write("<TD m="+m+" class='m m"+m+"'>"+m+"</td>");
+   }   
+   document.write("</tr><tr>");
+}
+  </script>
+        <TR>
+         <td m='10' class="m m10">10</td>
+         <td m='20' class="m m20">20</td>
+         <td m='30' class="m m30">30</td>
+         <td m='40' class="m m40">40</td>
+         <TD></TD>
+        </TR>
+       </table>
+       <table class='m2tb tinfo'>
+        <tr><th rowspan="11">拖</th>
+         <script language="javascript">
+for(i=1;i<=9;i++){
+   for(j=0;j<5;j++){
+      var m=i+j*10;
+	  if(m<10) m= '0' +m; 
+	  document.write("<TD m="+m+" class='m m"+m+"'>"+m+"</td>");
+   }   
+   document.write("</tr><tr>");
+}
+  </script>
+        <TR>
+         <td m='10' class="m m10">10</td>
+         <td m='20' class="m m20">20</td>
+         <td m='30' class="m m30">30</td>
+         <td m='40' class="m m40">40</td>
+         <TD></TD>
+        </TR>
+       </table>
+       
+</div>
+        
+
+         
+                            <div class="res">
+              <table class="wd100 tinfo">
+              <tr><th class="cg"><input type='checkbox' class='all'  /></th><th  style="font-size:9pt" class="xh">序号</th><th class="je" >金额</th><th class="hm" style='width:270px;'>号码</th></tr>
+              </table>
+               </div>
+               
+     <table class="zttb tinfo" >
+    <tr><th>选择号码数：</th><td class="sumhm">0</td><th>合计注数：</th><td class="totalzs">0</td></tr>
+     </table>
+       <table class="exetb" >
+        <tr>
+        <td style="width:100px;"><input type="radio" value="0" checked name="mode" />普通&nbsp;&nbsp;<input name="mode" type="radio" value="1" />胆拖
+       </td>
+         <td style="text-align:center">
+         <input type="button" value="添加号码" class="addhm b" />
+         <input type="button" value="机选1注" num='1' class="randbtn b" />
+         <input type="button" value="机选5注" num='5' class="randbtn b" />
+         <bR />
+         <input type="button" value="清空号码" class="delall b" />
+          <input type="button" value="删除所选" class="delselect b" />
+          <input type="button" value="确定投注" class="exe red b" /></td>
+        </tr>
+       </table>
+       
+                            <table class="tinfo fasttb" >
+      <tr>
+         <td class='tz'> 
+<!--       <label>单</label>
+<label>双</label>
+<label>大</label>
+<label >小</label>
+<BR />
+<label>合单</label>
+<label>合双</label>
+<BR />
+<label>大尾</label>
+<label>小尾</label>
+<BR />
+<label class="red">红</label>
+<label class="blue">蓝</label>
+<label class="lv">绿</label>
+<BR />
+<label>金</label>
+<label>木</label>
+<label>水</label>
+<label>火</label>
+<label>土</label>
+<Br />
+<label>家畜</label>
+<label>野兽</label>
+<label>前</label>
+<label>后</label>
+<br />-->
+<label>鼠</label>
+<label>牛</label>
+<label>虎</label>
+<label>兔</label>
+<label>龙</label>
+<label>蛇</label>
+<label>马</label>
+<label>羊</label>
+<label>猴</label>
+<label>鸡</label>
+<label>狗</label>
+<label>猪</label>
+
+<span>尾:</span>
+<label class="w">0</label>
+<label class="w">1</label>
+<label class="w">2</label>
+<label class="w">3</label>
+<label class="w">4</label>
+<label class="w">5</label>
+<label class="w">6</label>
+<label class="w">7</label>
+<label class="w">8</label>
+<label class="w">9</label>
+<BR />
+<!--<span>头:</span>
+<label class="t">0</label>
+<label class="t">1</label>
+<label class="t">2</label>
+<label class="t">3</label>
+<label class="t">4</label>
+<BR />-->
+<label class="red">红单</label>
+<label class="blue">蓝单</label>
+<label class="lv">绿单</label>
+
+<label  class="red">红双</label>
+<label class="blue">蓝双</label>
+<label class="lv">绿双</label>
+
+<label class="red">红大</label>
+<label class="blue">蓝大</label>
+<label class="lv">绿大</label>
+
+<label  class="red">红小</label>
+<label class="blue">蓝小</label>
+<label class="lv">绿小</label>
+<BR /></td></tr>
+<tr><td>
+<span>备注:</span>【普通】模式如果选择大于6个号码，自动转为复式！
+         </td>
+        </tr>
+        </table>
+       
+       </td>
+      <td></td>
+     </tr>
+    </table></td>
+   <!--con-->
+   <td  class="info" valign="top" ><table class="game2 tinfo"  style="width:200px;margin-top:5px;">
+     <tr>
+      <td> {+section name=i loop=$gamecs+}        
+       {+if $gamecs[i].ifok!='0'+}
+       <label gid={+$gamecs[i].gid+} {+if $gid==$gamecs[i].gid+}class='click'{+/if+}>{+$gamecs[i].gname+}</label>
+       {+/if+}{+/section+}</td>
+     </tr>
+    </table>
+    <table class="tinfo" style="width:200px;margin-top:5px;display:none">
+     <tr>
+      <td style="width:100%;text-align:left;"><a href='{+$kjurl+}' target="_blank"><img src='../imgn/live.jpg' style="border:none;height:30px;"  /></a></td>
+     </tr>
+    </table></td>
+  </tr>
+  <!--con1-->
+  <!--con1-->
+ </table>
+</div>
+
+<table class="lastxx tinfo">
+<tr><td><input type="button"  value="关闭" /><input type="hidden" class="pages" uid='0'  value="1" /></td><td colspan="3"></td></tr>
+ <tr><th class="f">会员</th><th class="s">编号</th><th class="t">内容</th><th class="t2">时间</th></tr>
+</table>
+
+<div id='test'></div>
+<input id='test2' type="text" class="hide"  />
+<iframe name=sfrm id=sfrm style="display:none;"  ></iframe>
+<iframe name=dfrm id=dfrm style="display:none;"  ></iframe>
+<iframe style="width:0px;height:0px;display:none" src="check.php" name="check" id='check'   ></iframe>
+<iframe style="width:0px;height:0px;" frameborder="0" id=downfrm></iframe>
+<iframe style="width:900px;height:450px;position:absolute;border:2px solid orange;display:none" frameborder="0" id='long' scrolling="auto"></iframe>
+<script language="javascript">
+sdate=new Array();
+{+foreach item=i from=$sdate key=key+}
+sdate[{+$key+}]="{+$i+}";
+{+/foreach+}
+var style = '{+$class+}';
+var ngid= {+$gid+};
+var minje = {+$minje+};
+var ma=new Array();
+ma[0] = new Array();
+ma[0]['name'] = '单';
+ma[0]['ma'] = new Array(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49);
+ma[1] = new Array();
+ma[1]['name'] = '双';
+ma[1]['ma'] = new Array(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48);
+ma[2] = new Array();
+ma[2]['name'] = '大';
+ma[2]['ma'] = new Array(25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49);
+ma[3] = new Array();
+ma[3]['name'] = '合单';
+ma[3]['ma'] = new Array(1,3,5,7,9,10,12,14,16,18,21,23,25,27,29,30,32,34,36,38,41,43,45,47,49);
+ma[4] = new Array();
+ma[4]['name'] = '合双';
+ma[4]['ma'] = new Array(2,4,6,8,11,13,15,17,19,20,22,24,26,28,31,33,35,37,39,40,42,44,46,48);
+ma[5] = new Array();
+ma[5]['name'] = '大尾';
+ma[5]['ma'] = new Array(5,6,7,8,9,15,16,17,18,19,25,26,27,28,29,35,36,37,38,39,45,46,47,48,49);
+ma[6] = new Array();
+ma[6]['name'] = '小尾';
+ma[6]['ma'] = new Array(1,2,3,4,10,11,12,13,14,20,21,22,23,24,30,31,32,33,34,40,41,42,43,44);
+ma[7] = new Array();
+ma[7]['name'] = '红';
+ma[7]['ma'] = new Array(1,2,7,8,12,13,18,19,23,24,29,30,34,35,40,45,46);
+ma[8] = new Array();
+ma[8]['name'] = '蓝';
+ma[8]['ma'] = new Array(3,4,9,10,14,15,20,25,26,31,36,37,41,42,47,48);
+ma[9] = new Array();
+ma[9]['name'] = '绿';
+ma[9]['ma'] = new Array(5,6,11,16,17,21,22,27,28,32,33,38,39,43,44,49);
+ma[10] = new Array();
+ma[10]['name'] = '金';
+ma[10]['ma'] = new Array(12,13,20,21,28,29,42,43);
+ma[11] = new Array();
+ma[11]['name'] = '木';
+ma[11]['ma'] = new Array(2,3,10,11,24,25,32,33,40,41);
+ma[12] = new Array();
+ma[12]['name'] = '水';
+ma[12]['ma'] = new Array(1,8,9,16,17,30,31,38,39,46,47);
+ma[13] = new Array();
+ma[13]['name'] = '火';
+ma[13]['ma'] = new Array(4,5,18,19,26,27,34,35,48,49);
+ma[14] = new Array();
+ma[14]['name'] = '土';
+ma[14]['ma'] = new Array(6,7,14,15,22,23,36,37,44,45);
+ma[15] = new Array();
+ma[15]['name'] = '鼠';
+ma[15]['ma'] = new Array(5,17,29,41);
+ma[16] = new Array();
+ma[16]['name'] = '牛';
+ma[16]['ma'] = new Array(4,16,28,40);
+ma[17] = new Array();
+ma[17]['name'] = '虎';
+ma[17]['ma'] = new Array(3,15,27,39);
+ma[18] = new Array();
+ma[18]['name'] = '兔';
+ma[18]['ma'] = new Array(2,14,26,38);
+ma[19] = new Array();
+ma[19]['name'] = '龙';
+ma[19]['ma'] = new Array(1,13,25,37,49);
+ma[20] = new Array();
+ma[20]['name'] = '蛇';
+ma[20]['ma'] = new Array(12,24,36,48);
+ma[21] = new Array();
+ma[21]['name'] = '马';
+ma[21]['ma'] = new Array(11,23,35,47);
+ma[22] = new Array();
+ma[22]['name'] = '羊';
+ma[22]['ma'] = new Array(10,22,34,46);
+ma[23] = new Array();
+ma[23]['name'] = '猴';
+ma[23]['ma'] = new Array(9,21,33,45);
+ma[24] = new Array();
+ma[24]['name'] = '鸡';
+ma[24]['ma'] = new Array(8,20,32,44);
+ma[25] = new Array();
+ma[25]['name'] = '狗';
+ma[25]['ma'] = new Array(7,19,31,43);
+ma[26] = new Array();
+ma[26]['name'] = '猪';
+ma[26]['ma'] = new Array(6,18,30,42);
+ma[27] = new Array();
+ma[27]['name'] = '1头';
+ma[27]['ma'] = new Array(10,11,12,13,14,15,16,17,18,19);
+ma[28] = new Array();
+ma[28]['name'] = '2头';
+ma[28]['ma'] = new Array(20,21,22,23,24,25,26,27,28,29);
+ma[29] = new Array();
+ma[29]['name'] = '3头';
+ma[29]['ma'] = new Array(30,31,32,33,34,35,36,37,38,39);
+ma[30] = new Array();
+ma[30]['name'] = '4头';
+ma[30]['ma'] = new Array(40,41,42,43,44,45,46,47,48,49);
+ma[31] = new Array();
+ma[31]['name'] = '0头';
+ma[31]['ma'] = new Array(01,02,03,04,05,06,07,08,09);
+ma[32] = new Array();
+ma[32]['name'] = '1尾';
+ma[32]['ma'] = new Array(01,11,21,31,41);
+ma[33] = new Array();
+ma[33]['name'] = '2尾';
+ma[33]['ma'] = new Array(02,12,22,32,42);
+ma[34] = new Array();
+ma[34]['name'] = '3尾';
+ma[34]['ma'] = new Array(03,13,23,33,43);
+ma[35] = new Array();
+ma[35]['name'] = '4尾';
+ma[35]['ma'] = new Array(04,14,24,34,44);
+ma[36] = new Array();
+ma[36]['name'] = '5尾';
+ma[36]['ma'] = new Array(05,15,25,35,45);
+ma[37] = new Array();
+ma[37]['name'] = '6尾';
+ma[37]['ma'] = new Array(06,16,26,36,46);
+ma[38] = new Array();
+ma[38]['name'] = '7尾';
+ma[38]['ma'] = new Array(07,17,27,37,47);
+ma[39] = new Array();
+ma[39]['name'] = '8尾';
+ma[39]['ma'] = new Array(08,18,28,38,48);
+ma[40] = new Array();
+ma[40]['name'] = '9尾';
+ma[40]['ma'] = new Array(09,19,29,39,49);
+ma[41] = new Array();
+ma[41]['name'] = '0尾';
+ma[41]['ma'] = new Array(10,20,30,40);
+ma[42] = new Array();
+ma[42]['name'] = '全部';
+ma[42]['ma'] = new Array(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49);
+ma[43] = new Array();
+ma[43]['name'] = '小';
+ma[43]['ma'] = new Array(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24);
+ma[44] = new Array();
+ma[44]['name'] = '家畜';
+ma[44]['ma'] = new Array(4,16,28,40,11,23,35,47,10,22,34,46,8,20,32,44,7,19,31,43,6,18,30,42);
+ma[45] = new Array();
+ma[45]['name'] = '野兽';
+ma[45]['ma'] = new Array(5,17,29,41,9,21,33,45,3,15,27,39,2,14,26,38,1,13,25,37,49,12,24,36,48);
+ma[46] = new Array();
+ma[46]['name'] = '前';
+ma[46]['ma'] = new Array(5,17,29,41,4,16,28,40,3,15,27,39,2,14,26,38,1,13,25,37,49,12,24,36,48);
+ma[47] = new Array();
+ma[47]['name'] = '后';
+ma[47]['ma'] = new Array(11,23,35,47,10,22,34,46,9,21,33,45,8,20,32,44,7,19,31,43,6,18,30,42);
+ma[48] = new Array();
+ma[48]['name'] = '红单';
+ma[48]['ma'] = new Array(1,7,13,19,23,29,35,45);
+ma[49] = new Array();
+ma[49]['name'] = '红双';
+ma[49]['ma'] = new Array(2,8,12,18,24,30,34,40,46);
+ma[50] = new Array();
+ma[50]['name'] = '红大';
+ma[50]['ma'] = new Array(29,30,34,35,40,45,46);
+ma[51] = new Array();
+ma[51]['name'] = '红小';
+ma[51]['ma'] = new Array(1,2,7,8,12,13,18,19,23,24);
+ma[52] = new Array();
+ma[52]['name'] = '蓝单';
+ma[52]['ma'] = new Array(3,9,15,25,31,37,41,47);
+ma[53] = new Array();
+ma[53]['name'] = '蓝双';
+ma[53]['ma'] = new Array(4,10,14,20,26,36,42,48);
+ma[54] = new Array();
+ma[54]['name'] = '蓝大';
+ma[54]['ma'] = new Array(25,26,31,36,37,41,42,47,48);
+ma[55] = new Array();
+ma[55]['name'] = '蓝小';
+ma[55]['ma'] = new Array(3,4,9,10,14,15,20);
+ma[56] = new Array();
+ma[56]['name'] = '绿单';
+ma[56]['ma'] = new Array(5,11,17,21,27,33,39,43,49);
+ma[57] = new Array();
+ma[57]['name'] = '绿双';
+ma[57]['ma'] = new Array(6,16,22,28,32,38,44);
+ma[58] = new Array();
+ma[58]['name'] = '绿大';
+ma[58]['ma'] = new Array(27,28,32,33,38,39,43,44,49);
+ma[59] = new Array();
+ma[59]['name'] = '绿小';
+ma[59]['ma'] = new Array(5,6,11,16,17,21,22);
+ma[60] = new Array();
+ma[60]['name'] = '合大';
+ma[60]['ma'] = new Array(7,16,25,34,43,8,17,26,35,44,9,18,27,36,45,19,28,37,46,29,38,47,39,48,49);
+ma[61] = new Array();
+ma[61]['name'] = '合小';
+ma[61]['ma'] = new Array(1,10,2,11,20,3,12,21,30,4,13,22,31,40,5,14,23,32,41,6,15,24,33,42);
+var mal=ma.length;
+sm = new Array();
+sm1 = new Array();
+sm2 = new Array();
+mq = new Array();
+</script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+{+include file='headers.html'+}
+<link href="/css/default/user.css" rel="stylesheet" type="text/css">
+<link href="/css/default/jquery-ui.css" rel="stylesheet" type="text/css">
+<script language="javascript" src="/js/md5.js"></script>
+<script type="text/javascript" src="../js/ui/jquery-ui.js"></script>
+<script type="text/javascript" src="../js/ui/dialog-hi.js"></script>
+<style type="text/css">
+.td100{width:110px !important;}
+.tleft{text-align:left !important; padding-left:3px;}
+.tright{text-align:right !important; padding-right:3px;}
+.tcenter{text-align:center !important;}
+</style>
+</head>
+<body style="overflow:hidden">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='money_user';</script>
+
+
+
+<div class="main">
+		<div class="top_info">
+			<span class="title"><label>现金会员管理</label></span>
+			<div class="center">
+				<div class="query_panel">
+					<span class="input_panel">
+<input type="checkbox" class="online" {+if $online==1+}checked{+/if+} />
+在线
+					<label>状态：<select id="" name="status" class="status">
+        <option value="all" >全部</option>
+        <option value="1">启用</option>
+        <option value="2">冻结</option>
+        <option value="0">停用</option>
+</select>
+
+</label> <label>搜索：</label> 账号或名称：<input name="name" class="input" id="usernames">
+					</span> <input type="button" value="查找" class="query searchbtn">
+     <input type="hidden" name="fid"  id="fid" value="" />
+    
+     选定:
+     <input id='openselect' value='启用'  type="button" class="s1" />
+     <input id='pauseselect' value='冻结'  type="button" class="s1" />
+     <input id='closeselect' value='停用' type="button" class="s1" />
+				</div>
+				
+   
+			</div>
+			<div class="right">
+				
+			</div>
+		</div>
+		<div class="contents">
+			<div class="user_list">
+				<table class="data_table list user_tb" >
+					<thead>
+						<tr>
+                            <th><input type="checkbox" class="all" /></th>
+                           
+                            <th style="width:50px;">在线</th>
+							<th class="td100">用户名(姓名)</th>
+                             <th class="td100">上级</th>
+                              <th>下线</th> 
+                              <th class="status">状态</th>                           
+                            <th>性别</th>
+                            <th class="td100">生日</th>
+                            <th class="td100">手机</th>
+                            <th class="td100">QQ</th>
+                            <th class="td100">注册时间</th>
+                            <th class="td100">上次登陆</th>
+                            <th>现金(余额)</th>
+                            <th>操作</th>
+						</tr>
+					</thead>
+					<tbody>
+                  {+section name=i loop=$user+}
+						<tr uid='{+$user[i].userid+}' fid='{+$user[i].fid+}' wid='{+$user[i].wid+}' username='{+$user[i].username+}'>
+                            <td><input type="checkbox" value="{+$user[i].userid+}" /></td>                            
+                            <td class="online">{+if ($user[i].online==0)+}<span class='s0'></span>{+else+}<span class='s1 zhuxiao' title='注销'></span>{+/if+}</td>
+							<td class="tleft">{+$user[i].username+}({+$user[i].tname+})</td>   
+                            <td class="tleft"><a href='javascript:void(0);'  class="upuser" fstr='{+foreach item=c from=$user[i].fids+}{+$c+}`{+/foreach+}'>{+$user[i].upuser+}({+$user[i].upname+})</a></td>
+                            <td><a href='javascript:void(0);'  class="showdown">{+$user[i].downnum+}</a></td>                         <td class="status"><input type="button" class="s{+$user[i].status+}" v="{+$user[i].status+}" value="{+$user[i].statusz+}"></td>
+                            <td>{+$user[i].sex+}</td>
+                            <td>{+$user[i].birthday+}</td>
+                            <td class="tleft">{+$user[i].tel+}</td>
+                            <td class="tleft">{+$user[i].qq+}</td>
+                            <td>{+$user[i].regtime+}</td>
+                            <td>{+$user[i].lastlogintime+}</td>
+                            <td class="tleft"><a href='javascript:void(0);'  class="kmaxmoney">{+$user[i].kmaxmoney+}</a>({+$user[i].kmoney+})</td>
+                            <td style='text-align:center'  class="op">
+      <a href='javascript:void(0);'  class="showson userxx"  >详细</a>             
+      <!--<a href='javascript:void(0);'  class="modify edit"  >修改</a>-->
+      <a href='javascript:void(0);'  class="login_log info logininfo" >日志</a>      
+      <a href='javascript:void(0);'  class="op_log record"  >记录</a>
+      <a href='javascript:void(0);'  class="op_log sendmessage"  >发消息</a>
+                            </td>
+						</tr>
+                  {+/section+}		           
+					</tbody>
+				</table>
+                
+				<div class="page"><div class="page_info" upage='{+$upage+}' pcount='{+$pcount+}' rcount='{+$rcount+}'>
+<span class="record">共 <span>{+$rcount+}</span> 条记录</span>
+<span class="page_count">共 <span>{+$pcount+}</span> 页</span>
+<span class="page_control">
+
+</span>
+</div>
+</div>
+			</div>
+		</div>
+	</div>
+    
+    <div id="statusPanel" class="popdiv" style="position:absolute; display: none;"><div class="title">修改帐户状态<i></i></div><div class="statuslist"><label><input name="ustatus" type="radio" value="1">启用</label><label><input name="ustatus" type="radio" value="2">冻结</label><label><input name="ustatus" type="radio" value="0">停用</label></div></div>
+    
+    
+    
+<script language="javascript">
+
+</script>
+</body></html>

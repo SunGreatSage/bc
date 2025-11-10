@@ -1,0 +1,156 @@
+{+include file='header.html'+}
+<link rel="stylesheet" href="../imgn/user.css" type="text/css">
+{+include file='header.html'+}
+<style>
+select{width:120px;margin-right:10px;}
+.cmd input{margin-right:10px;}
+
+.xbody1{width:1004px;}
+.history {clear:both;font-size:11px;}
+.history tr:hover{background:#E4DAFE}
+.history td.click{background:#FCC}
+.history .qs{width:90px;}
+.history .nr{width:40px;}
+.history td.xm{text-align:left;padding-left:5px;width:120px;}
+.history .qiu{font-weight:bold;font-size:15px;width:40px;}
+.history .cz{background:#ccc}
+.qiua{margin:0px;float:left;width:26px;height:26px;background:url(../imgn/ball_blue1.png);line-height:26px;text-align:center;margin-right:2px;font-weight:bold}
+.qiub{margin:0px;float:left;width:26px;height:26px;background:url(../imgn/ball_red1.png);line-height:26px;text-align:center;margin-right:2px;font-weight:bold}
+.qiua1{margin:0px;float:left;width:21px;height:21px;background:url(../imgn/ball_blue2.png);line-height:21px;text-align:center;margin-right:2px;font-weight:bold}
+.qiub1{margin:0px;float:left;width:21px;height:21px;background:url(../imgn/ball_red2.png);line-height:21px;text-align:center;margin-right:2px;font-weight:bold}
+.w2000{width:2100px;}
+.w1500{width:1700px;}
+.w1260{width:1260px;}
+.w500{width:700px;}
+.qiu{margin-right:3px;}
+.qiured{font-weight:bold; color:White;  float:none;  margin:0px auto;width:21px; height:21px; line-height:21px; font-size:13px; text-align:center; background:#FB0200 url(../img/bgbm.gif) no-repeat left top;background-color:#FB0200;}
+.qiublue{font-weight:bold; color:White;  float:none;  margin:0px auto; width:21px; height:21px; line-height:21px; font-size:13px; text-align:center; background:#FB0200 url(../img/bgbm.gif) no-repeat left top;background-color:#0000FE; background-position:-42px top;}
+.qiugreen{font-weight:bold; color:White;  float:none;  margin:0px auto; width:21px; height:21px; line-height:21px; font-size:13px; text-align:center; background:#FB0200 url(../img/bgbm.gif) no-repeat left top;background-color:#007F04; background-position:-21px top;}
+
+tr:hover{background:#75D2FF}
+</style>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='long';</script>
+<div class="xbody1">
+
+{+if $gid==100+}
+	   <table class='tinfo' style="width:1260px;">
+       <tr>
+       <th>期數</td>
+ 	   <th>開獎日(星期)</th>
+       <th>正1</th>
+       <th>正2</th>
+       <th>正3</th>
+       <th>正4</th>
+       <th>正5</th>
+       <th>正6</th>
+       <th>特碼</th>
+       <th>特肖</th>
+       <th>單雙</th>
+       <th>大小</th>
+       <th>合單雙</th>
+       <th>尾大小</th>
+       <th>家/獸</th>
+       <th>五行</th>
+       <th colspan="3">總分</th>
+       
+   </tr>
+   {+section name=xk loop=$kj+}
+
+    <tr>
+   
+          <td>{+$kj[xk].qishu+}</td>
+       <td>{+$kj[xk].date+}(<font color=blue>{+$kj[xk].week+}</font>)</td>
+       
+      
+       <td> <div class="qiu">{+$kj[xk].m1+}</div></td>
+       <td> <div class="qiu">{+$kj[xk].m2+}</div></td>
+       <td> <div class="qiu">{+$kj[xk].m3+}</div></td>
+       <td> <div class="qiu">{+$kj[xk].m4+}</div></td>
+       <td> <div class="qiu">{+$kj[xk].m5+}</div></td>
+       <td> <div class="qiu">{+$kj[xk].m6+}</div>
+        </td>
+	   <td>
+       <div class="qiu">{+$kj[xk].m7+}</div></td>
+	   <td>{+$kj[xk].sx+}</td>
+	   <td {+if $kj[xk].ds=='單'+}class='red'{+/if+}> {+$kj[xk].ds+}</td>
+	   <td {+if $kj[xk].dx=='大'+}class='red'{+/if+}> {+$kj[xk].dx+}</td>
+       <td {+if $kj[xk].hds=='合單'+}class='red'{+/if+}>{+$kj[xk].hds+}</td>
+       <td {+if $kj[xk].wdx=='尾大'+}class='red'{+/if+}> {+$kj[xk].wdx+}</td>
+       <td {+if $kj[xk].jy=='家畜'+}class='red'{+/if+}> {+$kj[xk].jy+}</td>
+       <td> {+$kj[xk].wh+}</td>
+  
+       <td >{+$kj[xk].zf+}</td>
+       
+       <td {+if $kj[xk].zfds=='總單'+}class='red'{+/if+}> {+$kj[xk].zfds+}</td>
+       <td {+if $kj[xk].zfdx=='總大'+}class='red'{+/if+}> {+$kj[xk].zfdx+}</td>
+      
+              
+   </tr>
+   {+/section+}
+</table>
+     </TD>
+	 </tr>
+</table>
+
+{+else+}
+
+<table class="tinfo cmd wd100"><tr><th style="text-align:left;padding-left:10px;">
+<select class="game hide">
+       {+section name=i loop=$game+}
+         {+if $game[i].fast==1+}
+         <option value="{+$game[i].gid+}" fast='{+$game[i].fast+}' {+if ($game[i].gid==$gid)+}selected{+/if+} >{+$game[i].gname+}</option>
+         {+/if+}
+         {+/section+}
+       </select>
+    <select class='bid'>
+   <option value="longsm">综合</option> 
+      {+section name=i loop=$b+}
+       {+if ($b[i].name!='连码' & $b[i].name!='2字组合' & $b[i].name!='2字定位' & $b[i].name!='3字组合' & $b[i].name!='3字定位' & $b[i].name!='组选3' & $b[i].name!='组选6' )+}
+     <option value="{+$b[i].bid+}">{+$b[i].name+}</option>
+     {+/if+}
+      {+/section+}
+      
+ 
+    </select>
+    <select class='sid'>
+    </select>
+    <select class='cid'>
+    </select>
+    <input type="button" class="query" value="查询开奖记录" />
+    <select class="pages" style="width:50px;">
+      {+foreach item=i from=$parr+}
+         <OPTION value="{+$i+}">{+$i+}</OPTION>
+      {+/foreach+}
+    </select>
+</th></tr></table>
+{+/if+}
+</div>
+
+<table class="tinfo history w1260"  >
+</table>
+
+<div id='test' style="clear:both;color:"></div>
+<script  language="javascript">
+var ngid={+$gid+};
+co=new Array();
+co[0] = 'blue';
+co[1] = 'orange';
+co[2] = 'lv';
+co[3] = 'red';
+bg=new Array();
+bg[0] = 'orange';
+bg[1] = 'blue';
+bg[2] = 'red';
+bg[3] = 'green';
+bg[4] = '#F6F';
+bg[5] = '#000';
+ma = [];
+     ma['紅'] = new Array(01,02,07,08,12,13,18,19,23,24,29,30,34,35,40,45,46); 
+     ma['藍'] = new Array(03,04,09,10,14,15,20,25,26,31,36,37,41,42,47,48); 
+     ma['綠'] = new Array(05,06,11,16,17,21,22,27,28,32,33,38,39,43,44,49); 
+
+</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+{+include file='header2.html'+}
+
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='online';
+</script>
+
+<style type="text/css">
+.click{background:#E3F1FF}
+</style>
+<div class="main">
+<div class="top_info">
+<span class="title">在线会员</span>
+</div>
+<div class="contents">
+<TABLE class="data_table list data_list guide">
+<tr><th>代理</th><th>会员</th></tr>
+<tr>{+foreach item=i key=k from=$num+}<td class="type{+if $type==($k+1)+} click{+/if+}" type='{+$k+}'>{+$i+}</td>{+/foreach+}</tr>
+</TABLE><BR />
+
+   <table class="data_table data_list list on_tb">
+   <tr><td colspan="8">{+$page+}</td></tr>
+   <thead><TR><th><input type="checkbox" id='clickall' />全选</th><th>用户类型</th><th>用户名</th><th>登陆时间</th><th>最后活动</th><th>ip</th><th>来源</th><th><input type="button" value="踢出选中" id='delall' class='btn3 btnf'  /></th></TR></thead>
+    {+section name=i loop=$on+}
+    <TR>
+        <TD><input type="checkbox" value="{+$on[i].id+}" />{+$on[i].i+}</TD>
+        <Td>{+$on[i].usertype+}</Td>
+        <Td class='tl'>{+$on[i].username+}({+$on[i].name+})</Td>  
+        <Td>{+$on[i].logintime+}</Td><Td>{+$on[i].savetime+}</Td>
+        <Td>{+$on[i].ip+}</Td>
+        <Td class="ip">{+$on[i].addr+}</Td>
+   
+       
+        <Td><input type="button" value="踢出" class="btn1 btnf"  /></Td>
+     </TR>
+    {+/section+}
+   </table>
+</div>
+<div class="page"><div class="page_info">
+    </div>
+</div>
+</div>
+</body>
+</html>

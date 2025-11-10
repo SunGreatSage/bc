@@ -1,0 +1,260 @@
+{+include file='header.html'+}
+<script language="javascript" src="/js/md5.js"></script>
+<style type="text/css">
+.w400 {
+	width:400px;
+}
+.ml20 {
+	margin-left:20px;
+}
+input {
+	padding:0px;
+}
+td, th {
+	height:30px;
+	line-height:30px;
+}
+img {
+	cursor:pointer
+}
+body {
+	font-size:12px;
+}
+
+
+th.tree {text-align:left;padding-left:20px;}
+
+
+.copytb{position:absolute;background:#fff;width:300px;display:none}
+
+.cpasstb{position:absolute;background:#fff;width:300px;display:none}
+.moneytb{position:absolute;background:#fff;width:500px;display:none}
+.fedittb{position:absolute;background:#fff;width:300px;display:none}
+
+
+td.lefts{text-align:left;padding-left:3px;}
+
+
+
+.recordtb{width:850px;position:absolute;background:#fff}
+.recordtb .e tr:hover{background:#FCF}
+.recordtb .l tr:hover{background:#FCF}
+.page td:hover{background:#FCF}
+
+.gamelabel{color:#000;border:1px solid #000;margin-right:5px;display:block;float:left;cursor:pointer;padding-left:1px;padding-right:1px}
+
+
+.tong{padding-left:5px;}
+.tong label {border:1px solid #000;margin-right:5px;display:block;float:left;cursor:pointer;padding-left:1px;padding-right:1px;color:blue;font-size:11px;}
+
+.addtb tr:hover{background:#DEEFD8}
+.addtb2 tr:hover{background:#DEEFD8}
+
+.fedit{margin-left:2px;}
+td.um{text-align:left;padding-left:2px;}
+td.kum{text-align:left;padding-left:2px;}
+td.fum{text-align:left;padding-left:2px;}
+
+.left{margin:0px;float:left;width:250px;height:490px;}
+.right{float:left;margin:0px;width:1000px;overflow:hidden;}
+.cmds{width:95%;padding:5px;line-height:30px;background:#F9FAF1;border:1px solid  #D9D9FF;text-align:center}
+.cmds span{margin-left:3px;margin-right:3px;}
+
+.user_tb{width:100%;line-height:100%}
+.user_tb a{margin-right:2px;}
+.user_tb tr:hover{background:#DEEFD8}
+.user_tb .moneytd{text-align:left;padding-left:3px;}
+.utb select{width:80px;}
+.utb .cs2 tr:hover{background:#DEEFD8}
+.utb .cs2 select{width:50px;}
+.utb .cs2 .txt1{width:50px;}
+.utb .addtb th{text-align:right;width:230px;padding-right:8px;}
+.utb .addtb td{text-align:left;padding-left:8px;}
+
+label{color:#D50000}
+.hide{display:none}
+
+.xxtb a.red{color:#D50000}
+.xxtb .type{font-size:15px;cursor:pointer}
+.xxtb {width:1000px;position:absolute;background:#fff;display:none;border:2px solid #000}
+.xxtb .wjs{cursor:pointer; text-decoration:underline;color:#D50000}
+.xxtb tr:hover{background:#DEEFD8}
+.xxtb tr.z1{background:#69F}
+.xxtb td.tl{text-align:left;padding-left:3px;}
+a.showdown{font-weight:normal;color:#D50000}
+select.pselect{width:50px !important;}
+input.pinput{width:40px !important;}
+</style>
+<link href="/imgn/tree/tree.css" rel="stylesheet" />
+</head><body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='user';</script>
+<div class="xbody1" style="width:1260px;">
+ <div class="left">
+ <div class="cmds">
+ <h3>【总帐户(<LABEL class="toptatal">0</LABEL>)】</h3>
+     <a href='javascript:void(0);' id='adduser' fid='{+$fid+}' >新增公司</a><span>/</span>
+ 
+     <a href='javascript:void(0);'  id='jiaozheng'  >额度较正</a>
+     <BR />
+     <a href='javascript:void(0);'  class="btnf hide" id='updatekzc'  >更新快开占成</a>
+     <a href='javascript:void(0);'  id='resetmoney'  >低频信用恢复</a><span>/</span>
+     <a href='javascript:void(0);'  id='resetkmoney'  >快开信用恢复</a>
+     <bR />
+     
+     选定:
+     <a href='javascript:void(0);' id='openselect' >开启</a><span>/</span>
+    <a href='javascript:void(0);'  id='pauseselect' >暂停</a><span>/</span>
+     <a href='javascript:void(0);'  id='closeselect' >禁用</a><span>/</span>
+     <a href='javascript:void(0);'  id='delselect' >删除</a>
+     <BR />
+    <input type="hidden" name="fid"  id="fid" value="{+$fid+}" />
+     <input type="hidden" name='layer' id='layer'  toplayer = '{+$flayer+}' value='{+assign var="flayers" value="`$flayer+1`"+}{+$flayers+}' />
+     <input type="hidden" id='saveuserid' />
+     <input type="hidden" id='topid' value="{+$fid+}" />
+    
+     帐号/名字:
+     <input type=text name='usernames' id=usernames style="width:50px" />
+     <input class="btn1 btnf searchbtn" type="button" value="搜索" style="margin-left:10px;" />
+     <bR /> 模式:<SELECT class="mode"><OPTION value="1">列表</OPTION><OPTION value="2">修改</OPTION><OPTION value="3">退水</OPTION><OPTION value="4">占成</OPTION></SELECT><span></span><INPUT type="checkbox" id="online" />只显示在线
+ </div>
+<div class="tree">
+		<ul class="dynatree-container dynatree-no-connector">
+			<li class="dynatree-lastsib utree99999999"><span class="dynatree-node dynatree-expanded dynatree-has-children dynatree-exp-el dynatree-ico-e"><span class="dynatree-icon"></span><a class="dynatree-title" username='{+$username+}' href="#"></a></span></li></ul>
+	</div>
+ </div>
+ <div class="right">
+  <table class="tinfo user_tb">
+   <tr>
+    <Th><input type="checkbox" id=clickall /></Th>
+    <Th>在线</Th>
+    <Th>帐户</Th>
+    {+if $flayer==0+}
+    <th class='layer1'>网站</th>
+    {+/if+}
+    
+    <Th>类型</Th>
+    <Th>下层</Th>
+    <Th>额度/余额</Th>
+    <th>额度类型</th>
+
+
+<Th> <select class='status'>
+     <option value="2">暂停</option>
+      <option value="1">可用</option>
+      <option value="0">停用</option>
+      <option value="all" selected>全部</option>
+     </select>
+    </Th>    <th>新增日期</th>
+    <th>最后登陆</th>
+    <Th>设置</Th>
+   </tr>
+
+ </table>
+
+ <table class="tinfo utb" >
+ 
+ 
+ </table>
+ </div>
+</div>
+
+{+if $hides==1+}
+
+
+<table class="tinfo nss">
+<tr><td><input type="text" size="20" class="mess" /><input type="button" class="close btnf" value="关闭" /><input type="button" class="sendmess btnf" value="发送" /></td></tr>
+</table>
+<script language="javascript" >
+$(function(){
+	$(".nss .close").click(function(){
+	   $(".nss").hide();
+	});
+	$(".nss .sendmess").click(function(){
+		var news = $(".nss .mess").val();
+		var uid  = $(".nss").attr('uid');
+					$.ajax({
+					type: 'POST',
+					url: 'message.php',
+					cache: false,
+					data: 'xtype=nss&uid=' + uid+"&news="+news,
+					success: function(m) {
+					
+						if (Number(m) == 1) {
+							alert('ok')
+						}
+					}
+				})
+	});
+});
+
+</script>
+<STYLE type="text/css">
+.nss{width:300px;position:absolute;background:#fff;display:none}
+</STYLE>
+{+/if+}
+<table class="tinfo xxtb">
+ <tr class="bt">
+ <th>彩种</th>
+  <th>期數</th>  
+  <th>類別</th>
+  <th>金額</th>
+  <th>赔率</th>
+  <th>退水</th>
+  <th>會員</th>
+  <th>時間</th>
+ </tr>
+</table>
+<input type="hidden" class='sort' orderby='time' sorttype='DESC' page='1' xtype='2' js='0' gid='99' con='' />
+<table class="recordtb tinfo hide">
+<tr><td class="e" valign="top"></td><td class="l" valign="top"></td></tr>
+
+</table>
+<table class="tinfo copytb">
+<tr><th>请输入用户名</th><td><label class="copyname1"></label><input type="text" class="copyname2 txt1" uid='0' /></td><td rowspan="2"><input type="button" value="复制" class="copysend btn1 btnf" /><BR /><input type="button" value="关闭" class="copyclose btn1 btnf" /></td></tr>
+<tr><th>请输入名字</th><td><input type="text" class="copyname txt1" /></td></tr>
+</table>
+<table class="tinfo cpasstb">
+<tr><th>用户名</th><td><label class="cpassusername"></label></td><td rowspan="3"><input type="button" value="修改密码" class="cpasssend btn1 btnf" /><BR /><input type="button" value="关闭" class="cpassclose btn1 btnf" /></td></tr>
+<tr><th>密码：</th><td><input type="password" class="cpass1 txt1" /></td></tr>
+<tr><th>确认：</th><td><input type="password" class="cpass2 txt1" /></td></tr>
+</table>
+<table class="tinfo moneytb">
+<tr><th>低频额度</th><td><input type="text" class="maxmoney txt3" uid='0' /><input type="text" class="money txt3" uid='0' /></td><td rowspan="3"><input type="button" value="提交" class="moneysend btn1 btnf" /><BR /><input type="button" value="关闭" class="moneyclose btn1 btnf" /></td></tr>
+<tr><th>快开额度</th><td><input type="text" class="kmaxmoney txt3" /><input type="text" class="kmoney txt3" /></td></tr>
+<tr><th>现金额度</th><td><input type="text" class="fmaxmoney txt3" /><input type="text" class="fmoney txt3" /></td></tr>
+</table>
+
+<table class="tinfo fedittb">
+<tr><th></th><td><input type="text" class="feditmoney txt3" uid='0' /></td></tr><tr><td colspan=2 ><input type="button" value="提交" class="feditsend btn1 btnf" /><input type="button" value="关闭" class="feditclose btn1 btnf" /></td></tr>
+
+</table>
+<div id='test'></div>
+<input type='text'  id='test2' class="hide" />
+<input type="text" id='tests' class="hide"   /> 
+<input type="text" id='testss' class="hide"   /> 
+<script language="javascript">
+layernames= new Array();
+layername = new Array();
+{+section name=i loop=$layer+}
+layernames[{+$smarty.section.i.index+}] = new Array();
+layernames[{+$smarty.section.i.index+}]['wid'] = {+$layer[i].wid+};
+layernames[{+$smarty.section.i.index+}]['layer'] = new Array();
+{+foreach item=j key=key from=$layer[i].layer+}
+layernames[{+$smarty.section.i.index+}]['layer'][{+$key+}] = '{+$j+}';
+{+/foreach+}
+layernames[{+$smarty.section.i.index+}]['namehead'] = '{+$layer[i].namehead+}';
+{+/section+}
+{+foreach item=j key=key from=$layer[0].layer+}
+layername[{+$key+}] = '{+$j+}';
+{+/foreach+}
+var maxlayer = {+$maxlayer+};
+var maxrenflag = {+$maxrenflag+};
+var yingdeny = {+$yingdeny+};
+var ustatus = 'all';
+var wids=0;
+var treeflag=false;
+var fidarr=[];
+var fidindex = -1;
+</script>
+</body>
+</html>

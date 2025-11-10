@@ -1,0 +1,143 @@
+ {+include file='header.html'+}
+<style>
+.addtb {
+	width:200px;
+	display:none;
+	position:absolute;
+	background:#fff
+}
+.addtb td {
+	text-align:left;
+}
+</style>
+</head><body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='class';</script>
+<div class="xbody1" style="width:98%">
+ <table class="tinfo wd100 s_tb">
+  <tr>
+   <th colspan="3">分类</th>
+   <th colspan="10">名称：
+    <input type="text" id='name' />
+    <select id="bid">
+     <option value="">大分类</option>
+     
+     
+       {+section name=i loop=$b+}
+          
+     
+     <option value='{+$b[i].bid+}'>{+$b[i].name+}</option>
+     
+     
+       {+/section+}
+       
+    
+    </select>
+    <select id="sid">
+     <option value="">小分类</option>
+    </select>
+  
+    <input type="button" class="btn3 btnf" id='add'  value="添加分类" /></th>
+  </tr>
+  <TR>
+   <th><input type="checkbox" id='clickall' />
+    全选</th>
+   <th>编号</th>
+   <th><select class="bid">
+     <option value="">大分类</option>
+     
+     
+       {+section name=i loop=$b+}
+          
+     
+     <option value='{+$b[i].bid+}' {+if $b[i].bid==$bid+}selected{+/if+}>{+$b[i].name+}</option>
+     
+     
+       {+/section+}
+       
+    
+    </select>
+   </th>
+   <th><select class="sid">
+     <option value="">小分类</option>
+       {+section name=i loop=$s+}
+          
+     
+     <option value='{+$s[i].sid+}' {+if $s[i].sid==$sid+}selected{+/if+}>{+$s[i].name+}</option>
+     
+     
+       {+/section+}
+    </select>
+   </th>
+   <th>名称</th>
+   <th>可用</th>
+   <th>码类型</th>
+   <th>面类型</th>
+   <th>大面类型</th>
+   <th>排序</th>
+
+   <th>分类</th>
+    <th>唯一</th>
+   <th><input type="button" class="btn3 btnf" id='delall'  value="删除选中" /><input type="button" class="edit btn1 btnf"  id='edit' value='修改选中' /></th>
+  </TR>
+  {+section name=i loop=$c+}
+  <TR>
+   <td><input type="checkbox" value='{+$c[i].cid+}' /></td>
+   <td>{+$c[i].cid+}</td>
+   <td><input type="text" value="{+$c[i].bid+}" cid='{+$c[i].cid+}' class="bid" />
+    [{+$c[i].bname+}] </td>
+   <td><input type="text" value="{+$c[i].sid+}" cid='{+$c[i].cid+}' class="sid" />
+    [{+$c[i].sname+}] </td>
+   <td><input type="text" value="{+$c[i].name+}" cid='{+$c[i].cid+}' class="name" /></td>
+   <td><input type="checkbox" class="ifok" {+if $c[i].ifok==1+}checked{+/if+} /></td>
+   <td><select class="mtype">
+     
+     
+       {+foreach item=j from=$mtype+}
+          
+     
+     <option value='{+$j+}' {+if $j==$c[i].mtype+}selected{+/if+}>{+$j+}</option>
+     
+     
+       {+/foreach+}
+       
+    
+    </select></td>
+   <td><select class="ftype">
+     
+     
+       {+foreach item=j from=$ftype+}
+          
+     
+     <option value='{+$j+}' {+if $j==$c[i].ftype+}selected{+/if+}>{+$j+}</option>
+     
+     
+       {+/foreach+}
+       
+    
+    </select></td>
+     <td><select class="dftype">
+     
+     
+       {+foreach item=j from=$dftype+}
+          
+     
+     <option value='{+$j+}' {+if $j==$c[i].dftype+}selected{+/if+}>{+$j+}</option>
+     
+     
+       {+/foreach+}
+       
+    
+    </select></td>  
+   <TD><input type="text" class='xsort' value="{+$c[i].xsort+}" /></TD>
+
+   <td><input type="checkbox" class="xshow" {+if $c[i].xshow==1+}checked{+/if+} /></td>
+   <td><input type="checkbox" class="one" {+if $c[i].one==1+}checked{+/if+} /></td>
+   <td><input type="button" class="delone btn4 btnf" value='删除' />
+    </td>
+  </TR>
+  {+/section+}
+ </table>
+</div>
+<div id='test'></div>
+</body>
+</html>

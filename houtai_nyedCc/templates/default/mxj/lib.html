@@ -1,0 +1,84 @@
+
+ 
+ <div class="scrollable backgroundcolorlightpink ng-scope others lib">
+    <div class="scrollable-content overthrow">
+        <div class="container-report cnsmall2"> <!--container-->
+            <div class="reportcontainer">
+                <table width="851" cellpadding="10" class="reporttbl cn">
+                  <thead class="cnbig">
+                    <tr>
+                      <th  style="width:150px !important;">注单号</th>
+                      <th style="width:200px !important;">类型</th>
+                      <th>玩法</th>
+                      <th>金额</th>
+                      <th>退水</th>
+                      <th>可赢</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {+section name=i loop=$lib+}
+<tr>
+                      <td><span class="green cnbig">{+$lib[i].tid+}</span><br><span class="cn">{+$lib[i].date+}</span><br><span class="cnsmall">{+$lib[i].time+}</span></td>
+                      <td><span class="cnbig">{+$lib[i].gid+}</span><br><span class="cn green">第{+$lib[i].qishu+}期</span></td>
+                      <td><span class="cn blue">
+                        <span class="text">{+$lib[i].wf+}{+if $lib[i].content!=''+}:{+$lib[i].content+}{+/if+}</span><br><span class="cnbig">@</span><span class="cnbig2 red fontbold">{+$lib[i].peilv1+}{+if $lib[i].peilv2>1+}/{+$lib[i].peilv2+}{+/if+}<span class="cn blue">:{+$lib[i].abcd+}盘</span></span>
+                      </span></td>
+                      <td><span class="cnbig">{+$lib[i].je+}</span></td>
+                      <td><span class="cnbig">{+$lib[i].points+}%</span></td>
+                      <td><span class="cnbig2 blue fontbold sy">{+$lib[i].ky+}</span></td>
+                    </tr>        
+                    {+/section+}
+                    
+                    
+                    
+                              </tbody>
+                </table>
+
+            </div>
+            
+          <div class="row graylightbg borderbtmred darkred">
+            <div class="row darkredbg white cnbig">
+              <div class="padding20 clearfix marginleft20">
+                  <table width="377" border="0" cellpadding="10" class="reporttbl2">
+                      <tbody>
+                        <tr>
+                          <td width="176" class="textright">注数 : </td>
+                          <td width="155">{+$rcount+}</td>
+                        </tr>
+                        <tr>
+                          <td width="176" class="textright">金额 (计) : </td>
+                          <td width="155" class="sy">{+$zje+}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                </div>
+            </div>
+          </div>
+        </div><!--container-->
+
+          <div class="col-sm-12 pagination page_info" rcount='{+$rcount+}' psize='{+$psize+}' tpage='{+$tpage+}'>
+            <div class="col-sm-4">
+              <div class="previous pull-left previous-btn">
+                <span aria-hidden="true">&lt;&lt; </span>前一页
+                
+              </div>
+            </div>
+            <div class="col-sm-4 textcenter">
+              <div><input class="pageNum needsclick" type="number" max="1" min="1" value="{+$tpage+}" length="4" ></div>
+            </div>
+            <div class="col-sm-4">
+              <div class="next pull-right next-btn">
+                  后一页<span aria-hidden="true"> &gt;&gt;</span> 
+                
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-12 pagination textcenter pagestatus">
+              <div>共 {+$rcount+} 笔记录 共 {+$pcount+} 页</div>
+          </div>
+
+ <div class="gap100" style="height:200px;"></div>
+
+      </div>
+     
+    </div>

@@ -1,0 +1,112 @@
+@CHARSET "UTF-8";
+
+#drawTable table { width: 100%; }
+
+#drawTable .page_info { width: 99.5%; height: 35px; line-height: 35px; background: #eeeeee; text-shadow: 1px 1px 0 white; margin: 10px auto; }
+
+/*.table_ball .name { width: 40px; }*/
+
+.table_ball .odds { width: 50px; }
+
+.table_zh2 .amount { width: 64px; }
+
+.table_ball .balls { /*width: 220px;*/ text-align: left; }
+.split_panel .table_ball { width: 142px; float: left; }
+.split_table .odds { text-align: center; max-width: 55px; }
+.data_table .temaMark{background-color:gold!important}
+.split_table .name { max-width: 30px; }
+
+.split_table .amount input { max-width: 35px; border: #b0b0b0 1px solid; margin-bottom: 3px; }
+
+/*.split_table td {
+  height: 20px;
+  line-height: 20px;
+}*/
+
+.split_panel table { margin: 1px 1px 0 0; }
+
+.chkType a { background: url("../images/red/tab1.png") no-repeat 0 -33px; color: #FFFFFF; display: inline-block; height: 33px; line-height: 25px; margin: 5px 0 0 5px; text-decoration: none; width: 66px; }
+
+.chkType .on { background: url("../images/red/tab1.png") no-repeat 0 0; color: #FFFFFF; font-weight: 700; }
+
+.table_ball .balls span,
+.table_ball .name span,
+#drawInfo .balls b { background: url("../images/ball_hk6.png") no-repeat; display: inline-block; width: 25px; height: 27px; font-size: 0px; text-indent: -99999px; margin-top: 4px; }
+.table_ball .ball em{font-style:normal;} 
+/*.table_ball .ball_HM em { display: none; }
+.table_ball .ball_HM span { height: 26px; width: 26px; line-height: 26px; display: inline-block; margin-right: 3px; }
+.table_ball .ball_HM span { background: url(../images/ball_hk6.png) 0px -0px no-repeat; }*/
+.table_ball .ball_his em { display:  inline-block; }
+.table_ball .ball_his span { height: 26px; width: 26px; line-height: 26px; display: inline-block; margin-right: 3px; }
+.table_ball .ball_his span { background: url(../images/ball_hk6.png) 0px -0px no-repeat; }
+#drawLotterInfo .plus {
+ 
+display: inline-block;
+    width: 18px;
+    text-align: left;
+    font-weight: bold;
+    font-size: 16px;
+    position: relative;
+top: -8px;
+}
+.table_ball .balls .b1, .table_ball .name .b1,.table_ball span.ball_1 { background-position: 0 0px; }
+.table_ball .balls .b2, .table_ball .name .b2,.table_ball span.ball_2 { background-position: 0 -27px; }
+.table_ball .balls .b3, .table_ball .name .b3,.table_ball span.ball_3 { background-position: 0 -54px; }
+.table_ball .balls .b4, .table_ball .name .b4,.table_ball span.ball_4 { background-position: 0 -81px; }
+.table_ball .balls .b5, .table_ball .name .b5,.table_ball span.ball_5 { background-position: 0 -108px; }
+.table_ball .balls .b6, .table_ball .name .b6,.table_ball span.ball_6 { background-position: 0 -135px; }
+.table_ball .balls .b7, .table_ball .name .b7,.table_ball span.ball_7 { background-position: 0 -162px; }
+.table_ball .balls .b8, .table_ball .name .b8,.table_ball span.ball_8 { background-position: 0 -189px; }
+.table_ball .balls .b9, .table_ball .name .b9,.table_ball span.ball_9 { background-position: 0 -216px; }
+.table_ball .balls .b01, .table_ball .name .b01,.table_ball span.ball_01 { background-position: 0 0px; }
+.table_ball .balls .b02, .table_ball .name .b02,.table_ball span.ball_02 { background-position: 0 -27px; }
+.table_ball .balls .b03, .table_ball .name .b03,.table_ball span.ball_03 { background-position: 0 -54px; }
+.table_ball .balls .b04, .table_ball .name .b04,.table_ball span.ball_04 { background-position: 0 -81px; }
+.table_ball .balls .b05, .table_ball .name .b05,.table_ball span.ball_05 { background-position: 0 -108px; }
+.table_ball .balls .b06, .table_ball .name .b06,.table_ball span.ball_06 { background-position: 0 -135px; }
+.table_ball .balls .b07, .table_ball .name .b07,.table_ball span.ball_07 { background-position: 0 -162px; }
+.table_ball .balls .b08, .table_ball .name .b08,.table_ball span.ball_08 { background-position: 0 -189px; }
+.table_ball .balls .b09, .table_ball .name .b09,.table_ball span.ball_09 { background-position: 0 -216px; }
+.table_ball .balls .b10, .table_ball .name .b10,.table_ball span.ball_10 { background-position: 0 -243px; }
+.table_ball .balls .b11, .table_ball .name .b11,.table_ball span.ball_11 { background-position: 0 -270px; }
+.table_ball .balls .b12, .table_ball .name .b12,.table_ball span.ball_12 { background-position: 0 -297px; }
+.table_ball .balls .b13, .table_ball .name .b13,.table_ball span.ball_13 { background-position: 0 -324px; }
+.table_ball .balls .b14, .table_ball .name .b14,.table_ball span.ball_14 { background-position: 0 -351px; }
+.table_ball .balls .b15, .table_ball .name .b15,.table_ball span.ball_15 { background-position: 0 -378px; }
+.table_ball .balls .b16, .table_ball .name .b16,.table_ball span.ball_16 { background-position: 0 -405px; }
+.table_ball .balls .b17, .table_ball .name .b17,.table_ball span.ball_17 { background-position: 0 -432px; }
+.table_ball .balls .b18, .table_ball .name .b18,.table_ball span.ball_18 { background-position: 0 -459px; }
+.table_ball .balls .b19, .table_ball .name .b19,.table_ball span.ball_19 { background-position: 0 -486px; }
+.table_ball .balls .b20, .table_ball .name .b20,.table_ball span.ball_20 { background-position: 0 -513px; }
+.table_ball .balls .b21, .table_ball .name .b21,.table_ball span.ball_21 { background-position: 0 -540px; }
+.table_ball .balls .b22, .table_ball .name .b22,.table_ball span.ball_22 { background-position: 0 -567px; }
+.table_ball .balls .b23, .table_ball .name .b23,.table_ball span.ball_23 { background-position: 0 -594px; }
+.table_ball .balls .b24, .table_ball .name .b24,.table_ball span.ball_24 { background-position: 0 -621px; }
+.table_ball .balls .b25, .table_ball .name .b25,.table_ball span.ball_25 { background-position: 0 -648px; }
+.table_ball .balls .b26, .table_ball .name .b26,.table_ball span.ball_26 { background-position: 0 -675px; }
+.table_ball .balls .b27, .table_ball .name .b27,.table_ball span.ball_27 { background-position: 0 -701px; }
+.table_ball .balls .b28, .table_ball .name .b28,.table_ball span.ball_28 { background-position: 0 -728px; }
+.table_ball .balls .b29, .table_ball .name .b29,.table_ball span.ball_29 { background-position: 0 -755px; }
+.table_ball .balls .b30, .table_ball .name .b30,.table_ball span.ball_30 { background-position: 0 -782px; }
+.table_ball .balls .b31, .table_ball .name .b31,.table_ball span.ball_31 { background-position: 0 -809px; }
+.table_ball .balls .b32, .table_ball .name .b32,.table_ball span.ball_32 { background-position: 0 -836px; }
+.table_ball .balls .b33, .table_ball .name .b33,.table_ball span.ball_33 { background-position: 0 -863px; }
+.table_ball .balls .b34, .table_ball .name .b34,.table_ball span.ball_34 { background-position: 0 -890px; }
+.table_ball .balls .b35, .table_ball .name .b35,.table_ball span.ball_35 { background-position: 0 -917px; }
+.table_ball .balls .b36, .table_ball .name .b36,.table_ball span.ball_36 { background-position: 0 -944px; }
+.table_ball .balls .b37, .table_ball .name .b37,.table_ball span.ball_37 { background-position: 0 -971px; }
+.table_ball .balls .b38, .table_ball .name .b38,.table_ball span.ball_38 { background-position: 0 -998px; }
+.table_ball .balls .b39, .table_ball .name .b39,.table_ball span.ball_39 { background-position: 0 -1025px; }
+.table_ball .balls .b40, .table_ball .name .b40,.table_ball span.ball_40 { background-position: 0 -1052px; }
+.table_ball .balls .b41, .table_ball .name .b41,.table_ball span.ball_41 { background-position: 0 -1079px; }
+.table_ball .balls .b42, .table_ball .name .b42,.table_ball span.ball_42 { background-position: 0 -1106px; }
+.table_ball .balls .b43, .table_ball .name .b43,.table_ball span.ball_43 { background-position: 0 -1133px; }
+.table_ball .balls .b44, .table_ball .name .b44,.table_ball span.ball_44 { background-position: 0 -1160px; }
+.table_ball .balls .b45, .table_ball .name .b45,.table_ball span.ball_45 { background-position: 0 -1187px; }
+.table_ball .balls .b46, .table_ball .name .b46,.table_ball span.ball_46 { background-position: 0 -1214px; }
+.table_ball .balls .b47, .table_ball .name .b47,.table_ball span.ball_47 { background-position: 0 -1242px; }
+.table_ball .balls .b48, .table_ball .name .b48,.table_ball span.ball_48 { background-position: 0 -1269px; }
+.table_ball .balls .b49, .table_ball .name .b49,.table_ball span.ball_49 { background-position: 0 -1296px; }
+.ds_d, .dx_d {
+    color: red !important;
+}

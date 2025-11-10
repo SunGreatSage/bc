@@ -1,0 +1,138 @@
+
+<div class="scrollable ng-scope others ucenter">
+
+<link rel="stylesheet" href="../css/mobile/mobile-cash.css">
+<link rel="stylesheet" href="../css/default/xj/jquery-ui.css">
+<div class="scrollable-content member-setting overthrow">
+
+<div>
+
+  <div class="clearfix margintop10 marginleft10">
+      <div class="fl"><img src="../css/mobile/xj/icouser.jpg" width="47" height="46" alt=""></div><div class="fl blue cnbig1 marginleft10 margintop15">{+$username+}</div>
+    </div>
+    <div class="settingmenu margintop10 clearfix">
+        <a href="javascript:void(0);" class="colbtn safe">
+          <img src="../css/mobile/xj/icolock.jpg" width="73" height="74" alt="">
+            <p class="margintop10">安全设置</p>
+            
+        </a>
+        <a href="javascript:void(0);" class="colbtn uinfo">
+          <img src="../css/mobile/xj/icouser2.jpg" width="73" height="74" alt="">
+            <p class="margintop10">账号设置</p>
+         
+        </a>
+        <a href="javascript:void(0);" class="colbtn notices">
+          <img src="../css/mobile/xj/icoreport.jpg" width="73" height="74" alt="">
+            <p class="margintop10">消息中心</p>
+            <div class="settingarrow"></div>
+            
+        </a>
+    </div>
+
+      <!-- 修改密码 -->
+      <div style="display: block;" id="changePassword_container" class="settingContainer">
+        <div class="padding20 con safes" style="display:none;">
+          <div class="textbox clearfix">
+            <div class="col1 fl">旧密码</div>
+              <div class="col2 fl"><input type="password" id="oldpassword" class="textfield1 needsclick" placeholder="(请填写)" ></div>
+          </div>
+          <div class="textbox clearfix">
+            <div class="col1 fl">新密码</div>
+              <div class="col2 fl"><input type="password" id="password" class="textfield1 needsclick" placeholder="(请填写)" ></div>
+          </div>
+          <div class="textbox clearfix">
+            <div class="col1 fl">确认密码</div>
+              <div class="col2 fl"><input type="password" id="ckpassword" class="textfield1 needsclick" placeholder="(请填写)" ></div>
+          </div>
+          <div class="gap20"></div>
+            <div class="col-xs-12">
+              <input type="button"  class="submitbtn cnbig btnradius needsclick cpass" value="确定" >
+            </div>
+        </div>
+      </div>
+      
+      <div class="padding20 con uinfos" >
+      <div class="padding20">
+          收货地址 填写真实资料，逢年过节时，我们可能给忠实会员派送小礼物哦！
+        </div>
+        
+          <div class="textbox clearfix">
+            <div class="col1 fl">姓名</div>
+              <div class="col2 fl">{+$tname+}</div>
+          </div>
+         <div class="textbox clearfix">
+            <div class="col1 fl">性别</div>
+              <div class="col2a fl"><i class="fa fa-angle-down"></i><select name="sex" id="sex" class="province floatleft dropdown needsclick">
+											<option {+if $sex=='男'+}selected{+/if+} value="男">男</option>
+											<option {+if $sex=='女'+}selected{+/if+} value="女">女</option>
+											</select></div>
+          </div>
+          <div class="textbox clearfix">
+            <div class="col1 fl">出生年月</div>
+              <div class="col2b fl"><input id="birthday" type="text" class="textfield1 needsclick" value="{+$birthday+}" onclick="laydate()"></div>
+          </div>
+          <div class="textbox clearfix">
+            <div class="col1 fl">电话</div>
+              <div class="col2 fl"><input id="tel" type="text" class="textfield1 needsclick" value="{+$tel+}"></div>
+          </div>
+          <div class="textbox clearfix">
+            <div class="col1 fl">QQ</div>
+              <div class="col2 fl"><input id="qq" type="text" class="textfield1 needsclick" value="{+$qq+}"></div>
+          </div>
+          <div class="textbox clearfix">
+            <div class="col1 fl">省市区</div>
+              <div class="col2 fl"><input id="txtCity" type="text" class="textfield1 needsclick" value="{+$shengshi+}"></div>
+          </div>
+          <div class="textbox clearfix">
+            <div class="col1 fl">街道</div>
+              <div class="col2 fl"><input id="txtStreet" type="text" class="textfield1 needsclick" value="{+$street+}"></div>
+          </div>
+          <div class="textbox clearfix">
+            <div class="col1 fl">收货人</div>
+              <div class="col2 fl"><input id="txtConsignee" type="text" class="textfield1 needsclick" value="{+$shr+}"></div>
+          </div>
+
+          <div class="gap20"></div>
+          <div class="submitbtn cnbig btnradius edits">保存</div>
+        </div>
+        
+        
+   <div class="notification-list con noticess" style="display:none;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th bgcolor="#217eec" colspan="4px"><i class="fa fa-envelope-o fa-lg"></i> 未读 <span class="badge"></span></th>
+          </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+      </table>
+            <div class="col-sm-12 pagination margintop20">
+              <div class="col-sm-4">
+                <div class="previous pull-left previous-btn">
+                  <span aria-hidden="true">&lt;&lt; </span>前一页
+                  
+                </div>
+              </div>
+              <div class="col-sm-4 textcenter">
+                <div><input class="pageNum needsclick" type="number" max="1" min="1" value="1" length="4"></div>
+              </div>
+              <div class="col-sm-4">
+                <div class="next pull-right next-btn">
+                    后一页<span aria-hidden="true"> &gt;&gt;</span> 
+                  
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-12 pagination textcenter">
+                <div>共 1 笔记录 共 1 页</div>
+            </div>
+    </div>
+</div>
+ <div class="gap100" style="height:200px;"></div> 
+</div>
+<style type="text/css">
+tr.du0 td{font-weight:bold}
+</style>
+</div>

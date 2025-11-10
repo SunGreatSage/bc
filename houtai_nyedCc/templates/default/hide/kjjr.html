@@ -1,0 +1,36 @@
+<tr>
+<th><input type="checkbox" value="all" class="clickall" /></th>
+ <th>彩种</th>
+ <th>期数</th>
+  <th>报表开关</th>
+    <th>结算</th>
+ <th>开盘时间</th>
+ <th>关盘时间</th>
+ <th>正码关盘时间</th>
+ <th>开奖时间</th>
+ {+section name=mnum loop=11 start=1 max=$mnum step=1+}
+  
+ <th>{+$smarty.section.mnum.index+}球</th>
+ {+/section+}
+ <th>操作</th>
+</tr>
+
+{+section name=i loop=$kj+}
+
+<tr>
+<td><input type="checkbox" value="{+$kj[i].qishu+}" gid='{+$kj[i].gid+}' bml='{+$kj[i].bml+}' /></td>
+<td gid='{+$kj[i].gid+}'>{+$kj[i].gname+}</td>
+<td>{+$kj[i].qishu+}</td>
+<td><img src='{+$globalpath+}img/{+$kj[i].baostatus+}.gif' class="baos" /></td>
+<td><img src='{+$globalpath+}img/{+$kj[i].js+}.gif' class="js" /></td>
+<td class="opentime" y='{+$kj[i].oy+}'>{+$kj[i].opentime+}</td>
+<td class="closetime" y='{+$kj[i].cy+}'>{+$kj[i].closetime+}</td>
+<td class="otherclosetime">{+$kj[i].otherclosetime+}</td>
+<td class="kjtime" y='{+$kj[i].ky+}'>{+$kj[i].kjtime+}</td>
+ {+section name=mnum loop=11 start=1 max=$mnum step=1+}
+  {+assign var="tmp" value="m`$smarty.section.mnum.index`"+}
+  <td class="ma">{+$kj[i].$tmp+}</td>
+ {+/section+}
+<td>{+if $kj[i].js==0+}<input type="button" class="setthisqishu btnf"  value="设当前期" />{+/if+}<input type="button" class="kjjs btnf"  value="结算" /><input type="button" class="editkjbtn btnf"  value="修改" /></td>
+ </tr>
+{+/section+}

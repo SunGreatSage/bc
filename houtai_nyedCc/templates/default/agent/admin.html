@@ -1,0 +1,136 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"  {+if $rkey==0+}oncontextmenu="return false"{+/if+}>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link href="/css/allagent.css" rel="stylesheet" type="text/css" />
+<script language="javascript" src="/js/jquery-1.8.3.min.js"></script>
+<script language="javascript">
+var thref = top.location.href;
+if (thref.indexOf('php')!=-1) {windows.close();}
+function hideinfo(){ if(event.srcElement.tagName=="A"){
+   window.status=event.srcElement.innerText}
+}
+document.onmouseover=hideinfo; 
+document.onmousemove=hideinfo;
+var globalpath = "{+$globalpath+}";
+</script>
+<style >
+html,body{padding:0px;}
+body{overflow-x:hidden;overflow-y:hidden}
+.atb{float:left;margin:0px;clear:both;width:1024px;height:100%}
+.adiv{float:left;margin:0px;width:100%;overflow:hidden;background:url('{+$globalpath+}imgn/abg.jpg');height:71px;padding:0px;overflow:hidden}
+.atb .logo{width:120px;margin:0px;text-align:center;height:71px;overflow:hidden;line-height:71px;}
+.atb .logo h1 {   font: bold 330%/100% "黑体"; display:block;  margin-top:13px;  overflow:hidden;  font-weight:bolder;  color:#D50000;  font-size:38px;  height:100%;  line-height:100%;}
+.atb .logo h1 span {   background:none;   filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='{+$globalpath+}imgs/fine.png', sizingMethod='scale');   display: block;   width: 100%;   height:100%;  line-height:100%;  padding:0px;} 
+
+.atb .mess{width:594px;}
+.atb .mess marquee{float:left;width:100%;}
+.atb .other{width:310px;font-size:11px;line-height:110%;padding-left:10px;}
+.atb .menu{margin-bottom:0px;overflow:hidden;height:25px;}
+.atb .menu ul{margin:0px;padding:0px;}
+/*.atb .menu ul li{background:url('{+$globalpath+}img/an.png') no-repeat;width:70px;height:19px;line-height:19px;float:left;list-style:none;text-align:center;}*/
+.atb .menu ul li{filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(enabled=true, sizingMethod=scale, src='{+$globalpath+}img/an.png'); width:70px;height:25px;line-height:25px;float:left;list-style:none;text-align:center;background:none}
+
+.atb .menu ul li{cursor:pointer;}
+.atb .menu ul li:hover{text-decoration:underline;}
+.atb .menu{overflow:hidden;height:25px;}
+.btb{margin:0px;float:left;width:1024px;height:550px;background:#960}
+.smenu{position:absolute;display:none;width:100px;}
+.smenu td{background:#fff}
+.usertb{position:absolute;z-index:100;display:none}
+.zdtb{position:absolute;z-index:100;display:none}
+.accounttb{position:absolute;z-index:100;display:none}
+.baotb{position:absolute;z-index:100;display:none}
+.hide {display:none}
+.panstatus{height:40px;font-size:16px;}
+.game2 label{display:block;float:left;width:40px;border:1px solid  #63C;text-align:left;padding-left:1px;margin:1px;cursor:pointer;overflow:hidden;font-size:10pt;color:#000;background:#fff}
+.game2 label.click{background:#FC6}
+</style>
+</head>
+<body >
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var sss = 'admin';
+var js=1;
+</script>
+<div class="adiv">
+<iframe id="tmfrm" style="position:absolute;top:71px;width:100px;z-index:50;display:none;background:none"></iframe>
+<table class="atb" cellspacing="0" cellpadding="0"  border="0" >
+<tr>
+ <td rowspan=3 class="logo"><H1><span>{+$webname+}</span></H1></td>
+<td colspan="2" style="height:20px;" class="game2">
+  {+section name=i loop=$gamecs+}
+    {+if $gamecs[i].ifok!='0'+} <label gid={+$gamecs[i].gid+} {+if $gid==$gamecs[i].gid+}class='click'{+/if+} >{+$gamecs[i].sgname+}</label>{+/if+}
+     {+/section+}
+</td></tr>
+  <tr>
+   
+    <td class='mess' ><marquee  scrollamount="4" onMouseOver="this.stop();" onMouseOut="this.start();" style="display:none" ></marquee></td>
+    <td class="other">
+     <input type="hidden" id="amess" value='{+$amess+}' />
+
+      <input type=hidden id='layer' value="{+$layer+}" />
+      
+<span class="panstatus" s='{+$panstatus+}'><span>{+if $panstatus==1+}距离关盘:{+else+}距離开盘:{+/if+}</span><label class="time0">{+$pantime+}</label></span><BR /><span s='{+$otherstatus+}' class="otherstatus hide"><span>{+if $otherstatus==1+}距正码关盘:{+else+}距离正码开盘:{+/if+}</span><label class="time1">{+$othertime+}</label></span>
+  
+    </td>
+  </tr>   
+  <tr>
+     <td class="menu"  valign="top" >
+        <ul>
+         {+if $status==1+}
+           {+if $check==1+}<!--<li url='lib'>监控</li>-->{+/if+}
+           {+if $slib==1+}<li url='slib' class="over">注单</li>{+/if+}
+          {+/if+}
+           {+if $baox==1+}<li url='baox' >报表</li>{+/if+}
+           {+if $status==1+}
+           {+if $suser==1+}<li url='suser' >帐号管理</li>{+/if+}
+           {+if $account==1+}<li url='account' class="over">个人设置</li>{+/if+}
+           {+if $long==1+}
+           <li url='long'>开奖记录</li>
+             {+if $gid==150+}
+             <li url='zinfo'>中奖名单</li>
+             {+/if+}
+           {+/if+}
+           {+if $rule==1+}<!--<li url='rule'>游戏规则</li>-->{+/if+}
+           {+if $report==1+}<!--<li url='report'>意见建议</li>-->{+/if+}
+           <li url='changepass2' >更改密码</li>
+           {+/if+}
+           <li url='top'>登出</li>
+        </ul>
+        </td><td  valign="top">
+        <span>欢迎：</span><label>{+$username+}</label>&nbsp;&nbsp;<select class="game">
+  {+section name=i loop=$gamecs+}
+  {+if $gamecs[i].ifok!='0'+}
+     <option value="{+$gamecs[i].gid+}" {+if $gamecs[i].gid==$gid+}selected{+/if+}>{+$gamecs[i].gname+}</option>
+     {+/if+}
+     {+/section+}
+    </select>
+     </td>
+  </tr>
+</table>
+<table class="smenu  zdtb tinfo">
+<!--<tr><Td><a url='now'>即时注单</a></Td></tr>-->
+<tr><Td><a url='xxtz'>注单明细</a></Td></tr>
+
+</table>
+<table class="smenu  accounttb tinfo">
+{+if $credit==1+}<tr><Td><a surl='credit' action=show>信用资料</a></Td></tr>{+/if+}
+<tr><Td><a surl='libset' action=show>注单设置</a></Td></tr>
+<tr><Td><a surl='record' action=news>系统消息</a></Td></tr>
+{+if ($layer==1 & $ifexe==1)+}<tr><Td><a surl='record' action=peilv>赔率记录</a></Td></tr>{+/if+}
+<tr><Td><a surl='record' action=show>操作记录</a></Td></tr>
+<!--<tr><Td><a>自动补货设置</a></Td></tr>-->
+</table>
+
+<table class="smenu baotb tinfo">
+<!--<tr><Td><a url='bao2'>报表2</a></Td></tr>-->
+<!--<tr><Td><a url='baolist'>分类报表</a></Td></tr>-->
+</table>
+
+</div>
+
+<iframe id="bottom" frameborder="0"  src="" scrolling="Auto"  name="bottom" class="btb" style='width:100%;overflow-x:hidden'></iframe>
+<iframe style="width:100px;height:100px;display:none" src="check.php" name="check" ></iframe>
+</body>
+</html>

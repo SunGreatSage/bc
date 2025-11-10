@@ -1,0 +1,47 @@
+{+include file='header.html'+}
+    </head>
+    <body class="playnav"><script id=myjs language="javascript">var js=1;var sss='nav';</script>
+    	
+        <header class='header-model tc rel fw700'>
+            <label style="color:red">{+$webname+}</label>玩法大厅
+            <span class='abs btn-h btn-r logout' >退出</span>
+        </header>
+        {+section name=i loop=$gamecs+}
+    <p class='content fw700 rel homenav {+$gamecs[i].class+}' gid='{+$gamecs[i].gid+}'>{+$gamecs[i].gname+}<img src='../imgn/mobi/next.png' class='abs'/></p>
+     {+/section+}
+        
+     
+        <p class='content fw700 rel homenav_bottom lib'>未结明细
+             <img src='../imgn/mobi/next.png' class='abs'/>
+        </p>
+        <p class='content fw700 rel homenav_bottom bao'>账户历史
+             <img src='../imgn/mobi/next.png' class='abs'/>
+        </p>
+        <p class='content fw700 rel homenav_bottom kj'>开奖结果
+             <img src='../imgn/mobi/next.png' class='abs'/>
+        </p>
+        <p class='content fw700 rel homenav_bottom uinfo'>个人资料
+             <img src='../imgn/mobi/next.png' class='abs'/>
+        </p>
+        <p class='content fw700 rel homenav_bottom cpass'>更改密码
+             <img src='../imgn/mobi/next.png' class='abs'/>
+        </p>
+        <p class='fw700 tj'>
+            <label class="tright" id="accountInfo">{+$username+}</label> 
+           
+            <label class="yuer">
+              {+if $fudong==1+}
+              [现金]余额：<span id='money'>{+$money+}</span>     
+              {+else+}
+                 [低频]余额：<span id='money'>{+$money+}</span>
+                 [快开]余额：<span id='money'>{+$kmoney+}</span>
+              {+/if+}
+            </label>
+        </p>
+        <article class='notice'>
+            <div class=''>添加"手机下注"快捷方式到桌面，请按<img src='../imgn/mobi/ico.png'/>然后点选<img src='../imgn/mobi/ico_log.png'/>添加至主屏幕</div>
+        </article>
+     
+      
+    </body>
+</html>

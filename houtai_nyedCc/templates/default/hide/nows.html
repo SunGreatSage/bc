@@ -1,0 +1,251 @@
+{+include file='header2.html'+}
+<script type="text/javascript" src="../js/jquery-ui.js"></script>
+<script type="text/javascript" src="../js/jquery.ui.datepicker-zh-CN.js"></script>
+<style>
+.zd th{}
+input.vsmall{width:20px;padding:0px;}
+.points{width:30px;}
+.kpoints{width:30px;}
+input.bred{background:red}
+a.red{color:#D50000}
+.hide{display:none}
+.nowtb tr.c:hover{background:#DEEFD8}
+.nowtb  {table-layout:inherit;word-wrap:break-word;word-break:break-all;font-size:12px;}
+.con {width:150px;}
+.s_head th{width:80px;}
+td.r{text-align:left;padding-left:2px;}
+.w1260{width:1260px;}
+.w1560{width:1560px;}
+
+tr.z1{background:#69F}
+tr.z2{background:#6cc}
+tr.z3{background:#696}
+tr.z5{background:#655}
+tr.he{background:#acf1a9}
+.zd th {
+}
+input.vsmall {
+	width:20px;
+	padding:0px;
+}
+.points {
+	width:30px;
+}
+.kpoints {
+	width:30px;
+}
+input.bred {
+	background:red
+}
+a.red {
+	color:#D50000
+}
+.nowtb td {
+	font-size:10px;
+}
+.nowtb th {
+	font-size:10px;
+}
+.nowtb tr:hover {
+	background:#FCF
+}
+.user tr:hover {
+	background:#FCF
+}
+
+.qishu{width:210px;}
+.txts{width:25px;border:1px solid #36F}
+.txts2{width:90px;border:1px solid #36F}
+.s_head .r{text-align:left;padding-left:10px;}
+.time{width:80px;}
+.contents{overflow-x: auto}
+	.textb{width:80px;}
+	label{color:red;}
+</style>
+</head>
+<body>
+<script ID="myjs" language="javascript">var js=1;var sss='nows';</script>
+<div class="main">
+	<div class="top_info">
+		<span class="title">注单删改2</span>
+	</div>
+	<table class="data_table data_list">
+	<tr>
+		<th>
+			彩种选择
+		</th>
+		<td class="r">
+			 {+if $gid==100+}
+			<select id='game'>
+				<option value="100">香港彩</option>
+			</select>
+{+else+}
+			<select id='game'>
+         {+section name=i loop=$game+}
+          {+if $game[i].gid!=100+}
+				<option value="{+$game[i].gid+}">{+$game[i].gname+}</option>
+           {+/if+}
+         {+/section+}
+				<option value="999" selected>全部快开</option>
+			</select>
+      {+/if+}
+		</td>
+		<th>
+			结算状态
+		</th>
+		<td class="r">
+			<select id='z'>
+				<option value="0" selected>未结算</option>
+				<option value="1">已结算</option>
+				<option value="2">全部</option>
+			</select>
+		</td>
+		<th>
+			刷新
+		</th>
+		<td class="r">
+			<select id="reloadtime">
+				<option value="10">10秒</option>
+				<option value="15">15秒</option>
+				<option value="20">20秒</option>
+				<option value="30" selected>30秒</option>
+				<option value="45">45秒</option>
+				<option value="60">60秒</option>
+				<option value="90">90秒</option>
+				<option value="120">120秒</option>
+			</select>
+			<label class="time"></label>秒<input class="btn1 btnf" type="button" value="刷新" id="reload"/><input class="btn1 btnf" type="button" value="暂停" id="zanting"/>
+		</td>
+		<th>
+			每页显示
+		</th>
+		<td class="r">
+			<select id="psize">
+				<option value="50">50条</option>
+				<option value="100" selected>100条</option>
+				<option value="200">200条</option>
+				<option value="500">500条</option>
+			</select>
+		</td>
+	
+	</tr>
+	<tr>	<th>
+			分类选择
+		</th>
+		<td class="r" >
+			<select class='bid'>
+				<option value="">全部</option>
+      {+section name=i loop=$b+}
+				<option value="{+$b[i].bid+}">{+$b[i].name+}</option>
+      {+/section+}
+			</select>
+			<select class='sid'>
+			</select>
+			<select class='cid'>
+			</select>
+		</td>
+		<th  class="hide">
+			查询方式
+		</th>
+		<td class="r hide">
+			<input type="radio" value="0" name="fs" checked/>
+    按日期
+			<input type="radio" value="1" name="fs"/>
+    按期数&nbsp;&nbsp;
+		</td>
+		<th>
+			日期选择
+		</th>
+			<td class="r" colspan="3">
+			<input class='textb' id="start" value='{+$sdate[10]+}' size='8'/>
+    &nbsp;-&nbsp;
+			<input class='textb' id="end" name='end' value='{+$sdate[10]+}' size='8'/>
+			<input type="button" class="s btnf" D="1" value="今天"/>
+			<input type="button" class="s btnf" D="2" value="昨天"/>
+			<input type="button" class="s btnf" D="3" value="本星期"/>
+			<input type="button" class="s btnf" D="4" value="上星期"/>
+  
+		</td>	<th  class="hide">
+			期数选择
+		</th>
+		<td class="r hide">
+			<select class='qishu'>
+				{+foreach item=i from=$qishu+}
+				<option value="{+$i+}">{+$i+}期</option>
+     {+/foreach+}
+			</select>
+		</td>	<th>
+			详细信息
+		</th>
+        <td>
+        <input type="checkbox" value="1" checked name="xinfo" />
+        </td>
+	
+	</tr>
+	<tr>
+		<th>
+			会员选择
+		</th>
+		<td colspan="9" class="r">
+			会员名:<input type='text' id='username' value=''  />
+			<input type="hidden" value="" id='saveuserid' LAYER="{+$layer+}"/>
+			<input type="hidden" id="page" value="1"/>
+			<input type="hidden" id='topid' value="{+$topid+}" LAYER="{+$layer+}" username='{+$username+}'/>
+			<select class='user' LAYER="{+$layer+1+}">
+				<option value="">选择公司</option>
+{+section name=i loop=$topuser+}
+				<option value="{+$topuser[i].userid+}" wid='{+$topuser[i].wid+}'>{+$topuser[i].username+}</option>
+{+/section+}
+			</select>
+		</td>
+          <td colspan="2" class="hide"> <input class="btn1 btnf query" type="button" value="注单查询"  style="margin:1px;" /></td>
+	</tr>
+	</table>
+    <input type="hidden" class='sort' orderby='time' sorttype='DESC' page='1' xtype='2' con='' />
+	<div class="contents param_panel">
+ <table class="data_table data_list nowtb" style='margin-top:10px;background:#fff;width:1800px;'>
+     <thead>
+  <tr>
+  <th><input type="checkbox" class="clickall" /></th>
+  <th>操作</th>
+  <th>彩种</th>
+   <th>期数</th>
+   <th>交易号</th>
+   <th><select class='xtype'><option value='3' selected>全部</option><option value='0'>下注</option><option value='1'>内补</option><option value='2'>外补</option></select></th>
+   <th>类别</th>
+   <th>大盘</th>
+   <th>小盘</th>
+   <th>中</th>
+   <th>内容</th>
+   <th>金额</th>
+   <th>赔率</th>
+   <th>退水%</th>
+   <th>会员</th>
+   <th>时间</th>
+  </tr><tbody></tbody>
+ </table>
+	</div>
+</div>
+<div id='test'>
+</div>
+<script language="javascript">
+layernames= new Array();
+layername = new Array();
+{+section name=i loop=$layername+}
+layernames['w{+$layername[i].wid+}'] = [];
+{+foreach item=j key=key from=$layername[i].layer+}
+layernames['w{+$layername[i].wid+}'][{+$key+}] = '{+$j+}';
+{+/foreach+}
+{+/section+}
+{+foreach item=j key=key from=$layername[0].layer+}
+layername[{+$key+}] = '{+$j+}';
+{+/foreach+}
+var maxlayer= layername.length;
+var layer ={+$layer+} ;
+sdate=new Array();
+{+foreach item=i from=$sdate key=key+}
+sdate[{+$key+}]="{+$i+}";
+{+/foreach+}
+</script>
+</body>
+</html>

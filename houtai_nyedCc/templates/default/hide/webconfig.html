@@ -1,0 +1,27 @@
+{+include file='header2.html'+}
+<link href="/default/css/jquery.loadmask.css" rel="stylesheet" />
+<script src="/js/sitetool.js?v=004"></script>
+<script src="/js/jquery.loadmask.js?v=004"></script>
+</head><body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='webconfig';</script>
+<div class="jt-container">
+ <input type="hidden" name="xtype" value="setsys" />
+   <div class="s_main">
+ <table style="border-collapse:unset;"  class="data_table info_table user_panel table_ball table_ball infotb" >
+ <thead><tr class=""><th colspan="2">自动维护</th></tr></thead>
+     <tr><th>自动删除登录日志(天)</th><td><input type="text" value='{+$config.autodellogintime+}' class="autodellogintime txt1" /><input type="checkbox" {+if $config.autodellogin==1+}checked{+/if+} class="autodellogin" /></td></tr>
+       <tr><th>自动删除修改日志(天)</th><td><input type="text" value='{+$config.autodeledittime+}' class="autodeledittime txt1" /><input type="checkbox" {+if $config.autodeledit==1+}checked{+/if+} class="autodeledit" />&nbsp;包括修改记录、资金记录</td></tr>
+     <tr><th>自动删除赔率日志(天)</th><td><input type="text" value='{+$config.autodelpltime+}' class="autodelpltime txt1" /><input type="checkbox" {+if $config.autodelpl==1+}checked{+/if+} class="autodelpl" /></td></tr>
+    <tr><th>每页记录数1</th><td><input type="text" value='{+$config.psize+}' class="psize txt1"  />&nbsp;代理报表页数,会员下注单页数</td></tr>
+    <tr><th>每页记录数2</th><td><input type="text" value='{+$config.psize1+}' class="psize1 txt1"  />&nbsp;用户列表页数,在线统计页数</td></tr>
+    <tr><th>每页记录数3</th><td><input type="text" value='{+$config.psize2+}' class="psize2 txt1"  />&nbsp;开奖记录页数</td></tr>
+  <tr><th>每页记录数4</th><td><input type="text" value='{+$config.psize3+}' class="psize3 txt1"  />&nbsp;补货变更记录页数,资金记录页数,公司注单查询页数</td></tr>
+    <tr><th>每页记录数5</th><td><input type="text" value='{+$config.psize5+}' class="psize5 txt1"  /></td></tr>
+ </table>
+ <div class="data_footer control">
+          <input type="button" value="保存" class="button editall bnt_1" />
+		</div>
+ </div>
+<div id='test'></div>
+</body>
+</html>

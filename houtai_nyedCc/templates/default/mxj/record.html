@@ -1,0 +1,19 @@
+<table class="tinfo messagetb wd100" >
+<tr>
+<th style="width:120px;">时间</th><th>系统消息</th>
+</tr>
+{+section name=i loop=$news+}
+<tr><td>{+$news[i].time+}</td><td>{+$news[i].content+}</td></tr>
+{+/section+}
+
+</table>
+
+<table class="tinfo recordtb wd100" style="margin-top:10px;">
+<tr>
+<th>登陆时间</th><th>IP</th><th>来源</th><th>备注</th>
+</tr>
+{+section name=i loop=$l+}
+<tr><td>{+$l[i].time+}</td><td>{+$l[i].ip+}</td><td>{+$l[i].addr+}</td><td>{+$l[i].ifok+}</td></tr>
+{+/section+}
+
+</table>

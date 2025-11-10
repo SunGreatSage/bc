@@ -1,0 +1,59 @@
+{+include file='headers.html'+}
+<style type="text/css">
+.inputs{width:200px !important;}
+</style>
+</head>
+<body style="overflow:hidden">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='money_banknum';</script>
+
+				<table class="data_table list bank" >
+					<thead>
+						<tr>
+                            <th>
+                            <select class="userid">
+                            <option value='99999999'>公司</option>
+                            {+section name=i loop=$moneyuser+}
+                            <option value='{+$moneyuser[i].userid+}'>{+$moneyuser[i].username+}-{+$moneyuser[i].name+}-{+$moneyuser[i].tname+}</option>
+                            {+/section+}
+                            </select>
+                            </th>
+							<th>银行名称</th>
+                            <th>卡号/支付宝/微信号</th>
+                            <th>户名</th>
+                            <th>开户行</th>
+                            <th>提款密码</th>
+                            <th>启用</th>
+                            <th>删除</th>
+						</tr>
+					</thead>
+					<tbody>
+                    {+section name=i loop=$bank+}
+                     <tr id='{+$bank[i].id+}'>
+                     <td class='tcenter'>{+$bank[i].username+}</td>
+                     <td class='tcenter'>{+$bank[i].bankname+}</td>                     
+                     <td><input type='text' class="input inputs num" value="{+$bank[i].num+}" /></td>
+                     <td><input type='text' class="input name" value="{+$bank[i].name+}" /></td>
+                     <td><input type='text' class="input inputs kaihuhang" value="{+$bank[i].kaihuhang+}" /></td>
+                     <td><input type='text' class="input inputs bankpass" value="{+$bank[i].bankpass+}" /></td>
+                     <td><input type="checkbox" class="ifok" {+if $bank[i].ifok==1+}checked{+/if+}  /></td>
+                     <td  class='tcenter'><input type="button" class="button del" value="删除" /></td>
+                     </tr>
+                    {+/section+}
+					<tr>
+                    <td colspan="8"  class='tcenter'>
+                       <input type="button" class="button add" value="新增" />
+                       <input type="button" class="button save" value="保存" />
+                    </td>
+                    </tr>
+					</tbody>
+				</table>
+
+<select style="display:none;" class="banks">
+{+section name=i loop=$banks+}
+  <option value='{+$banks[i].bankid+}'>{+$banks[i].bankname+}</option>
+{+/section+}
+</select>
+<script language="javascript">
+var uids = '{+$uid+}';
+</script>
+</body></html>

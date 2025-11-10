@@ -1,0 +1,45 @@
+{+include file='header2.html'+}
+<script language="javascript" src="/js/md5.js"></script>
+<link href="/css/admins.css" type="text/css" rel="stylesheet" />
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='adminslist';</script>
+<div class="main">
+	<div class="top_info">
+		<span class="title">管理员</span><span class="right"></span>
+	</div>
+   <table class="data_table data_list">
+    <TR>
+      <Th><a href='admins.php?xtype=list'>管理员</a></Th>
+      <Th><a href='admins.php?xtype=login'>登录记录</a></Th>
+    </TR>
+   </table>
+   <BR>
+ <table class="data_table data_list">
+   <TR>
+   
+<th >管理员</th><th>新增时间</th><th>登陆次数</th><th>最后登录IP</th><th>最后登录时间</th><th>最后修改密码时间</th><th>操作</th>
+
+   </TR>     
+   {+section name=i loop=$data+}
+<tr><td >{+$data[i].adminname+}</td><td>{+$data[i].regtime+}</td><td>{+$data[i].logintimes+}</td><td>{+$data[i].lastloginip+}[{+$data[i].lastloginfrom+}]</td><td>{+$data[i].lastlogintime+}</td><td>{+$data[i].passtime+}</td>
+   <td>
+   {+if $data[i].adminid!=0+}
+   <input type='button' class='del btn1 btnf' value='删除' id=del"{+$data[i].adminid+}" AID="{+$data[i].adminid+}" />
+   {+/if+}
+   <input class='edit btn1 btnf' id=edit"{+$data[i].adminid+}" value='修改' AID="{+$data[i].adminid+}" type='button' />
+   <input class='add btn1 btnf' value='添加'  id=add"{+$data[i].adminid+}" type='button' />
+   </td>
+   </tr>
+   {+/section+}
+   </table>
+   <table class="data_table data_list addtb" style='width: 400px;'>
+      <TR><Th>管理帐号</Th><TD><label class="adminname" aid=''></label><input type="text" id='adminname' class="intext" /><input type="hidden" id='action' value="add" /></TD></TR>
+      <TR><Th>密码</Th><TD><input type="password" id='pass1' class="intext" /></TD></TR>
+      <TR><Th>重复密码</Th><TD><input type="password" id='pass2' class="intext" /></TD></TR>
+      <TR><th colspan="2" class="tcenter"><input type="button" id='addbtn' class="btn1 btnf" value="添加" /><input type="button" id='closebtn' class="btn1 btnf" value="关闭" /></th></TR>
+   </table>
+</div>
+<div id='test'></div>
+</body>
+</html>

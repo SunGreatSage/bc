@@ -1,0 +1,447 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   {+if $rkey==0+}oncontextmenu="return false"{+/if+}><head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="user-scalable=yes, width=1225, target-densityDpi=device-dpi" />
+    <meta name="renderer" content="webkit" />
+<title>{+$webname+}</title> 
+   <link href="/default/css/member/adminbd.min.css" type="text/css" rel="stylesheet" />
+    <link href="/default/css/member/jqueryuib.min.css" type="text/css" rel="stylesheet" />
+{+if $gid==100+}
+<link id="lotStyle" href="/default/css/member/yellow/skinbd.min.css"type="text/css" rel="stylesheet" />
+{+else+}
+<link id="lotStyle" href="/default/css/member/skinbd.min.css"type="text/css" rel="stylesheet" />
+{+/if+}
+<script language="javascript" src="/js/jquery-1.8.3.min.js"></script>
+<script language="javascript" src="/js/public.js"></script>
+<script language="javascript" src="/js/jquerybundle.min.js"></script>
+<script language="javascript" src="/js/jquery.cookie.js"></script>
+<script type="text/javascript" src="/js/default/jsuxj/libs.js"></script>
+<script type="text/javascript" src="/js/default/jsuxj/settingbet.js"></script>
+
+</head>
+<body class='{+$skin+}'>
+<script type="text/javascript" id="myjs">var mulu='{+$mulu+}';
+var js=1;
+var sss="top";
+</script>
+  <style>
+        .ios { -webkit-overflow-scrolling: touch; overflow: auto; }
+
+        .foot_box { position: relative; min-width: 1225px; background: url(../default/images/marquebg.png) repeat-x; border-bottom: 1px solid #b5c6e2; border-top: 1px solid #b5c6e2; line-height: 25px; text-indent: 3px; }
+
+        .foot_box .more_c { position: absolute; right: 18px; top: 0; color: #684716; }
+
+        .foot_box .info { padding-right: 65px; }
+
+        .foot_box .info > marquee > span { color: #f54b00; }
+
+        .foot_box .info > marquee > span:not(:first-child) { margin-left: 50px; }
+		#betListForm .bottom {
+    border: 1px solid #b9c2cb;
+}
+#betListForm .bottom span {
+    display: inline-block;
+    height: 26px;
+    text-align: center;
+    line-height: 26px;
+}
+#bcount {
+    width: 127px;
+    border-right: 1px solid #b9c2cb;
+}
+#btotal {
+    width: 215px;
+}
+#betListForm .betList {
+    min-height: 82px;
+    max-height: 260px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+.bet_panel .odds, #BetConfirmBox .odds {
+    color: #f00;
+    font-weight: bold;
+    font-size: 12px;
+    font-family: Verdana,Arial,Helvetica,sans-serif;
+}
+.table_ball thead th, .table_ball .head th {
+    height: 28px;
+    line-height: 28px;
+    font-weight: normal;
+}
+.table_ball thead th, .table_ball .head th {
+    background: url(/images/bg22.png) repeat-x left bottom;
+    color: #3c4454;
+}
+#settingbet .ds {
+    border: #b9c2cb 1px solid;
+    padding: 0 4px;
+    width: 110px;
+    height: 20px;
+    margin-bottom: 5px;
+}
+    </style>
+	  <style type="text/css">
+        @keyframes arrowAnimation {
+            from { transform: translateY(-5%) scaleY(0.8); }
+
+            to { transform: translateY(5%) scaleY(0.8); }
+        }
+
+        #dialog_open, #layer { width: 100%; height: 100%; margin: 0; padding: 0 !important; overflow: hidden; }
+
+        .dialog_iframe { width: 100%; height: 100%; margin: 0; padding: 0; }
+
+        .show_games { position: absolute; left: 40px; display: inline-block; }
+
+        .new-card-games { display: inline-block; height: 38px; width: auto; color: #fff; padding-left: 8px; padding-right: 8px; top: 0; left: 38px; z-index: 9; background: url(/default/images/blue/nav_shuxian.png) no-repeat right 9px; }
+
+        .new-card-games div { float: left; cursor: pointer; }
+
+        .card-game { padding: 10px 5px 10px 20px; font-size: 13px; }
+
+        .card-game-icon { margin: 13px 10px 10px 5px; animation: arrowAnimation 200ms ease-in-out infinite alternate; text-shadow: 0 2px 5px #00a6e8; }
+
+        .card-game-icon:before { content: "▼"; position: absolute; top: -5px; right: 0; bottom: 0; left: 0; width: 0; height: 0; color: #00aaea; animation-delay: 200ms; z-index: -1; }
+
+        .new-card-games-container { background-color: #e7e7e7; display: none; position: absolute; top: 38px; width: 1100px; height: auto; padding: 0 15px 10px 15px; z-index: 25 }
+
+        .gamebox2 { padding: 25px 25px; background-color: #fff; border: 1px solid #ccc; font-size: 13px; display: none; height: auto; margin-top: 5px; border-top: none; }
+
+        .new-single-game-item { display: inline-block; background-size: contain !important; background-repeat: no-repeat !important; overflow: hidden; background-position: center !important; width: 125px !important; height: 125px !important; position: relative; }
+
+        .new-single-game-item:hover { background-color: #ececec !important; }
+    </style>
+	 <div class="index-container">
+<div class="header" style="">
+            <div class="top_w">
+                 <div class="logo">
+            <img src="/logo.png" style="width:160px;height:60px" />
+        </div>
+
+                <div class="top_box">
+                    <div class="menu1">
+                        <div id="result_info" class="draw_number">
+                            <div id="resultLotName"></div>
+                            <div id="divResultInstallNo"></div>
+                        </div>
+                        <a id="result_balls" target="_blank" class="T_HK6"></a>
+                    </div>
+                </div>
+
+                <div class="top_menu">
+                    <a href="javascript:void(0);" class="lib" >
+                        <p>未结明细</p>
+                    </a>
+                    <a href="javascript:void(0);" class="baoday">
+                        <p>今日已结</p>
+                    </a>
+                    <a href="javascript:void(0);" class="bao">
+                        <p>报表查询</p>
+                    </a>
+                    <a href="javascript:void(0);" class="longs">
+                        <p>开奖结果</p>
+                    </a>
+                    <a href="javascript:void(0);" class="userinfo">
+                        <p>个人资讯</p>
+                    </a>
+                    <a href="javascript:void(0);" class="rule">
+                        <p>活动规则</p>
+                    </a>
+                    <a  href="/Mobile/Index?xtype=show" class="logout">
+                        <p>切换手机</p>
+                    </a>
+                    <a href="javascript:void(0);" class="changepass2" >
+                        <p>修改密码</p>
+                    </a>
+                    <a  href="/Member/Logout?logout=yes" class="logout">
+                        <p>退出系统</p>
+                    </a>
+                </div>
+            </div>
+
+                <div class="lotterys clear" style=" ">
+                    <div class="menucontainer">
+                        <div class="spritearrow arrowup"></div>
+                        <div class="show_games">
+
+                        </div>
+						<div class="show lotterys">
+<div id="lotterys" >
+{+section name=i loop=$gamecs+}
+<a href="javascript:void(0)" gid='{+$gamecs[i].gid+}' class='g{+$gamecs[i].gid+} g{+if $gid==$gamecs[i].gid+} selected{+/if+}' {+if ($smarty.section.i.index>7 || $gamecs[i].ifok==0)+}style='display:none;'{+/if+}><span>{+$gamecs[i].gname+}</span></a>
+{+/section+}
+
+</div>
+</div>
+                       
+                    </div>
+                </div>                
+<div class="sub_box sub">
+
+
+<div id="child_MCHK6" class="hover submenu" style="display: block;">
+
+</div>         
+</div>
+        </div>
+ <div id="middle-content" class="middle-content clear" style="">
+
+            <div class="sider-left floatL" id="menuleft" style="-webkit-overflow-scrolling:touch;">
+                <div class="left_menu" id="mainMenuLeft">
+                    <div class="acc_box">
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td align="right">会员帐号：</td>
+                                <td>
+                                    <span>{+$username+}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right">盘口类型：</td>
+
+									<td class="rde_font" nowrap="nowrap">
+                                        <div class="pk_con abcd" id = "abcd">
+										{+foreach item=i from=$pan+}
+                                                    <li {+if ($i==$defaultpan)+}class="p_curr"{+/if+}>{+$i+}</li>
+										{+/foreach+}
+                                        </div>
+                                    </td>
+
+
+
+                            </tr>
+                                                            
+                                    {+if $moneytype eq 1+}
+                                    <tr class="userAccType accounts" accType="2">
+                                    <td nowrap="nowrap" align="right">现金额度：</td>
+                                    <td class="rde_font kmoney" id="accountLimit_2">{+$kmoney+}</td>
+                                    
+                                    {+else+}
+                                    <tr class="userAccType accounts" accType="2">
+                                    <td nowrap="nowrap" align="right">信用额度：</td>
+                                    <td class="rde_font kmaxmoney" id="accountLimit_2">{+$kmaxmoney+}</td>
+                                    </tr>
+                                    <tr class="userAccType accounts" accType="2">
+                                    <td nowrap="nowrap" align="right">可用额度：</td>
+                                    <td class="rde_font kmoney" id="accountLimit_2">{+$kmoney+}</td>
+                                    </tr>
+                                    {+/if+}                            
+                                    
+                                
+                                <tr class="userAccType accounts" accType="2">
+                                    <td align="right">未结金额：</td>
+                                    <td class="rde_font kmoneyuse" id="unSettleAmount">{+$kmoneyuse+}</td>
+                                </tr>
+
+
+                        </table>
+                    </div>
+					<a class="left_btn" href="{+$kjurl+}" target="_blank">
+                            开奖直播
+                        </a>
+                                                                                <div class="left_tab" style="cursor:pointer;">
+                        <a id="two1" href="javascript:void(0);" show="LastBet" title="只显示最近15条注单" class="hover">最新注单</a>
+                    </div>
+					<div class="left_con" id="left_con" style="max-height: 383px;">
+                        <div class="item" id="con_two_1" style="display: block;">
+
+                            <div class="lastbet">
+							<div style="height: 100px; font-size: 26px; text-align: center; line-height: 100px; " class="noBet">暂无注单</div>
+							<ul class="bets last15"></ul></div>
+
+
+                            <div class="betting" style="display: none;">
+
+                            </div>
+                        </div>
+                        <div class="item word_wrap hover" id="con_two_2" style="cursor: pointer; display: none;" title="点击查看更多公告详情">
+
+                        </div>
+                    </div>
+					<div style="display:none" id="betResultPanel">
+
+<div class="control s0">
+<a onclick="resetPanel()" href="javascript:void(0)">返 回</a>
+</div>
+<div id="betResultDrawNumber" class="Paneltitle"></div>
+<div class="bresults">
+<ul class="bets" id="betReulstList"></ul>
+<table class="total s0">
+<tbody>
+
+</tbody></table>
+</div>
+</div>
+
+
+                </div>
+            </div>
+            <div id="content" class="content ios" style="overflow-y:hidden;">
+                <iframe src="" id="frame" name="frame" width="100%" height="100%" marginheight="0" marginwidth="0" frameborder="0"></iframe>
+            </div>
+        </div>
+		
+		
+		
+
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-dialog-buttons ui-draggable ui-resizable sendtb" tabindex="-1" role="dialog" aria-describedby="betListForm" aria-labelledby="ui-id-1" style="display:none;position: absolute; height: auto; width: 600px; top: 171px; left: 348.5px; z-index: 101;">
+    <div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle"><span id="ui-id-2" class="ui-dialog-title">投注列表</span><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close" style="height: 28px;"><span class="ui-button-icon-primary ui-icon ui-icon-closethick close"></span><span class="ui-button-text">Close</span></button></div>
+    <div id="betListForm" class="ui-dialog-content ui-widget-content" style="width: auto; min-height: 0px; max-height: none; height: auto;">
+        <div class="betList">
+            <table class="table table_ball" width="100%" id="BetConfirmBox">
+                <thead height="27" align="center">
+                    <tr>
+                        <th style="display: none;" nowrap>序号</th>
+                        <th  class="betListjh" nowrap>项目</th>
+                        <th nowrap style="width: 50px;">赔率</th>
+                        <th nowrap>金额</th>
+                        <th nowrap>确认</th>
+                    </tr>
+                </thead>
+				<div id="chooseItem" style="color: red;float: left;;display: none;">号码：已选择[<span id="chooseItemhm"></span>]<span id="chooseItemnum"></span>个号码</div>
+                <tbody id="betlist"></tbody>
+            </table>
+        </div>
+        <div class="bottom"><span id="bcount"></span><span id="btotal"></span></div>
+        <div><label class='plts'><input style="display:none;" type="checkbox" id="ignoreOdds">如赔率变化，按最新赔率投注，成功后提示赔率变化</label><label style="display:none;" class='cgts red'>请关闭本窗口中,或者等待5秒后自动关闭本窗口!</label></div>
+    </div>
+    <div class="ui-dialog-buttonset" style="background-color: #f0f2f2;"><button type="button" class="ui-button qr"><span class="ui-button-text">确定</span></button><button type="button" class="ui-button close" role="button"><span class="ui-button-text">取消</span></button></div>
+</div>
+<div class="ui-widget-overlay ui-front ui-fronts" style="z-index: 100;display:none;"></div>
+
+
+<div id="moreNotice" class="ui-dialog-content ui-widget-content" style="display: none; width: auto; min-height: 0px; max-height: none; height: 359px;">
+<div class="contents">
+    <table class="list table notices table_ball table_layout" style="width:100%">
+        <thead><tr><th style="width:125px">时间</th><th>公告详情</th></tr></thead>
+        <tbody id="NoticeList">
+        </tbody>
+    </table>
+</div>
+ </div>
+
+<div class="popPanel moregame" style="display: none;">
+{+section name=i loop=$gamecs+}
+{+if $smarty.section.i.index>=8+}
+{+if ($gamecs[i].ifok==1)+}
+<a href="javascript:void(0)" gid='{+$gamecs[i].gid+}'><span>{+$gamecs[i].gname+}</span></a>
+{+/if+}
+{+/if+} 
+{+/section+}
+</div>
+
+<!--快捷金额-->
+
+<div id="settingbet" style="display: none; width: auto; min-height: 91px; max-height: none; height: auto;" class="ui-dialog-content ui-widget-content">
+
+    <input name="bet_1" placeholder="快选金额" class="ds" onkeypress="return event.charCode>=48 && event.charCode<=57"><br>
+
+    <input name="bet_2" placeholder="快选金额" class="ds" onkeypress="return event.charCode>=48 && event.charCode<=57"><br>
+
+    <input name="bet_3" placeholder="快选金额" class="ds" onkeypress="return event.charCode>=48 && event.charCode<=57"><br>
+
+    <input name="bet_4" placeholder="快选金额" class="ds" onkeypress="return event.charCode>=48 && event.charCode<=57"><br>
+
+    <input name="bet_5" placeholder="快选金额" class="ds" onkeypress="return event.charCode>=48 && event.charCode<=57"><br>
+
+    <input name="bet_6" placeholder="快选金额" class="ds" onkeypress="return event.charCode>=48 && event.charCode<=57"><br>
+
+    <input name="bet_7" placeholder="快选金额" class="ds" onkeypress="return event.charCode>=48 && event.charCode<=57"><br>
+
+    <input name="bet_8" placeholder="快选金额" class="ds" onkeypress="return event.charCode>=48 && event.charCode<=57"><br>
+
+    <label>
+
+        <input name="settingbet" type="radio" id="settingbet_0" value="1" checked="checked">
+
+        启动
+
+    </label>
+
+    <label>
+
+        <input name="settingbet" type="radio" id="settingbet_1" value="0">
+
+        停用
+
+    </label>
+
+    <br>
+
+    <br>
+
+<input type="button" class="button" style="padding: 1px 6px;" value="储存" onclick="submitsetting()">
+
+</div>
+
+
+
+
+
+{+if $moneytype==1+}
+<!--div style="position:absolute;width:210px;height:210px;z-index:10" id='sysdiv'><iframe src="wxkf.html" width='100%' height='100%' frameborder="0" scrolling="no"></iframe></div-->
+{+/if+}
+
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-dialog-buttons ui-draggable ui-resizable gameset"  style="position: relative; height: auto; width: 300px; top: 220px; left: 613px; display: none; z-index: 101;">
+
+<div class="ui-dialog-titlebar  ui-corner-all ui-helper-clearfix ui-draggable-handle">
+   <span id="ui-id-1" class="ui-dialog-title">选择显示彩种</span>
+     <button type="button" class="ui-dialog-titlebar-close ui-button-icon-only close" role="button" title="Close"></button></div>
+     
+   <div id="lotteryChoose" class="ui-dialog-content ui-widget-content" style="width: auto; min-height: 55px; max-height: none; height: auto;">
+   
+   <ul class="ui-sortable">
+{+section name=i loop=$gamecs+}
+  <li class="ui-sortable-handle"><input type="checkbox" {+if ($gamecs[i].ifok==1)+}checked="checked"{+/if+} value="{+$gamecs[i].gid+}">{+$gamecs[i].gname+}</li>
+{+/section+}
+  </ul>
+   <p>注：可拖动彩种位置来改变彩种排序。</p>
+   </div>
+   
+   <div class="ui-dialog-buttonset"><button type="button" class="ui-button qr" ><span class="ui-button-text">确定</span></button><button type="button" class="ui-button close" role="button"><span class="ui-button-text">取消</span></button></div>
+   
+  </div>
+
+
+<div class="gamecontainer moregames">
+  <div style="height: 20px;"></div>
+  <div class="gamebox clearfix" style="display:block">
+    {+section name=i loop=$gamecs+}
+
+<div class="itemmg"><a href="javascript:void(0)"  gid='{+$gamecs[i].gid+}'><span>{+$gamecs[i].gname+}</span></a>
+    {+if in_array($gamecs[i].gid,$garr)+}
+    <div class="delbtn" style="display: block;"></div>
+    {+else+}
+    <div class="addbtn" style="display: block;"></div>
+    {+/if+}
+</div>
+{+/section+}</div>
+
+  <div class="gamesmltxt">
+          
+  </div>
+  <div class="editon" style="display: block;">
+    <button class="gamebtn2">关闭</button>
+    <button class="gamebtn1">修改</button>
+  </div>
+  <div class="editoff" style="display: none;">
+    <button class="gamebtn2">取消修改</button>
+    <button class="gamebtn1">保存设置</button>
+  </div>
+</div>
+</div>
+
+
+
+ <div class="foot_box">
+        <div class="info"><marquee id="notices" scrollamount="2"><span></span><span style="margin-left:1401px">&nbsp;&nbsp;</span></marquee></div>
+        <a href="javascript:void(0)" class="more_c more">更多</a>
+    </div>
+	{+if $cnews>0+}
+	{+section name=i loop=$news+} 
+	<div id="dialogNotice_{+$news[i].id+}" class="word_wrap ui-dialog-content ui-widget-content" style="display: none; width: auto; min-height: 0px; max-height: none; height: 159px;">{+$news[i].content+}</div>
+    {+/section+}
+	{+/if+}
+</body>
+</html>

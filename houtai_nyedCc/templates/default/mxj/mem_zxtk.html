@@ -1,0 +1,125 @@
+<div class="scrollable ng-scope others zxtks">
+<link rel="stylesheet" href="../css/mobile/mobile-cash.css">
+<link rel="stylesheet" href="../css/default/xj/jquery-ui.css">
+<div class="scrollable-content member-setting overthrow">
+<div>
+
+  <div class="clearfix padding20">
+      <div class="fl">
+        <img src="../css/mobile/xj/icouser.jpg" width="47" height="46" alt=""></div><div class="fl blue cnbig1 marginleft10 margintop15">{+$username+}({+$tname+})
+      </div>
+      <div class="pull-right">
+        中心钱包 : {+$money+}
+      </div>
+  </div>
+    <div class="settingmenu margintop10 clearfix">
+        <a href="javascript:void(0);"  class="colbtn" v='zxcz'>
+          <img src="../css/mobile/xj/icodeposit.jpg" width="73" height="74" alt="">
+            <p class="margintop10">充值</p>
+        </a>
+        <a href="javascript:void(0);"  class="colbtn">
+          <img src="../css/mobile/xj/icowithdrawal.jpg" width="73" height="74" alt="">
+            <p class="margintop10">提款</p>
+            <div class="settingarrow"></div>         
+        </a>
+        <a href="javascript:void(0);"  class="colbtn" v='jyjl'>
+          <img src="../css/mobile/xj/icobalance.jpg" width="73" height="74" alt="">
+            <p class="margintop10">交易历史</p>
+            
+        </a>
+    </div>
+    
+     <div class="aligncenter">
+        <div class="formpanel margintop20">
+        <div class="wd-row" style="display:none;">
+          <div class="wd-col1">
+              注意：
+            </div>
+            <div class="wd-col2">
+              <small>每天每位用户前0笔提款免手续费，第1笔开始收取0%的手续费。</small>
+            </div>
+        </div>
+        
+          <div class="padding20 tikuan" {+if $havebank==0+}style='display:none;'{+/if+}>
+            <div class="textbox clearfix">
+              <div class="col1 fl">提款金额：</div>
+                <div class="col2 fl"><input id="drawamount" type="text" class="textfield1 needsclick"></div>
+            </div>
+            <div class="textbox clearfix">
+              <div class="col1 fl">可提金额：</div>
+                <div class="col2 fl" style="text-align:left;">{+$money+}</div>
+            </div>
+            <div class="textbox clearfix" style="height:auto">
+              <div class="col1 fl" style="height:auto">银行卡号：</div>
+                <div class="col2 fl" style="height:auto">
+                  
+                        <div class="wd-row" style="text-align:left;">      
+                              <div class="radio-label">
+                              <input type="radio" name="bankid" value="{+$cardid+}" checked="checked" class="needsclick">
+                              <span class="name">{+$bankname+}</span>
+                              <span class="tail">尾号:{+$lastcard4+}</span><BR />
+                              
+                              </div><a href='javascript:void(0);' class="changecard">更换银行卡</a>
+                        </div>
+
+                </div>
+            </div>
+
+            <div class="textbox clearfix">
+              <div class="col1 fl">提款密码：</div>
+                <div class="col2 fl"><input id="drawcode" type="password" class="textfield1 needsclick"></div>
+            </div>
+            <div class="gap20"></div>
+            <div class="submitbtn cnbig btnradius" id="tkbtn">提交</div>
+          </div>
+          
+          
+         <div class="padding20 addcard" {+if $havebank==1+}style='display:none;'{+/if+}>
+           <div class="textbox clearfix">
+           添加一张银行卡/支付账号开始提款吧
+           </div>
+         <div class="textbox clearfix">
+              <div class="col1 fl">银行/支付方式：</div>
+                <div class="col2 fl"><select id="bank" class="textfield1 needsclick">
+        {+section name=i loop=$bank+}
+         {+if ($bank[i].en=='WXZF' | $bank[i].en=='ZFB')+}
+          <option value="{+$bank[i].bankid+}">{+$bank[i].bankname+}</option>
+          {+/if+}
+        {+/section+}
+</select></div>
+            </div>
+            <div class="textbox clearfix">
+              <div class="col1 fl">账户名：</div>
+                <div class="col2 fl"><input id="names" type="text" class="textfield1 needsclick"  value=""></div>
+            </div>
+            
+            <div class="textbox clearfix">
+              <div class="col1 fl">卡号/账号：</div>
+                <div class="col2 fl"><input id="cardId" type="text" class="textfield1 needsclick"></div>
+            </div>
+            
+            <div class="textbox clearfix">
+              <div class="col1 fl">开户网点：</div>
+                <div class="col2 fl"><input id="bankaddress" type="text" class="textfield1 needsclick" ></div>
+            </div>
+            
+            <div class="textbox clearfix">
+              <div class="col1 fl">提款密码：</div>
+                <div class="col2 fl"><input id="bankpass" type="text" class="textfield1 needsclick" ></div>
+            </div>
+            
+        
+            
+            <div class="gap20"></div>
+            <div class="submitbtn cnbig btnradius" id="addcardbtn">添加银行/支付方式</div>
+          </div>
+          
+        </div>
+
+ <div class="gap100" style="height:200px;"></div> 
+     </div>
+    
+</div>
+
+</div>
+</div>

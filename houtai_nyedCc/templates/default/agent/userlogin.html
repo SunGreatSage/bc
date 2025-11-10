@@ -1,0 +1,24 @@
+{+include file='header.html'+}
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='userlogin';
+</script>
+<div class="xbody1">
+ <table class="tinfo wd100 on_tb"> 
+    <Tr><Th><a href='online.php?xtype=show'>在线用户</a></Th><Th><a href='online.php?xtype=getloginlist'>会员登陆记录</a></Th></Tr>
+ </table>
+   <BR>
+ <table class="tinfo wd100 login_tb">
+ <tr><th colspan="3">会员登陆记录</th><th colspan="3">{+$page+}</th></tr>
+ <TR>
+ <th>编号</th><th>登陆名</th><th>登陆时间</th><th>登陆IP</th>
+ </TR>
+ {+section name=i loop=$l+}
+<TR><td>{+$l[i].id+}</td><td>{+$l[i].adminname+}</td><td>{+$l[i].time+}</td><td>{+$l[i].ip+}</td></TR>
+ {+/section+}
+  </table>
+</div>
+<div id='test'></div>
+</body>
+</html>

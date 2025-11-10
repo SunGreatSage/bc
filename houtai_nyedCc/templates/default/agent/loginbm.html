@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<style type="text/css">
+body{padding:0px;
+     margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+    font-family:Tahoma,'Microsoft Yahei','Simsun';
+	
+}
+html,body{overflow-y: hidden; }
+.wai{width:990px;height:600px;float:none;margin:0px auto;position:relative}
+.intb{width:350px;position:absolute;top:390px;left:160px;height:120px;background:#fff;padding-top:20px;padding-bottom:20px;filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(enabled=true, sizingMethod=scale, src='../img/loginbga.png');background:none;z-index:10;}
+.intb2{width:350px;position:absolute;top:390px;left:160px;height:150px;background:none;z-index:20;}
+
+.intb2 td{height:30px;line-height:30px;width:110px;}
+.intb2 th{height:30px;line-height:30px;width:120px;}
+.intb2 th{padding-left:10px;text-align:right;}
+.intb2 input{width:100px;height:18px;margin:0px;float:left;}
+.intb2 img{float:left;cursor:pointer}
+img{border:none;}
+.fdiv{width:990px;position:absolute;top:0px;left:0px;height:600px;background:#fff;padding-top:0px;background:none;z-index:6;}
+</style>
+<script language="javascript" src="/js/jquery-1.8.3.js"></script>
+<script language="javascript" src="/js/md5.js"></script>
+
+<script language="javascript">
+function changeimg(){
+    document.getElementById('imgcode').src="../imgcode.php?act=init&"+Math.random();
+}
+$(function(){
+    $("#code").focus(function(){
+	    if($("#imgcode").attr('src')=='') $("#imgcode").attr('src',"../imgcode.php?act=init&"+Math.random());
+		$("#imgcode").show()
+	});
+	$("input.sub").click(function(){checkform();});
+	top.document.title="Welcome";
+});
+
+function checkform(){
+    if($("#username").val()==''){
+	     alert("请输入用户名");
+		 $("#username").focus();
+		 return false;
+	}else if($("#password").val()==''){
+	     alert("请输入密码");
+		 $("#password").focus();
+		 return false;
+	}else if($("#code").val()==''){
+	     alert("输入验证码");
+		 $("#code").focus();
+		 return false;
+	}else{
+		$("#pass").val(men_md5_password($("#password").val()));	
+		
+		$("#i1").hide();$("#i2").show();
+		$("#form").submit();
+	}
+}
+function stop(){
+return false;
+}
+document.oncontextmenu=stop;
+function hideinfo(){ if(event.srcElement.tagName=="A"){
+   window.status=event.srcElement.innerText}
+}
+   document.onmouseover=hideinfo; 
+	document.onmousemove=hideinfo;
+	try{
+	var href = top.window.location.href;	
+	//top.window.location.href = 'http://{+$aurl+}';
+}catch(e){
+	try{
+	    if(parent.window.location.href.indexOf('?p')==-1 | parent.window.location.href.indexOf(':')==-1){
+	       // parent.window.location.href = 'http://www.baidu.com';
+	    }	
+	}catch(e){
+        //window.location.href = 'http://www.baidu.com';
+	}
+}
+</script>
+</head>
+<body >
+<div class="wai">
+<form style="margin:0px;padding:0px;" method='post' id='form' name="form" >
+
+<div class="fdiv">
+<img id='i1' src="../img/close.jpg" />
+<img id='i2' src="../img/open.jpg" style="display:none" />
+</div>
+<div class='intb'>
+</div>
+<table class='intb2' border=0>
+<tr><td colspan="3" style="height:40px;"></td></tr>
+<TR><Th>帐号：</Th><TD><input type="text" id='username' name='username'  /></TD><Th></Th></TR>
+
+<TR><Th>密码：</Th><TD><input type="password" id='password' name='password' /><input type="hidden" name='pass' id='pass' value="" /></TD><Th></Th></TR>
+
+<TR><Th>验证码：</Th><TD><input type="text" id='code' name='code' style="width:35px;"   /><img  src='../imgcode.php?act=init' onclick="changeimg()" id=imgcode  /></TD>
+<Td style="text-align:left;"><input  type="button" class="sub" value="登陆" style="width:75px;height:25px;" /></Td>
+</TR>
+<tr><td colspan="3"></td></tr>
+</table>
+<input type="hidden" name="xtype" value="login" />
+
+</form>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,212 @@
+<div class="scrollable ng-scope others zxczs">
+<link rel="stylesheet" href="../css/mobile/mobile-cash.css">
+<link rel="stylesheet" href="../css/default/xj/jquery-ui.css">
+<div class="scrollable-content member-setting overthrow">
+
+<div>
+
+  <div class="clearfix padding20">
+      <div class="fl">
+        <img src="../css/mobile/xj/icouser.jpg" width="47" height="46" alt=""></div><div class="fl blue cnbig1 marginleft10 margintop15">{+$username+}({+$tname+})
+      </div>
+      <div class="pull-right">
+        中心钱包 : {+$money+}
+      </div>
+  </div>
+
+    <div class="settingmenu margintop10 clearfix">
+        <a href="javascript:void(0);" class="colbtn">
+          <img src="../css/mobile/xj/icodeposit.jpg" width="73" height="74" alt="">
+            <p class="margintop10">充值</p>
+            <div class="settingarrow"></div>
+        </a>
+        <a href="javascript:void(0);"  class="colbtn" v='zxtk'>
+          <img src="../css/mobile/xj/icowithdrawal.jpg" width="73" height="74" alt="">
+            <p class="margintop10">提款</p>
+         
+        </a>
+        <a href="javascript:void(0);"  class="colbtn" v='jyjl'>
+          <img src="../css/mobile/xj/icobalance.jpg" width="73" height="74" alt="">
+            <p class="margintop10">交易历史</p>
+            
+        </a>
+    </div>
+    <div class="clearfix">
+     {+if ($bankonline==1)+}
+        <div class="settingtab" data-id="p_0">
+            <div class="settingbluebar"></div>
+            <div class="settingpanel">
+              <div class="settingpaneltxt">
+              网银在线支付
+              </div>
+            </div>
+        </div>
+      {+/if+}  
+      {+if ($weixin==1)+}
+        <div class="settingtab" data-id="p_1">
+            <div class="settingbluebar"></div>
+            <div class="settingpanel">
+              <div class="settingpaneltxt">
+              微信支付
+              </div>
+            </div>
+        </div>
+       {+/if+}
+      {+if ($alipay==1)+}
+        <div class="settingtab" data-id="p_2">
+            <div class="settingbluebar"></div>
+            <div class="settingpanel">
+              <div class="settingpaneltxt">
+              支付宝支付
+              </div>
+            </div>
+        </div>
+       {+/if+}
+       {+if ($bankatm==1)+}
+        <div class="settingtab" data-id="p_3">
+            <div class="settingbluebar"></div>
+            <div class="settingpanel">
+              <div class="settingpaneltxt">
+              转帐汇款
+              </div>
+            </div>
+        </div>
+       {+/if+}
+  
+    </div>
+    <!-- 第三方支付 -->
+  	    <div style="display: block;" class="settingContainer subcontent" id="p_0">
+	  <div class="padding20">
+			<form action="http://pay.mqmya.com/redirect" target="_blank" id="form_0" method="post" onsubmit="return doDeposit(this,-1);" class="ng-pristine ng-valid">
+			<input type="hidden" name="pid" value="4FC79A1346B36FA3E0530100007FE7B8" class="needsclick">
+			<input type="hidden" name="oid" value="29fe530f35304c6c28a28b908e9ea4983b11bd80" class="needsclick">
+			
+	 <span class="validation">
+	<img src="../css/mobile/xj/iconwarning.jpg" width="17" height="15" alt=""> <span class="smalltxt red">请输入充值金额,最低金额100</span></span>
+	
+            <div class="textbox clearfix">
+              <div class="col1 fl">充值金额</div>
+                <div class="col2 fl"><input type="text" name="amount" class="textfield1 needsclick" placeholder="(请填写)"></div>
+            </div>
+
+		  <div class="textbox clearfix">
+            <div class="col1 fl">银行种类：</div>
+              <div class="col2a fl">
+                <i class="fa fa-angle-down"></i>
+                	<select name="payId" id="cardlist" class="banklist dropdown bankradiobtn2 needsclick">
+                    {+section name=i loop=$banks+}
+	  					<option id="{+$banks[i].id+}" value="{+$banks[i].id+}">{+$banks[i].bankname+}</option>
+                       {+/section+}
+                	</select>
+              </div>
+          </div>
+
+
+	        <div class="gap20"></div>
+	        <div class="col-xs-12">
+	        	<div class="submitbtn cnbig btnradius" onclick="$(&quot;#form_0&quot;).submit()">开始充值</div>
+	        </div>
+	  </form></div>	
+	</div>
+	
+    <div style="display: none" class="settingContainer subcontent" id="p_1">
+	  <div class="padding20">
+			<form action="http://pay.paghy.top/redirect" target="_blank" id="form_1" method="post" onsubmit="return doDeposit(this,-1);" class="ng-pristine ng-valid">
+			<input type="hidden" name="pid" value="508C6573FC315DC8E0530100007F2445" class="needsclick">
+			<input type="hidden" name="oid" value="29fe530f35304c6c28a28b908e9ea4983b11bd80" class="needsclick">
+			
+	 <span class="validation">
+	<img src="../css/mobile/xj/iconwarning.jpg" width="17" height="15" alt="">  <span class="smalltxt red">请输入充值金额,最低金额100</span></span>
+	
+            <div class="textbox clearfix">
+              <div class="col1 fl">充值金额</div>
+                <div class="col2 fl"><input type="text" name="amount" class="textfield1 needsclick" placeholder="(请填写)"></div>
+            </div>
+
+		  <div class="textbox clearfix">
+            <div class="col1 fl">银行种类：</div>
+              <div class="col2a fl">
+                <i class="fa fa-angle-down"></i>
+                	<select name="payId" id="cardlist" class="banklist dropdown bankradiobtn2 needsclick">
+	  					<option id="wxzf" selected="selected" value="wxzf">微信支付</option>
+                	</select>
+              </div>
+          </div>
+
+
+	        <div class="gap20"></div>
+	        <div class="col-xs-12">
+	        	<div class="submitbtn cnbig btnradius" onclick="$(&quot;#form_1&quot;).submit()">开始充值</div>
+	        </div>
+	  </form></div>	
+	</div>
+
+    <div style="display: none" class="settingContainer subcontent" id="p_2">
+	  <div class="padding20">
+			<form action="http://pay.paghy.top/redirect" target="_blank" id="form_1" method="post" onsubmit="return doDeposit(this,-1);" class="ng-pristine ng-valid">
+			<input type="hidden" name="pid" value="508C6573FC315DC8E0530100007F2445" class="needsclick">
+			<input type="hidden" name="oid" value="29fe530f35304c6c28a28b908e9ea4983b11bd80" class="needsclick">
+			
+	 <span class="validation">
+	<img src="../css/mobile/xj/iconwarning.jpg" width="17" height="15" alt="">  <span class="smalltxt red">请输入充值金额,最低金额100</span></span>
+	
+            <div class="textbox clearfix">
+              <div class="col1 fl">充值金额</div>
+                <div class="col2 fl"><input type="text" name="amount" class="textfield1 needsclick" placeholder="(请填写)"></div>
+            </div>
+
+		  <div class="textbox clearfix">
+            <div class="col1 fl">银行种类：</div>
+              <div class="col2a fl">
+                <i class="fa fa-angle-down"></i>
+                	<select name="payId" id="cardlist" class="banklist dropdown bankradiobtn2 needsclick">
+	  					<option id="zfb" selected="selected" value="zfb">支付宝支付</option>
+                	</select>
+              </div>
+          </div>
+
+
+	        <div class="gap20"></div>
+	        <div class="col-xs-12">
+	        	<div class="submitbtn cnbig btnradius" onclick="$(&quot;#form_1&quot;).submit()">开始充值</div>
+	        </div>
+	  </form></div>	
+	</div>
+	
+    
+    <div style="display: none" class="settingContainer subcontent" id="p_3">
+	  <div class="padding20">
+
+		  <div class="textbox clearfix">
+            <div class="col1 fl">银行种类：</div>
+              <div class="col2a fl">
+                <i class="fa fa-angle-down"></i>
+                	<select name="bank_2" id="cardlistatm" class="banklist2 dropdown bankradiobtn2 needsclick">
+                    {+section name=i loop=$banks+}
+	                    <option  value="{+$banks[i].id+}">{+$banks[i].bankname+}</option>
+                        {+/section+}
+                	</select>
+              </div>
+          </div>
+
+	          <div class="padding20">
+	            <small>温馨提示：为确保财务第一时间为您添加游戏额度，请您尽量不要转账整数（例如：欲入￥5000，请￥5000.68）谢谢！<br><span class="blue">友情提示：请每次入款前登录会员核对银行账号是否使用。入款至已过期账号，公司无法查收，恕不负责！<br>在您转账成功后，请点击“我已存款”，通知客服确认到账哦！</span></small>
+	          </div>
+
+	        <div class="gap20"></div>
+	        <div class="col-xs-12">
+	        	<div class="submitbtn cnbig btnradius zxczbtn">开始充值</div>
+	        </div>
+	  </div>	
+	</div>
+	
+      
+ 
+      
+ 
+
+    
+</div>
+ <div class="gap100" style="height:200px;"></div> 
+</div>
+</div>

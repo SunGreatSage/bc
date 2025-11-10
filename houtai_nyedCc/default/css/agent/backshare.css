@@ -1,0 +1,110 @@
+@CHARSET "UTF-8";
+
+.data_table td {
+	text-align: center;
+}
+
+.data_table tbody th {
+	background: #F2F2F2;
+}
+
+.data_table .selected, .data_table .selected th {
+  background: #ffc214;
+}
+
+.oddspanel .data_table tbody th {
+	width: 28%;
+}
+
+.oddsdown .data_table tbody th {
+	width: 14%;
+}
+
+.data_table .flag {
+	width: 70px;
+}
+
+.tab {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.tab li {
+	float: left;
+	cursor: pointer;
+	height: 26px;
+	line-height: 26px;
+	margin: 0 5px;
+}
+
+.tab .on {
+	color: red;
+}
+
+.quick {
+	width: 100%;
+	border-bottom: #b5d6e6 1px solid;
+	border-right: #b5d6e6 1px solid;
+}
+
+.quick thead tr {
+	/*background: url("images/bg_g.jpg") repeat-x;*/
+}
+
+.quick th,.quick td {
+	border-top: #dd9aa8 1px solid;
+	border-left: #dd9aa8 1px solid;
+	height: 24px;
+	line-height: 24px;
+}
+
+.quick tbody th {
+	background: #fff3f3;
+}
+
+.quick .title {
+	width: 34%;
+}
+
+.quick .range {
+	width: 10%;
+}
+
+.quick .control {
+	width: 80px;
+}
+
+.quick .t_btn {
+	height: 40px;
+}
+
+
+.color {
+	background: url("images/td_ts.gif") no-repeat left -40px;
+}
+
+.quick .button{
+	margin: 0 5px;
+}
+
+.t_BALL .color {
+	background-position: left top;
+}
+
+.t_LM .color {
+	background-position: left bottom;
+}
+
+.t_ITEM .color {
+	background-position: left -80px;
+}
+
+#quickSetting .input_panel input {
+  width: 80px;
+}
+
+#quickSetting .menu a {
+  color: blue;
+  margin: 0 5px;
+}

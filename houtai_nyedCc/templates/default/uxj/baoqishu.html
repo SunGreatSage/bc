@@ -1,0 +1,9 @@
+   <table class="tinfo baotb" style="margin-top:10px;width:850px;">
+     <tr><th>日期</th><th>期數</th><th>註數</th><th>下註金額</th><th>退水</th><th>結果</th></tr>
+     {+section name=i loop=$qishu+}
+      <Tr><td><a href="javascript:void(0);" q='{+$qishu[i].q+}'>{+$qishu[i].r+}&nbsp;星期{+$qishu[i].w+}</a></td><td>{+$qishu[i].q+}</td><td>{+$qishu[i].zs+}</td><td>{+$qishu[i].je+}</td><td>{+$qishu[i].points+}</td>
+      <td>{+$qishu[i].tj+}</td>
+      </Tr>
+     {+/section+}
+     <tr><th>合計</th><th></th><th>{+$zs+}</th><th>{+$je+}</th><th>{+$points+}</th><th>{+$tj+}</th></tr>
+   </table>

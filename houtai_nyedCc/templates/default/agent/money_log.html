@@ -1,0 +1,38 @@
+{+include file='header2.html'+}
+</head>
+<body id="topbody">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='money_log';
+</script>
+<div class="main">
+<div class="top_info">
+<span class="title">{+$username+} 资金日志</span>
+<span class="right"></span>
+</div>
+<div class="contents">
+<table class="data_table data_list list">
+<thead><tr><th>时间</th><th>类型</th><th>发生金额</th><th>余额</th><th>备注</th><th>ip</th><th>IP归属地</th><th>操作员</th></tr></thead>
+<tbody>
+{+section name=i loop=$log+}
+<tr>
+    <td class="time">{+$log[i].time+}</td>
+    <td>{+if $log[i].type==0+}低频{+elseif $fudong==1+}现金{+else+}快开{+/if+}</td>
+    <td>{+$log[i].money+}</td>
+    <td>{+$log[i].usermoney+}</td>
+    <td>{+$log[i].bz+}</td>
+    <td>{+$log[i].ip+}</td><td>{+$log[i].addr+}</td><td>{+$log[i].modiuser+}({+$log[i].modisonuser+})</td></tr>
+{+/section+}
+</tbody>
+</table>
+</div>
+
+<div class="page"><div class="page_info" page="{+$page+}" pcount="{+$pcount+}" uid='{+$uid+}'>
+<span class="record">共 <span>{+$rcount+}</span> 条记录</span>
+<span class="page_count">共 <span>{+$pcount+}</span> 页</span>
+<span class="page_control"><a class="prev">前一页</a>『<span class="current">&nbsp;1&nbsp;</span>&nbsp;<a href="javascript:void(0)" class="p">2</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="p">3</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="p">4</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="p">5</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="p">6</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="p">7</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="p">8</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="p">9</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="p">10</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="p">11</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="p">12</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="p">13</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="p">14</a>&nbsp;&nbsp;<a href="javascript:void(0)" class="p">15</a>&nbsp;』<a class="next">后一页</a></span>
+</div>
+</div>
+
+</div>
+</body>
+</html>

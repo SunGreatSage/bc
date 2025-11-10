@@ -1,0 +1,119 @@
+{+include file='header2.html'+}
+<link href="/default/css/jquery.loadmask.css" rel="stylesheet" />
+<script src="/js/sitetool.js?v=004"></script>
+<script src="/js/jquery.loadmask.js?v=004"></script>
+</head><body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='mailbox';</script>
+<style>
+.table_ball tbody input {
+    text-align: left;
+}
+</style>
+<div class="jt-container">
+ <div class="top_info">
+        <span class="title">备份邮箱设置</span>
+    </div>
+  <div class="s_main">  
+ <table class="data_table info_table  table_ball">
+ <thead><tr><th colspan="2">自动备份邮箱设置</th></tr></thead>
+ <tbody>
+                    <tr>
+                        <th style="width: 40%">自动备份注单到邮箱</th>
+                        <td class="t_left">
+                            <label><input type="radio" name="mailbox"  {+if $config.mailbox==1+}checked{+/if+} value="1">启用</label>
+					   <label><input type="radio" name="mailbox"  {+if $config.mailbox==0+}checked{+/if+} value="0">不启用</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>SMTP服务器</th>
+                        <td class="t_left">
+                              <input type="text"  style="width: 200px;" id="smtpserver" value="{+$mailbox.smtpserver+}" >
+                        </td>
+                    </tr>
+					 <tr>
+                        <th>SMTP用户名</th>
+                        <td class="t_left">
+                              <input type="text" style="width: 200px;" id="smtpusername" value="{+$mailbox.smtpusername+}" >
+                        </td>
+                    </tr>
+					<tr>
+                        <th>SMTP密码</th>
+                        <td class="t_left">
+                              <input type="password" style="width: 200px;" id="smtppassword" value="{+$mailbox.smtppassword+}" >
+                        </td>
+                    </tr>
+					 <tr>
+                        <th>SMTP加密方式</th>
+                       <td class="t_left">
+					   <label><input type="radio" name="smtpencryption"  {+if $mailbox.smtpencryption==0+}checked{+/if+} value="0">TLS</label>
+					   <label><input type="radio" name="smtpencryption"  {+if $mailbox.smtpencryption==1+}checked{+/if+} value="1">SSL</label>
+					   <label><input type="radio" name="smtpencryption"  {+if $mailbox.smtpencryption==2+}checked{+/if+} value="2">STARTTLS</label>
+                        </td>
+                    </tr>
+					<tr>
+                        <th>SMTP端口</th>
+                       <td class="t_left">
+                              <input type="text" style="width: 100px;" id="smtppost" value="{+$mailbox.smtppost+}" >
+                        </td>
+                    </tr>
+					 <tr>
+                        <th>发件人</th>
+                       <td class="t_left">
+                              <input type="text" style="width: 200px;" id="sender" value="{+$mailbox.sender+}" >
+							   名字
+							    <input type="text" style="width: 90px;" id="sendername" value="{+$mailbox.sendername+}" >
+                        </td>
+                    </tr>
+					<tr>
+                        <th>收件人</th>
+                       <td class="t_left">
+                              <input type="text" style="width: 200px;" id="recipient" value="{+$mailbox.recipient+}" >
+							  名字
+							   <input type="text" style="width: 90px;" id="recipientname" value="{+$mailbox.recipientname+}" >
+                        </td>
+                    </tr>
+					<tr>
+                        <th>发送标题</th>
+                       <td class="t_left">
+                              <input type="text" style="width: 300px;" id="smtptitle" value="{+$mailbox.smtptitle+}" >
+                        </td>
+                    </tr>
+					<tr>
+                        <th>发送内容</th>
+                       <td class="t_left">
+                              <input type="text" style="width: 300px;" id="smtpcontent" value="{+$mailbox.smtpcontent+}" >
+                        </td>
+                    </tr>
+					<tr>
+                        <th>启用彩种</th>
+                       <td class="t_left">
+					   {+section name=i loop=$game+}
+                             {+if $game[i].fast==0+} <label><input type="checkbox"  name="gamemail"  {+if $game[i].gamemail==1+}checked{+/if+} value="{+$game[i].gid+}" >{+$game[i].gname+}</label>{+/if+}
+							   {+/section+}
+                        </td>
+                    </tr>
+					<tr>
+                        <th>未结算备份</th>
+						<td class="t_left">
+                            <label><input type="radio" name="unsettlement"  {+if $mailbox.unsettlement==1+}checked{+/if+} value="1">启用</label>
+					   <label><input type="radio" name="unsettlement"  {+if $mailbox.unsettlement==0+}checked{+/if+} value="0">不启用</label>
+                        开始备份时间：<input type="text" style="width: 100px;" id="utime" value="{+$mailbox.utime+}" >&nbsp;<span style="color:red;">请设置为开奖时间前且不在高峰期 一般为21:30:00</span>
+						</td>
+                    </tr>
+					<tr>
+                        <th>已结算备份</th>
+						<td class="t_left">
+                            <label><input type="radio" name="settled"  {+if $mailbox.settled==1+}checked{+/if+} value="1">启用</label>
+					   <label><input type="radio" name="settled"  {+if $mailbox.settled==0+}checked{+/if+} value="0">不启用</label>
+                        开始备份时间：<input type="text" style="width: 100px;" id="stime" value="{+$mailbox.stime+}" >&nbsp;<span style="color:red;">请设置为结算时间后且不在高峰期 一般为23:30:00</span>
+						</td>
+                    </tr>
+                </tbody>
+				<tfoot><tr><td colspan="2" style="color:red;">SMTP信息不懂配置请联系系统人员,收件人禁止使用国内邮箱 可以使用参数 {期数} {彩种名称}来在名字 标题 内容获取对应的期数或彩种名称</td></tr></tfoot>
+ </table>
+      <div class="data_footer control">
+          <input type="button" value="保存" id="smtpbtn" class="button bnt_1" />
+		</div>
+</div>
+</body>
+</html>

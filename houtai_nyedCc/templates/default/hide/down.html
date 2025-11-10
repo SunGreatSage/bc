@@ -1,0 +1,59 @@
+{+include file='header2.html'+} 
+<style>
+a.red{color:#D50000}
+.control a.blue{border: 1px solid #ddd;
+    color: #2161b3 !important;
+    background: #f9f9f9;
+	 padding: 4px 8px;}
+	 .control span.chu{border: 1px solid #2161b3;
+    color: #fff !important;
+    background-color: #2161b3;
+    padding: 4px 10px;}
+	select{     padding: 3px 5px;}
+</style>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='down';</script>
+<div class="jt-container">
+<div class="top_info">
+		<span class="title">报表日志</span><span class="right">&nbsp;&nbsp;<a class="back" onclick="javascript:history.back(-1);" href="javascript:void(0);">返回</a></span>
+	</div>
+<div class="s_main">
+<div class="sub_w2">
+           
+
+            <div class="page-tabs">
+                <div class="tab_con2 clear pages" id="scroll_div2">
+                    <ul id="sliderLottery">
+						<li>
+					<a href="javascript:void(0)" class="show"  page="show">登录日志</a>
+<a href="javascript:void(0)" class="useredit" page="useredit">会员操作日志</a>
+<a href="javascript:void(0)" class="adminedit" page="adminedit">代理操作日志</a>
+<a href="javascript:void(0)" class="agentpeilv" page="agentpeilv">公司控盘日志</a>	
+<a href="javascript:void(0)" class="adminpeilv" page="adminpeilv">代理控盘日志</a>
+<a href="javascript:void(0)" class="downlist" page="downlist">报表日志</a> </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+ <table class="data_table list table_center login_tb" style="margin-top:10px;">
+ <thead>
+  <TR>
+ <th><input type="checkbox" id='clickall' />全选</th><th>序  号</th><th>账号</th><th>监控</th><th>下载时间</th><th>彩种</th><th>期数</th><th>类型(xls为下载)</th><th><input type="button" class="btn7" id='delall' style="width: 70px;"  value="删除选中" />&nbsp;<input type="button" class="btn1" id='delallall'  value="清空所有" /></th>
+ </TR>
+ </thead>
+ {+section name=i loop=$l+}
+<TR><td><input type="checkbox" value='{+$l[i].id+}' /></td><td>{+$l[i].id+}</td><td>{+$l[i].username+}</td><td>{+$l[i].jkuser+}</td><td style="color: olivedrab;" >{+$l[i].time+}</td><td>{+$l[i].gname+}</td><td>{+$l[i].qishu+}</td><td>{+$l[i].downtype+}</td><td><input type="button" class="delone btn1" value='删除' /></td></TR>
+ {+/section+}
+  </table>
+  <div class="control">
+		<span>{+$page+}</span>
+	</div>	
+</div>
+</div>
+<script language="javascript">
+	var page = 'downlist';
+	</script>
+<div id='test'></div>
+</body>
+</html>

@@ -1,0 +1,347 @@
+{+include file='header.html'+}
+<script language="javascript" type="text/javascript" src="../js/My97DatePicker/WdatePicker.js"></script>
+<style>
+input.vsmall{width:20px;padding:0}
+.points{width:30px}
+.kpoints{width:30px}
+input.bred{background:red}
+a.red{color:#D50000}
+.nowtb td{font-size:11.5px}
+.nowtb th{font-size:11.5px}
+.nowtb tr:hover{background:#FCF}
+.user tr:hover{background:#FCF}
+select{width:90px}
+td.z2{background:#6cc}
+td.z5{background:#655}
+td.z1{background:#69F}
+td.z3{background:#EFE9ED}
+td.he{background:#acf1a9}
+.xbody1{width:994px}
+body{font-size:11.5px}
+.ccon{width:180px}
+.baotb a{margin-right:5px}
+.cmd .r{text-align:left;padding-left:10px}
+.cmd td{height:25px;line-height:25px}
+.bt {font-size:13px;}
+.gamelabel{color:#000;border:1px solid #000;margin-right:5px;margin-top:3px;display:block;float:left;cursor:pointer;padding-left:1px;padding-right:1px}
+.chk{background:#FFC;color:#D50000}
+
+
+.c100tb{background:#fff}
+label.c100{background:#8cd7f2}
+.c100tb .bt{background:#8cd7f2}
+.c100tb .bt th{background:#8cd7f2}
+.c100tb .tinfo .bt th{background:#8cd7f2}
+
+.c101tb{background:#fff}
+label.c101{background:#e8d15f}
+.c101tb .bt{background:#e8d15f}
+.c101tb .bt th{background:#e8d15f}
+
+.c108tb{background:#fff}
+label.c108{background:#ffb194}
+.c108tb .bt{background:#ffb194}
+.c108tb .bt th{background:#ffb194}
+
+.c109tb{background:#fff}
+label.c109{background:#b7f562}
+.c109tb .bt{background:#b7f562}
+.c109tb .bt th{background:#b7f562}
+
+.c110tb{background:#fff}
+label.c110{background:#b0d1ff}
+.c110tb .bt{background:#b0d1ff}
+.c110tb .bt th{background:#b0d1ff}
+
+.c111tb{background:#fff}
+label.c111{background:#ecb5f3}
+.c111tb .bt{background:#ecb5f3}
+.c111tb .bt th{background:#ecb5f3}
+
+.c112tb{background:#fff}
+label.c112{background:#71f0c3}
+.c112tb .bt{background:#71f0c3}
+.c112tb .bt th{background:#71f0c3}
+
+.c113tb{background:#fff}
+label.c113{background:#ffb86c}
+.c113tb .bt{background:#ffb86c}
+.c113tb .bt th{background:#ffb86c}
+
+.c115tb{background:#fff}
+label.c115{background:#dfe347}
+.c115tb .bt{background:#dfe347}
+.c115tb .bt{background:#dfe347}
+
+.c107tb{background:#fff}
+label.c107{background:#70baf4}
+.c107tb .bt{background:#70baf4}
+.c107tb .bt th{background:#70baf4}
+
+.c161tb{background:#fff}
+label.c161{background:#c2bffd}
+.c161tb .bt{background:#c2bffd}
+.c161tb .bt th{background:#c2bffd}
+
+.c162tb{background:#fff}
+label.c162{background:#ffbac5}
+.c162tb .bt{background:#ffbac5}
+.c162tb .bt th{background:#ffbac5}
+
+.c103tb{background:#fff}
+label.c103{background:#e2cd98}
+.c103tb .bt{background:#e2cd98}
+.c103tb .bt th{background:#e2cd98}
+
+
+.c133tb{background:#fff}
+label.c133{background:#8cd7f2}
+.c133tb .bt{background:#8cd7f2}
+.c133tb .bt th{background:#8cd7f2}
+.c133tb .tinfo .bt th{background:#8cd7f2}
+
+.c135tb{background:#fff}
+label.c135{background:#e8d15f}
+.c135tb .bt{background:#e8d15f}
+.c135tb .bt th{background:#e8d15f}
+
+.c131tb{background:#fff}
+label.c131{background:#ffb194}
+.c131tb .bt{background:#ffb194}
+.c131tb .bt th{background:#ffb194}
+
+.c132tb{background:#fff}
+label.c132{background:#b7f562}
+.c132tb .bt{background:#b7f562}
+.c132tb .bt th{background:#b7f562}
+
+.c136tb{background:#fff}
+label.c136{background:#b0d1ff}
+.c136tb .bt{background:#b0d1ff}
+.c136tb .bt th{background:#b0d1ff}
+
+.c121tb{background:#fff}
+label.c121{background:#ecb5f3}
+.c121tb .bt{background:#ecb5f3}
+.c121tb .bt th{background:#ecb5f3}
+
+.c123tb{background:#fff}
+label.c123{background:#71f0c3}
+.c123tb .bt{background:#71f0c3}
+.c123tb .bt th{background:#71f0c3}
+
+.c125tb{background:#fff}
+label.c125{background:#ffb86c}
+.c125tb .bt{background:#ffb86c}
+.c125tb .bt th{background:#ffb86c}
+
+.c127tb{background:#fff}
+label.c127{background:#dfe347}
+.c127tb .bt{background:#dfe347}
+.c127tb .bt{background:#dfe347}
+
+.c129tb{background:#fff}
+label.c129{background:#70baf4}
+.c129tb .bt{background:#70baf4}
+.c129tb .bt th{background:#70baf4}
+
+.c151tb{background:#fff}
+label.c151{background:#c2bffd}
+.c151tb .bt{background:#c2bffd}
+.c151tb .bt th{background:#c2bffd}
+
+.c153tb{background:#fff}
+label.c153{background:#ffbac5}
+.c153tb .bt{background:#ffbac5}
+.c153tb .bt th{background:#ffbac5}
+
+.c155tb{background:#fff}
+label.c155{background:#e2cd98}
+.c155tb .bt{background:#e2cd98}
+.c155tb .bt th{background:#e2cd98}
+
+.c152tb{background:#fff}
+label.c152{background:#8cd7f2}
+.c152tb .bt{background:#8cd7f2}
+.c152tb .bt th{background:#8cd7f2}
+
+
+.c157tb{background:#fff}
+label.c157{background:#e8d15f}
+.c157tb .bt{background:#e8d15f}
+.c157tb .bt th{background:#e8d15f}
+
+.c163tb{background:#fff}
+label.c163{background:#ffb194}
+.c163tb .bt{background:#ffb194}
+.c163tb .bt th{background:#ffb194}
+
+.c117tb{background:#fff}
+label.c117{background:#b7f562}
+.c117tb .bt{background:#b7f562}
+.c117tb .bt th{background:#b7f562}
+
+.c118tb{background:#fff}
+label.c118{background:#b0d1ff}
+.c118tb .bt{background:#b0d1ff}
+.c118tb .bt th{background:#b0d1ff}
+
+.c119tb{background:#fff}
+label.c119{background:#ecb5f3}
+.c119tb .bt{background:#ecb5f3}
+.c119tb .bt th{background:#ecb5f3}
+
+.c116tb{background:#fff}
+label.c116{background:#71f0c3}
+.c116tb .bt{background:#71f0c3}
+.c116tb .bt th{background:#71f0c3}
+
+.baotb table{margin-bottom:10px;}
+</style>
+</head><body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='baox';
+</script>
+<div class="xbody1" style="width:1260px;">
+ <table class="tinfo cmd wd100">
+  <tr>
+   <th rowspan="2" style="width:150px;">彩种选择</th>
+   <td class="r"><input type="radio" value="all" name="game" checked />
+    全部&nbsp;&nbsp;
+    <input type="radio" value="0" name="game" />
+    低频&nbsp;&nbsp;
+    <input type="radio" value="1" name="game" />
+    快开&nbsp;&nbsp;
+    {+foreach item=i key=k from=$fl+}
+    <input type="radio" value="{+$k+}" name="game" />
+    {+$i+}&nbsp;&nbsp;
+    {+/foreach+}
+    </td>
+  </tr>
+  <tr>
+   <td class="r"> {+section name=i loop=$gamecs+}
+   <label gid='{+$gamecs[i].gid+}' class="gamelabel chk"  fast='{+$gamecs[i].fast+}' fenlei='{+$gamecs[i].fenlei+}' flname='{+$gamecs[i].flname+}'>{+$gamecs[i].gname+}</label>
+    {+/section+} </td>
+  </tr>
+  <tr>
+   <th>日期选择</th>
+   <td class="r"><input class='textb' id="start"  value='{+$sdate[10]+}' size='9' />
+    &nbsp;—&nbsp;
+    <input class='textb' id="end" name='end'  value='{+$sdate[10]+}' size='9' />
+    <input type="button" class="s"  d=1 value="今天" />
+    <input type="button" class="s"  d=2 value="昨天" />
+    <input type="button" class="s"  d=3 value="本星期" />
+    <input type="button" class="s"  d=4 value="上星期" />
+    <input type="button" class="s"  d=5 value="本月" />
+    <input type="button" class="s"  d=6 value="上月" /></td>
+  </tr>
+  <tr>
+   <th>玩法分类</th>
+   <td class="r">
+    <select class='bid'>
+     
+    
+    </select>
+    <select class='sid'>
+    </select>
+    <select class='cid'>
+    </select></td>
+  </tr>
+  <tr>
+   <th></th>
+   <td class="r"><input type="checkbox" checked class="onlyzb" />只显示总报表
+       &nbsp;&nbsp;&nbsp;<input type="radio" name='jsstatus' value="2" checked v='全部' />全部
+    &nbsp;&nbsp;&nbsp;<input type="radio" name='jsstatus' value="1"  v='已结算' />已结算
+    &nbsp;&nbsp;&nbsp;<input type="radio" name='jsstatus' value="0"  v='未结算' />未结算
+    <input style="margin-left:20px;width:80px;" type="button" class="query" value="查询" />
+    &nbsp;&nbsp;</td>
+  </tr>
+ </table>
+ <table class="tinfo wd100 scmd" style="margin-top:5px;display:none">
+
+  <tr>
+   <td style="text-align:left;padding-left:10px;"> 当前用户：
+    <label class="nowuser" uid='{+$topid+}' LAYER="{+$layer+}">{+$username+}</label></td>
+   <td style="text-align:left;padding-left:10px;"><font color="blue">[查看上级报表]</font>：<a href='javascript:void(0)'>
+    <label class="upuser" uid='{+$topid+}' LAYER="{+$layer+}"></label>
+    </a></td>
+   <td><input type="hidden" value="{+$topid+}" id='saveuserid' LAYER="{+$layer+}"  />
+    <input type="hidden" id=page value="1" />
+    <input type="hidden" id='topid' value="{+$topid+}" LAYER="{+$layer+}" username='{+$username+}' /><input class="btn1 btnf winprint" type="button" value="打印"  style="margin:1px;" />
+    <input class="btn3 btnf requery" type="button" value="返回查询"  style="margin:1px;" /></td>
+  </TR>
+  
+   <tr><td colspan="3" class="wd100" style="text-align:left;padding-left:10px;">
+ 
+     彩种:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label class="caizhong"></label><BR />
+     日期区间:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label class="qujian"></label><BR />
+     结算状态:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label class="jsstatus"></label>
+     
+   
+   
+  
+  </td></tr>
+ </table>
+ <table class="tinfo baotb wd100" style="margin-top:10px;">
+ </table>
+ <table class="tinfo flytb wd100" style="margin-top:10px;display:none">
+  <Tr>
+   <th>[内补]注数</th>
+   <th>[内补]金额</th>
+   <th>[内补]奖金</th>
+   <th>[内补]退水</th>
+   <th>[内补]盈亏</th>
+  </Tr>
+ </table>
+ <table class="tinfo flytbwai wd100" style="margin-top:10px;display:none">
+  <Tr>
+   <th>[外补]注数</th>
+   <th>[外补]金额</th>
+   <th>[外补]奖金</th>
+   <th>[外补]退水</th>
+   <th>[外补]盈亏</th>
+  </Tr>
+ </table>
+ <h5 style="float:right;margin-top:20px;display:none;clear:both;font-size:13px;">(注:如果金额出现负数,表示要付给下级)向下级收：
+  <label class="yk">0</label>
+ </h5>
+ <h5 style="float:right;margin-top:20px;display:none;clear:both;font-size:13px;">(注:如果金额出现负数,表示要付给上级)向上级收：
+  <label class="yk">0</label>
+ </h5>
+ <h5 style="float:right;margin-top:20px;display:none;clear:both;font-size:13px;">外补赢亏：
+  <label class="yk">0</label>
+ </h5>
+ <h4 style="float:right;margin-top:20px;clear:both;display:none">总盈亏：
+  <label class="yk">0</label>
+ </h4>
+ <table class="einfo nowtb wd100" style='margin-top:20px;background:#fff;display:none'>
+  <tr class="bt">
+   <th>期数</th>
+   <th>交易号</th>
+   <th>类别</th>
+   <th>大盘</th>
+   <th>小盘</th>
+   <th>内容</th>
+   <th>金额</th>
+   <th>赔率</th>
+   <th>退水%</th>
+   <th>投|注人</th>
+   <th>时间</th>
+  </tr>
+ </table>
+</div>
+<div id='test' style="margin-top:0px;"></div>
+<script language="javascript">
+layername= new Array();
+{+foreach item=i from=$layername key=key+}
+layername[{+$key+}]="{+$i+}";
+{+/foreach+}
+var layer ={+$layer+} ;
+sdate=new Array();
+{+foreach item=i from=$sdate key=key+}
+sdate[{+$key+}]="{+$i+}";
+{+/foreach+}
+
+</script>
+</body>
+</html>

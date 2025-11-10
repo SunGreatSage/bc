@@ -1,0 +1,35 @@
+{+include file='header.html'+}
+<style type="text/css">
+.conwidth{width:400px;text-align:left;padding-left:20px;}
+</style>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='faqs';</script>
+<div class="xbody1">
+   <form  method='POST' style="margin:0px;">
+    <input type="hidden" value="addnews" name='xtype' />
+    <input type="hidden" id='fid' name="fid" value="" />
+   <table class="tinfo wd100 news_tb">
+   <TR>
+     <th>标题</Th><TD colspan="3" style="text-align:left;padding-left:20px;"><input type="text"  style="width:500px;" name='ftitle' id='ftitle' /></TD><td rowspan="2"><input type="submit" value="增加" class="btn1 btnf" /></td></TR>
+   <TR>   
+     <th>内容</Th>
+      <td colspan="3" style="text-align:left;padding-left:20px;">{+$content+}</td>
+   </TR>
+   <tr><Th><input type="checkbox" id='clickall' />全选</Th><th>id</th><th class="conwidth">内容</th><th>时间</th><Th><input type="button" class="btn3 btnf" id='delall'  value="删除选中" /></Th>
+   {+section name=i loop=$news+}
+     <TR><td><input type="checkbox" value='{+$news[i].id+}' /></td><TD>{+$news[i].id+}</TD><TD class="conwidth" style="padding-left:10px;text-align:left;"><a href='javascript:void(0)' >{+$news[i].title+}</a><span style="display:none;">{+$news[i].content+}</span></TD><TD>{+$news[i].time+}</TD><td><input type="button" class="delone btn1 btnf" value='删除' />
+     <input type="button" class="edit btn1 btnf" value='修改' />
+      <input type="button" class="cedit btn3 btnf" value='取消修改' style="display:none;" />
+     </td></TR>
+   {+/section+}
+   </table>
+   </form>
+
+</div>
+<div id=showcontent style="display:none;width:700px;position:absolute;background:#fff;border:2px solid #000">
+
+</div>
+<div id='test'></div>
+</body>
+</html>

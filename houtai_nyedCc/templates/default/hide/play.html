@@ -1,0 +1,146 @@
+{+include file='header.html'+}
+<style>
+.addtb {
+	width:200px;
+	display:none;
+	position:absolute;
+	background:#fff
+}
+.addtb td {
+	text-align:left;
+}
+td{font-size:11px;}
+</style>
+</head><body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='play';</script>
+<div class="xbody1" style="width:1200px;">
+ <table class="tinfo wd100 s_tb">
+  <tr>
+   <th colspan="17">名称：
+    <input type="text" id='name' />
+    <select id="bid" >
+     <option value="">大分类</option>
+     
+       {+section name=i loop=$b+}
+          
+     <option value='{+$b[i].bid+}' >{+$b[i].name+}</option>
+     
+       {+/section+}
+       
+    </select>
+    
+    <select id="sid" >
+     <option value="">小分类</option>
+       
+    </select>
+    
+    <select id="cid">
+     <option value="">分类</option>
+    </select>
+    赔率1：
+    <input type="text" value="" id='peilv1' />
+    赔率2：
+    <input type="text" value="" id='peilv2' />
+    <select id='ztype'>
+     <option value="">中奖类型</option>
+     
+       {+foreach item=i from=$ztype+}
+       
+     <option value="{+$i+}" >{+$i+}</option>
+     
+       {+/foreach+}
+       
+    </select>
+    中奖个数1：
+    <input type="text" value="" id='znum1' />
+    中奖个数2：
+    <input type="text" value="" id='znum2' />
+    <input type="button" class="btn3 btnf" id='add'  value="添加玩法" /></th>
+  </tr>
+  <TR>
+   <th><input type="checkbox" id='clickall' />
+    全选</th>
+   <th>编号</th>
+   <th><select class="bid">
+     <option value="">大分类</option>
+     
+       {+section name=i loop=$b+}
+          
+     <option value='{+$b[i].bid+}' {+if $b[i].bid==$bid+}selected{+/if+}>{+$b[i].name+}</option>
+     
+       {+/section+}
+       
+    </select></th>
+   <th><select class="sid" >
+     <option value="">小分类</option>
+     
+       {+section name=i loop=$s+}
+          
+     <option value='{+$s[i].sid+}' {+if $s[i].sid==$sid+}selected{+/if+}>{+$s[i].name+}</option>
+     
+       {+/section+}
+       
+    </select></th>
+   <th><select class="cid" >
+     <option value="">分类</option>
+     
+       {+section name=i loop=$c+}
+          
+     <option value='{+$c[i].cid+}' {+if $c[i].cid==$cid+}selected{+/if+}>{+$c[i].name+}</option>
+     
+       {+/section+}
+       
+    </select></th>
+   <th>名称</th>
+   <th>可用</th>
+   <th>赔率1</th>
+
+   <th>赔率2</th>
+   <th>中奖类型</th>
+   <th>中奖个数1</th>
+   <th>中奖个数2</th>
+   <th>排序</th>
+   <th>赔率类型</th>
+   <th><input type="button" class="btn3 btnf" id='delall'  value="删除选中" /><input type="button" class="btn3 btnf" id='edit'  value="修改选中" /></th>
+  </TR>
+  {+section name=i loop=$p+}
+  <TR>
+   <td><input type="checkbox" value='{+$p[i].pid+}' /></td>
+   <td>{+$p[i].pid+}</td>
+   <td bid='{+$p[i].bid+}'><input type="text" value="{+$p[i].bid+}" class="bids" /><Br />{+$p[i].bname+}</td>
+   <td sid='{+$p[i].sid+}'><input type="text" value="{+$p[i].sid+}" class="sids" /><Br />{+$p[i].sname+}</td>
+   <td cid='{+$p[i].cid+}'><input type="text" value="{+$p[i].cid+}" class="cids" /><Br />{+$p[i].cname+}</td>
+   <td><input type="text" value="{+$p[i].name+}" class="names" /></td>
+   <td><input type="checkbox" class="ifok" value="1" {+if $p[i].ifok==1+}checked{+/if+} /></td>
+   <td><input type="text" value="{+$p[i].peilv1+}" class="peilv1" /></td>
+   <td><input type="text" value="{+$p[i].peilv2+}" class="peilv2" /></td>
+   <td><select class="ztype">
+     
+       {+foreach item=j from=$ztype+}
+          
+     <option value='{+$j+}' {+if $j==$p[i].ztype+}selected{+/if+}>{+$j+}</option>
+     
+       {+/foreach+}
+       
+    </select></td>
+   <td><input type="text" value="{+$p[i].znum1+}" class="znum1" /></td>
+   <td><input type="text" value="{+$p[i].znum2+}" class="znum2" /></td>
+   <TD><input type="text" class='xsort' value="{+$p[i].xsort+}" /></TD>
+   <td><select class="ptype">
+     
+       {+section name=j loop=$ptype+}
+          
+     <option value='{+$ptype[j].id+}' {+if ($ptype[j].id==$p[i].ptype)+}selected{+/if+}>{+$ptype[j].c+}</option>
+     
+       {+/section+}
+       
+    </select></td>
+   <td><input type="button" class="delone btn1 btnf" value='删除' />
+    </td>
+  </TR>
+  {+/section+}
+ </table>
+</div>
+<div id='test'></div>
+</body>
+</html>

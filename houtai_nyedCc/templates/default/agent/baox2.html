@@ -1,0 +1,93 @@
+{+include file='header.html'+}
+<style>
+.zd th{}
+input.vsmall{width:20px;padding:0px;}
+.points{width:30px;}
+.kpoints{width:30px;}
+input.bred{background:red}
+a.red{color:#D50000}
+
+select{width:85px;}
+.nowtb tr:hover{background:#FCF}
+.user tr:hover{background:#FCF}
+
+td.z1{background:#69F}
+td.z3{background:#696}
+td.he{background:#ACF1A9}
+
+.xbody1{width:1004px;}
+body{font-size:11.5px;}
+.con{width:200px;}
+.baotbq tr:hover{background:#FF9}
+
+.baotbq a{color:#D50000}
+
+.baotb {position:absolute;background:#FFD2FF;width:1004px;}
+.baotb tr:hover{background:#FF9}
+.baotb a{color:#D50000}
+.baotb td{background:#fff}
+
+.h31{position:absolute;background:#FFD2FF;width:1004px;}
+.res{position:absolute;background:#FFD2FF;width:1004px;}
+
+.hide{display:none}
+</style>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='baox2';
+</script>
+<div class="xbody1">
+
+<table class="tinfo wd100 s_head"  >
+  <TR><Th style="text-align:left;width:620px;">
+从<select id=qishu1>
+        {+foreach item=i from=$qishu+}<option value="{+$i+}">{+$i+}期</option>{+/foreach+}
+      </select>到<select id=qishu2>
+        {+foreach item=i from=$qishu+}<option value="{+$i+}">{+$i+}期</option>{+/foreach+}
+      </select>
+      <input type="hidden" id='qhide' value="" />
+      
+      <select id='bid'>
+      <option value="">全部</option>
+      {+section name=i loop=$b+}
+        <option value="{+$b[i].cid+}">{+$b[i].name+}</option>
+      {+/section+}
+      </select>
+      <select id='cid'>
+        
+      </select>
+      <select id='sid'>
+        
+      </select>   
+      <input class="btn1 btnf query" type="button" value="查询"  style="margin:1px;" /> 
+      <input class="btn1 btnf winprint" type="button" value="打印"  style="margin:1px;" /> <input type="hidden" value="{+$uid+}" id='saveuserid' />
+<input type="hidden" id=page value="1" /> <input type="hidden" id='topid' value="{+$topid+}" layer="{+$layer+}" />
+</Th>
+ 
+  <th style="text-align:left;">
+  当前用户：<label class="nowuser" uid='{+$topid+}' layer="{+$layer+}">{+$username+}</label>&nbsp;&nbsp;<font color="blue">[返回上线]</font>：<a href='javascript:void(0)'><label class="upuser" uid='{+$topid+}' layer="{+$layer+}"></label></a>
+
+  </th>
+</TR>
+ 
+   </table>
+ <h3 style="float:left;margin-top:20px;clear:both;font-size:15px;color:#D50000" class="h30">总报表:<label style="font-size:13px;color:#000">[此报表不计算外补]</label></h3>
+ <table class="tinfo baotbq wd100" style="margin-top:10px;"></table>  
+<h3 style="font-size:15px;color:#D50000" class="h31 hide">分期报表:<label style="font-size:13px;color:#000"></label><input type="button"  class="botton" style="margin-left:20px;" value="关闭" /></h3>   
+ <table class="tinfo baotb wd100 hide" ></table>
+<div class="res hide">
+  <h5 style="float:right;margin-top:20px;display:none;clear:both;font-size:13px;">(注:如果金额出现负数,表示要付给下级)向下级收：<label>0</label></h5>
+  <h5 style="float:right;margin-top:20px;display:none;clear:both;font-size:13px;">(注:如果金额出现负数,表示要付给上级)向上级收：<label>0</label></h5>
+  <h5 style="float:right;margin-top:20px;display:none;clear:both;font-size:13px;">外补盈亏：<label>0</label></h5>
+  <h4 style="float:right;margin-top:20px;clear:both;">总盈亏：<label>0</label></h4>
+</div>
+<table class="einfo nowtb wd100" style='margin-top:20px;background:#fff;display:none'>
+   <tr class="bt"><th>期数</th><th>交易号</th><th>类别</th><th>大盘</th><th>小盘</th><th>内容</th><th>金额</th><th>赔率</th><th>退水%</th><th>投|注人</th><th>时间</th></tr> 
+   </table>
+
+
+</div> 
+<div id='test' style="margin-top:0px;"></div>
+</body>
+</html>

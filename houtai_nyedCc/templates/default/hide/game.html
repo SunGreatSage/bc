@@ -1,0 +1,75 @@
+{+include file='header2.html'+}
+<script src="/js/sitetool.js?v=004"></script>
+<style>
+.h {
+	display:none
+}
+.edittb {
+	position:absolute;
+	width:950px;
+	display:none;
+	background:#fff;
+}
+
+</style>
+</head><body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='game';</script>
+<script language="javascript">
+var g=new Array();
+</script>
+<div class="jt-container">
+<div class="top_info">
+    <span class="title">开盘设定</span><span class="right">&nbsp;&nbsp;<a class="back" onclick="javascript:history.back(-1);" href="javascript:void(0);">返回</a></span>
+</div>
+  <div class="s_main">  
+ <table class="table_ball list  ztb">
+ <thead>
+  <tr>
+   <th style="display: none;">ID</th>
+   <th>彩种</th>
+   <th style="display: none;">排序</th>
+   <th>当前期数</th>
+   <th>默认开盘时间</th>
+   <th>默认关盘时间</th>
+   <th>自动开奖</th>
+   <th>自动开关盘</th>
+   <th>盘口状态</th>
+    <th>正码状态</th>
+   <th>报表开放</th>
+   <th style="display: none;">彩种开放</th>
+   <th style="display: none;">年份</th>
+   <th class="h">特码</th>
+   <th>正码提前关盘(秒)</th>
+   <th>会员提前关盘(秒)</th>
+   <th>玩法</th>
+  </tr>
+  </thead>
+  {+section name=i loop=$game+}
+  <tr>
+   <td style="display: none;" class="gid">{+$game[i].gid+}</td>
+   <td class="gname" >{+$game[i].gname+}</td>
+   <td class="xsort" style="display: none;">{+$game[i].xsort+}</td>
+   <td class="thisqishu">{+$game[i].thisqishu+}<input type="text" name="thisqishu" style="width: 70px;display: none;" value="{+$game[i].thisqishu+}"><input type="button" class="tsset"  style="display: none;" value="修改"></td>
+   <td class="opentimekj"><input type="text" name="opentimekj" style="width: 70px;" value="{+$game[i].opentimekj+}">&nbsp;<input type="button" class="ojset button btn3" value="设置"></td>
+   <td class="closetimekj"><input type="text" name="closetimekj" style="width: 70px;" value="{+$game[i].closetimekj+}">&nbsp;<input type="button" class="cjset button btn3" value="设置"></td>
+   <td class="autokj" state="{+$game[i].autokj+}"><label><input type="radio" name="autokj{+$game[i].gid+}" class="autokj" style="color:red" value="0"  {+if ($game[i].autokj==0)+}checked="checked"{+/if+}>手动</label>&nbsp;<label><input type="radio" name="autokj{+$game[i].gid+}"  class="autokj" {+if ($game[i].autokj==1)+}checked="checked"{+/if+}value="1" >自动</label></td>
+   <td class="autoopenpan" state="{+$game[i].autoopenpan+}"><label><input type="radio" name="autoopenpan{+$game[i].gid+}" class="autoopenpan" style="color:red" value="0"  {+if ($game[i].autoopenpan==0)+}checked="checked"{+/if+}>手动</label>&nbsp;<label><input type="radio" name="autoopenpan{+$game[i].gid+}"  class="autoopenpan" {+if ($game[i].autoopenpan==1)+}checked="checked"{+/if+}value="1" >自动</label></td>
+   <td class="panstatus" state="{+$game[i].panstatus+}"><label><input type="radio" name="panstatus{+$game[i].gid+}" class="panstatus" style="color:red" value="0"  {+if ($game[i].panstatus==0)+}checked="checked"{+/if+}>关盘</label>&nbsp;<label><input type="radio" name="panstatus{+$game[i].gid+}"  class="panstatus" {+if ($game[i].panstatus==1)+}checked="checked"{+/if+} value="1" >开盘</label></td>
+   <td class="otherstatus" state="{+$game[i].otherstatus+}" ><label><input type="radio" name="otherstatus{+$game[i].gid+}" class="otherstatus" style="color:red" value="0"  {+if ($game[i].otherstatus==0)+}checked="checked"{+/if+}>关盘</label>&nbsp;<label><input type="radio" name="otherstatus{+$game[i].gid+}"  class="otherstatus" {+if ($game[i].otherstatus==1)+}checked="checked"{+/if+} value="1" >开盘</label></td>
+   <td class="baostatus" state="{+$game[i].baostatus+}"><label><input type="radio" name="baostatus{+$game[i].gid+}" class="baostatus" style="color:red" value="0"  {+if ($game[i].baostatus==0)+}checked="checked"{+/if+}>开放</label>&nbsp;<label><input type="radio" name="baostatus{+$game[i].gid+}"  class="baostatus" {+if ($game[i].baostatus==1)+}checked="checked"{+/if+} value="1" >关闭</label></td>
+   <td class="ifopen" state="{+$game[i].ifopen+}" style="display: none;"><label><input type="radio" name="ifopen{+$game[i].gid+}" class="ifopen" style="color:red" value="0"  {+if ($game[i].ifopen==0)+}checked="checked"{+/if+}>关闭</label>&nbsp;<label><input type="radio" name="ifopen{+$game[i].gid+}"  class="ifopen" {+if ($game[i].ifopen==1)+}checked="checked"{+/if+} value="1" >开放</label></td>
+   <td class="fast"  state="{+$game[i].fast+}" style="display: none;"><img src='{+$globalpath+}img/{+$game[i].fast+}.gif'  class="fast" /></td>
+   <td class="thisbml" style="display: none;"  ><input type="text" name="thisbml" style="width: 50px;" value="{+$game[i].thisbml+}">&nbsp;<input type="button" class="tlset button btn3" value="修改"></td>
+    <td class="otherclosetime"><input type="text" name="otherclosetime" style="width: 30px;" value="{+$game[i].otherclosetime+}">&nbsp;<input type="button" class="oeset button btn3" value="设置"></td>
+   <td class="userclosetime"><input type="text" name="userclosetime" style="width: 30px;" value="{+$game[i].userclosetime+}">&nbsp;<input type="button" class="ueset button btn3" value="设置"></td>
+  <td class="flname">{+$game[i].flname+}</td>
+  </tr>
+  {+/section+}
+  </tr>
+  
+ </table>
+</div>
+</div>
+<div id='test' style="display: none;" ></div>
+</body>
+</html>

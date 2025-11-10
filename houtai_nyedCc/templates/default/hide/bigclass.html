@@ -1,0 +1,37 @@
+{+include file='header.html'+}
+<style>
+.addtb{width:150px;display:none;position:absolute;background:#fff}
+.addtb td{text-align:left;}
+</style>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='bigclass';</script>
+<div class="xbody1">
+   <table class="tinfo wd100">
+    <TR>
+      <Th><a href='stock.php?xtype=show'>股票列表</a></Th>
+      <Th><a href='stockupdate.php?xtype=show'>价格更新</a></Th>
+      <Th><a href='stock.php?xtype=smallclass'>小分类</a></Th>
+      <Th><a href='stock.php?xtype=bigclass'>大分类</a></Th>
+      <Th><a href='stock.php?xtype=area'>地区分类</a></Th>
+      
+    </TR>
+   </table>
+   <BR>
+ <table class="tinfo wd100 s_tb">
+ <tr><th colspan="3">大分类</th><th colspan="3"><input type="button" class="btn3 btnf" id='add'  value="添加分类" /></th></tr>
+ <TR>
+ <th><input type="checkbox" id='clickall' />全选</th><th>编号</th><th>名称</th><th><input type="button" class="btn3 btnf" id='delall'  value="删除选中" /></th>
+ </TR>
+ {+section name=i loop=$c+}
+<TR><td><input type="checkbox" value='{+$c[i].cid+}' /></td><td>{+$c[i].cid+}</td><td>{+$c[i].bigclassname+}</td><td><input type="button" class="delone btn1 btnf" value='删除' /> <input type="button" class="edit btn1 btnf" value='修改' /></td></TR>
+ {+/section+}
+  </table>
+   <table class="tinfo addtb">
+      <TR><Th>分类名称</Th><TD><input type="text" id='bigclassname' class="intext" /><input type="hidden" id='action' value="add" /><input type="hidden" id='bigclassid' value="" /></TD></TR>
+      <TR><th colspan="2" class="tcenter"><input type="button" id='addbtn' class="btn1 btnf" value="添加" /><input type="button" id='closebtn' class="btn1 btnf" value="关闭" /></th></TR>
+   </table>
+</div>
+<div id='test'></div>
+</body>
+</html>

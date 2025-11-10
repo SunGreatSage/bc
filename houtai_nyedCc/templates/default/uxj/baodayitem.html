@@ -1,0 +1,46 @@
+{+include file='headers.html'+}
+<style  type="text/css">
+.page_info .red{color:red !important}
+</style>
+</head>
+<body class="{+$skin+}">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='baodayitem';</script>
+<div class="main report">
+<div class="search">
+<span class="title" date='{+$date+}'>{+$date+} 星期{+$week+} 报表</span>
+</div>
+<table class="list table">
+<thead><tr><th>会员</th><th>注单号</th><th>时间</th><th>类型</th><th style="width:250px !important;">玩法</th><th>下注金额</th><th>退水(%)</th><th>结果</th></tr></thead>
+<tbody>
+{+section name=i loop=$lib+}
+<tr>
+  <td>{+$lib[i].uid+}</td>
+  <td>{+$lib[i].tid+}</td>
+  <td class="time">{+$lib[i].time+}</td>
+  <td class="period"><span class="lottery">{+$lib[i].gid+}</span><br /><span class="draw_number">第 {+$lib[i].qishu+} 期</span></td>
+  <td class="contents"><span class="text">{+$lib[i].wf+}{+if $lib[i].content!=''+}:{+$lib[i].content+}{+/if+}</span> @ <span class="odds">{+$lib[i].peilv1+}{+if $lib[i].peilv2>1+}/{+$lib[i].peilv2+}{+/if+}</span></td>
+  <td class="amount">{+$lib[i].je+}</td>
+  <td>{+$lib[i].points+}%</td>
+  <td class="result color">{+$lib[i].rs+}</td>
+</tr>
+{+/section+}
+
+</tbody>
+<tfoot>
+<tr><td></td><td></td><td></td><td></td><th>总计</th><td>{+$zje+}</td><td></td><td class="result color">{+$rs+}</td></tr>
+</tfoot>
+</table>
+<div class="page">
+<div class="page_info" rcount='{+$rcount+}' psize='{+$psize+}' tpage='{+$tpage+}'>
+<span class="record">共 {+$rcount+} 笔记录</span>
+<span class="page_count">共 1 页</span>
+<span class="page_control">
+<a class="previous" href='jsavscript:void(0)'>前一页</a>『
+<span class="current">1</span>
+』<a class="next" href='jsavscript:void(0)'>后一页</a>
+</span>
+</div>
+</div>
+</div>
+</body>
+</html>

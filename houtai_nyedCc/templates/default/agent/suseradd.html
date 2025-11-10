@@ -1,0 +1,295 @@
+<div class="top_info">
+        <span class="title">代理 -&gt; 新增</span>
+        <span class="right"><a class="back close"  href="javascript:;">返回</a></span>
+    </div>
+	<div class="s_main" id="saveForm">
+<table class="data_table info_table user_panel addtb list table_ball">
+<thead><tr><th colspan="2">账户资料</th></tr></thead>
+<tbody>
+      <TR>
+    <th>所属{+$layernamefu+}</th>
+    <TD><label>{+$fname+}</label><input type="hidden" value="adduser" name='xtype' id='xtype' /><input type="hidden" value="{+$action+}" name='action' id='action' /></td>
+     </TR>
+   <tr>
+    <th>{+$layername+}帐号</th>
+    <TD>
+     <input type="text" name='username' id='username' class="input" style="width:100px;" maxlength="{+$namelength+}" /><span id="usernameMsg"></span>&nbsp;&nbsp;<select name='status'  class='hides' layer='{+$layer+}'   id='status'>
+      <option   value="1" selectef>可用</option>
+      <option value="0"  >禁用</option>
+      <option value="2"  >暂停</option>
+     </select></td>
+   </tr>
+      <TR class='hides'>
+    <th>帐户类型</th>
+    <TD><select name="ifagent" id=ifagent>
+
+       <option value="1">运营商</option>
+     </select>&nbsp;&nbsp;(运营商/会员)</td>
+     </TR>
+
+   
+
+   
+   <TR>
+    <th>登入密码</th>
+    <TD><input type="text" name=password id=password class="input" /><span id="passdMsg"></span><input type="hidden" name=userpass id=userpass class="input" /></td>
+    </TR>
+
+   <TR>
+    <th>{+$layername+}名称</th>
+    <TD><input type="text" name='name' id='name'  class="input"  /></td>
+
+   </tr>
+    
+<tr><th>额度模式</th><td>
+    {+if $fudong==0+}    
+    <label><input type="radio" name="fudong" value="0" class="fudong" checked="checked">信用模式</label>
+    <label><input type="radio" name="fudong" class="fudong" value="1">现金模式</label>
+    {+else+}
+    <label><input type="radio" name="fudong" value="0" class="fudong" disabled="disabled">信用模式</label>
+    <label><input type="radio" name="fudong" class="fudong" value="1" disabled="disabled"  checked="checked">现金模式</label>
+    {+/if+}
+</td></tr>
+
+    <TR  class="modetr"   style="display: none;">
+    <th>信用额度[低频]</th>
+    <TD ><input type="text" name="maxmoney" id='maxmoney' class="input" value="" />&nbsp;&nbsp;<span id="dx" class="dx"></span>
+     &nbsp;&nbsp;[上级余额
+     <label>{+$maxmoney+}</label>
+     ]</td>
+   </tr>
+   <TR  class="kmodetr"  {+if $config.fasttype!=1+}style='display:none;'{+/if+}>
+    <th>额度</th>
+    <TD ><input type="text" name="kmaxmoney" id='kmaxmoney' class="input" value="" />&nbsp;&nbsp;<span id="dxk" class="dx"></span>
+     &nbsp;&nbsp;(上级余额
+     <label>{+$kmaxmoney+}</label>
+     )</td>
+   </tr>
+
+   <TR  class="fmodetr" {+if $fudong==0+}style='display:none;'{+/if+}>
+    <th>额度</th>
+    <TD ><input type="text" name="fmaxmoney" id='fmaxmoney' class="input" value="" />&nbsp;&nbsp;<span id="dxf" class="dx"></span>
+     &nbsp;&nbsp;(上级余额
+     <label>{+$kmaxmoney+}</label>
+     )</td>
+   </tr>
+
+   
+   {+if $layer<$maxlayer+}
+     {+if $maxrenflag==1+}
+   <TR >
+    <th>最多帐户数</th>
+    <TD><input type="text" class="input" name='maxren'  id=maxren />
+     [限额
+     <label>{+$maxren+}</label>
+     ] </td>
+
+   </tr>
+   {+/if+}
+ {+/if+} 
+
+   <TR>
+    <th>开放盘口</th>
+    <TD> {+foreach item=i from=$pan+}
+    <label> <input  class="pantype" type="checkbox" value="{+$i+}"  />
+     {+$i+}盘
+     </label>
+     {+/foreach+} <select name="defaultpan" id='defaultpan' class="hide"></select></td>
+ 
+   </tr>
+   <TR>
+    <th>赚取退水</th>
+    <TD> 
+     <select name="liushui" id="liushui">
+        
+                                  <option value="0">水全退到底</option>
+                                  <option value="0.1">赚取0.1%</option>
+                                  <option value="0.3">赚取0.3%</option>
+                                  <option value="0.5">赚取0.5%</option>
+                                  <option value="1">赚取1.0%</option>
+                                  <option value="1.5">赚取1.5%</option>
+                                  <option value="2">赚取2.0%</option>
+                                  <option value="2.5">赚取 2.5%</option>
+                                  <option value="100">赚取所有</option>
+                              
+               </select>
+</td>
+ 
+   </tr>
+   {+if $layer==1 +}
+   <TR>
+    <th>网站名称</th>
+    <TD><select name='wid' id='wid'>
+      
+      
+      
+      
+      {+section name=i loop=$web+}
+        
+      
+      
+      
+      <option value="{+$web[i].wid+}" maxlayer='{+$web[i].maxlayer+}'>{+$web[i].webname+}</option>
+      
+      
+      
+      
+      {+/section+}
+     
+     
+     
+     
+     </select></td>
+   
+   </tr>
+   <TR> <th>赔率调节</th>
+    <TD><select name='ifexe' id='ifexe'>
+      <option value="0">关</option>
+      <option value="1">开</option>
+     </select></td>
+     </TR>
+     <tr>
+    <th>赔率调节方式</th>
+    <TD><select name='pself' id='pself' style="width:210px;">
+      <option value="0">使用上级赔率(上级基础上加减)</option>
+      <option value="1">使用自设赔率</option>
+     </select></td>
+
+   </tr>
+  <TR>    <th>参数设置</th>
+    <TD><select name='cssz' id='cssz'>
+      <option value="0" {+if $cssz==0+}selected{+/if+}>关</option>
+      <option value="1" {+if $cssz==1+}selected{+/if+}>开</option>
+     </select>&nbsp;&nbsp;&nbsp;设置各盘赔率差</td>
+     
+     </TR>
+   {+/if+}
+   {+if $plc==1+}
+   <TR>
+    <th>赚赔设置</th>
+    <TD>  <select name='plc' id='plc'>
+      <option value="0">关闭</option>
+      <option value="1">开启</option>
+     </select>&nbsp;&nbsp;是否赚赔下级,关闭后下级也不能赚赔
+    </td>
+
+   </tr>
+   {+/if+}
+
+
+
+
+ <TR style="display:none;">
+    <th>默认彩种：</th>
+    <TD><select name="mgid" id=mgid>
+{+section name=i loop=$gamecs+}
+{+if $gamecs[i].ifok==1 +}
+<option value="{+$gamecs[i].gid+}" {+if $gamecs[i].gid==$mgid+}selected{+/if+}>{+$gamecs[i].gname+}</option>
+{+/if+}
+{+/section+}
+     </select></td>
+    </TR>
+
+     
+     <tr class='hides'>
+    <th>&nbsp;</th>
+   
+    <TD><input type="button" class="btn1 btnf add"  value="新增{+$layername+}"  style="margin-right:20px;" /><input type="button" class="btn1 btnf close"  value="关闭窗口" /></td>
+   </tr>
+   <TR  class='hides'>
+    <Td colspan="2">
+   <label>如果锁定占成，不管走补功能开放与否，该帐户将不能走补！</label>---会员略过!<BR />
+    <label>本级收补占成=收补占成-直属下级收补占成，如果是直属下级走补，本级收补占成=收补占成-0</label>---会员略过!<BR />
+    <label>如果直属下级的【上级占成】设为0，本级将没有收补占成</label>---会员略过!
+    </Td>
+    </TR>
+    </tbody>
+  </table>
+            <div id="zdMode">
+
+
+<style>
+    .zc_temp {
+        display: inline-block;
+        width: 50px;
+        color: red;
+        text-align: right;
+    }
+</style>
+ 
+
+ <table class=" addtb2   marT10 table_ball ">
+ <thead>
+  <th colspan="7" class="shareMode0">占成设置 - 默认模式</th>
+</thead>
+
+
+<tbody>
+     <tr class="shead">
+            <th rowspan="2" width="10%" class="shareMode0 shareMode1">类型</th>
+			<th rowspan="2" width="10%" class="shareMode0 shareMode1">彩种开关</th>
+            <th rowspan="2" width="20%" class="shareMode0 shareMode1">本级{+$layernamefu+}占成</th>
+            <th colspan="2" class="shareMode0">下级{+$layername+}占成</th>
+            <th rowspan="2" width="15%" class="shareMode0 shareMode1">允许补货</th>
+			<th rowspan="2" width="20%" class="shareMode0 shareMode1">补货占成</th>
+        </tr>
+
+        <tr class="shead">
+
+            <th width="15%" class="shareMode0" style="display: ;">最低占成 (%)</th>
+
+            <th width="15%" class="shareMode0">最高成数 (%)</th>
+        </tr>
+    </tbody>
+<tbody>
+   {+section name=i loop=$gamecs+}
+   <tr {+if $gamecs[i].ifok==0 +}style="display:none"{+/if+}>
+    <th gid='{+$gamecs[i].gid+}'>{+$gamecs[i].gname+}</th>
+    <td><select class="ifok"  val='{+$gamecs[i].ifok+}'>
+    {+if $gamecs[i].ifok==0+}
+      <option value="0">关闭</option>
+     {+else+}
+      <option value="0">关闭</option>
+      <option value="1">开启</option>
+     {+/if+}
+     </select></td>
+     
+    <td>
+        <input type="text" style="width: 100px" class="upzc share" maxzc='{+$gamecs[i].zc+}' value='0' />&nbsp;(0% 至 {+$gamecs[i].zc+}%)  
+    </td>
+    <td>
+        <input type="text" style="width: 100px" class="zcmin share"  maxzc='{+$gamecs[i].zc+}' value='0' />&nbsp;%
+    </td> 
+    <td>
+        <input type="text" style="width: 100px" class="zc share"  maxzc='{+$gamecs[i].zc+}' value='{+$gamecs[i].zc+}' />&nbsp;(最大{+$gamecs[i].zc+}%)
+    </td> 
+     <td>
+<select class="flytype"  val='{+$gamecs[i].flytype+}'>
+     {+if $gamecs[i].flytype==0+}
+         <option value="0">禁止</option>
+     {+elseif $gamecs[i].flytype==1+}
+        <option value="0">禁止</option>
+        <option value="1">开放</option>
+     {+elseif $gamecs[i].flytype==2+}
+         <option value="0">关闭</option>
+         <option value="2">外补</option>
+     {+else+}
+         <option value="0">关闭</option>
+         <option value="1">内补</option>
+         <option value="2">外补</option>
+         <option value="3">内外补</option>
+     {+/if+}
+     </select>
+     </td>
+    <td>
+        <input type="text"  style="width: 100px" class="flyzc share" maxzc='{+$gamecs[i].flyzc+}'  value='{+$gamecs[i].flyzc+}' />(0% 至 {+$gamecs[i].flyzc+}%)
+    </td>
+   </tr>
+   {+/section+}
+  
+</tbody>
+</table>
+
+ </div>
+ <div class="data_footer control"><input type="button" value="确定" class="button add btn1" /> <input type="button" value="取消"  class="close button btn1"></div>
+ </div>

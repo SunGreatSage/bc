@@ -1,0 +1,106 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta name="viewport" content="user-scalable=yes, target-densityDpi=device-dpi" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Welcome{+$gid+}</title>
+<link href="/default/css/member/user/layoutbl.min.css" type="text/css" rel="stylesheet" />
+<link href="/default/css/member/makes/jqueryuib.min.css" type="text/css" rel="stylesheet" />
+<link id="lotBetPageStyle" href="/default/css/member/makes/skinbd.min.css"type="text/css" rel="stylesheet" />
+
+<script language="javascript" src="/js/jquery-1.8.3.min.js"></script>
+<script language="javascript" src="/js/public.js"></script>
+<script language="javascript" src="/js/jquerybundle.min.js"></script>
+
+<script language="javascript">
+function hideinfo(){ if(event.srcElement.tagName=="A"){
+   window.status=event.srcElement.innerText}
+}
+document.onmouseover=hideinfo; 
+document.onmousemove=hideinfo;
+var globalpath = "{+$globalpath+}";
+function changeh(h){
+    var obj = parent.document.getElementById("frame"); //取得父页面IFrame对象  
+    obj.style.height = h+"px"; //调整父页面中IFrame的高度为此页面的高度
+}
+function Load(n) {
+        var t = window.top.$('<div id="dialog"><\/div>');
+        t.html('<div class="dialog-html">' + n + "<\/div>");
+        t.dialog({
+            resizable: !1,
+            modal: !0,
+            buttons: {},
+            title: "",
+            dialogClass: "dialog-loading dialog-no-title",
+            width: 190,
+            minHeight: 50
+        })
+    }
+	Dialog = {
+    IsShow: function() {
+        var n = $("#dialog");
+        return n.length > 0 && n.is(":visible") ? !0 : !1
+    },
+    Close: function() {
+        try {
+            window.$("#dialog").dialog("close").remove()
+        } catch (n) {
+            console.log(n)
+        }
+        try {
+            window.top.$("#dialog").dialog("close").remove()
+        } catch (n) {
+            console.log(n)
+        }
+    },
+    _show: function(n, t, i, r, u, f) {
+        Dialog.Close();
+        var e = window.top.$('<div id="dialog"><\/div>');
+        e.html('<div class="dialog-html"><span class="img"><\/span>' + t + "<\/div>");
+        e.dialog({
+            resizable: !1,
+            modal: !0,
+            buttons: i,
+            title: n,
+            dialogClass: f,
+            minWidth: r,
+            minHeight: u
+        })
+    },
+    Load: function(n) {
+        var t = window.top.$('<div id="dialog"><\/div>');
+        t.html('<div class="dialog-html">' + n + "<\/div>");
+        t.dialog({
+            resizable: !1,
+            modal: !0,
+            buttons: {},
+            title: "",
+            dialogClass: "dialog-loading dialog-no-title",
+            width: 190,
+            minHeight: 50
+        })
+    },
+    Alert: function(n, t) {
+        t.length == 0 && (t = [{
+            text: "确定",
+            click: function() {
+                Dialog.Close()
+            }
+        }]);
+        Dialog._show("", n, t, 250, 100, "dialog-alert dialog-no-title")
+    },
+    Error: function(n, t) {
+        t.length == 0 && (t = [{
+            text: "确定",
+            click: function() {
+                Dialog.Close()
+            }
+        }]);
+        Dialog._show("", n, t, 250, 100, "dialog-error dialog-no-title")
+    },
+    Confirm: function(n, t, i) {
+        Dialog._show(n, t, i, 250, 150, "dialog-confirm")
+    }
+}
+
+</script>

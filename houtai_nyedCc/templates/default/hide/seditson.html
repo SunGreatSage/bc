@@ -1,0 +1,80 @@
+{+include file='header2.html'+}
+<script language="javascript" src="/js/md5.js"></script>
+</head>
+<body id="topbody">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='seditson';
+</script>
+<div class="main">
+<div class="top_info">
+<span class="title">子帐号管理</span>
+<div class="right">
+				<a class="back" onclick="javascript:history.back(-1);" href="javascript:void(0);">返回</a>
+			</div>
+<div class="center" style="float: right;margin-right: 100px;">
+<a class="ico_add add" id="add{+$data[0].userid+}" href="javascript:void(0);" >新增子账号</a>
+</div>
+</div>
+<div class="contents s_main">
+    <table class="list  user_list table_ball">
+    <thead>
+  <TR>
+  
+  <th style="width:150px;">在线</th><th>子帐号	</th><th>新增日期</th><th style="display: none;">登陆次数</th><th>最后登录IP</th><th>最后登录时间</th><th style="display: none;">最后修改密码时间</th><th style="width: 25%;">功能</th>
+  
+
+   </TR>     
+		</thead>
+      {+section name=i loop=$data+}
+	   {+if $data[i].ifson!=0+}
+   <tr><td class="online">{+if ($data[i].online==0)+}<span class='s0'></span>{+else+}<span class='s1 zhuxiao' title='注销'></span>{+/if+}</td><td >{+$data[i].username+}</td><td>{+$data[i].regtime+}</td><td style="display: none;">{+$data[i].logintimes+}</td><td>{+$data[i].lastloginip+}({+$data[i].lastloginfrom+})</td><td>{+$data[i].lastlogintime+}</td><td style="display: none;">{+$data[i].passtime+}</td>
+   <td style="width:180px;">  
+
+   {+if $data[i].ifson!=0+}
+   <a  class='del'  id="del{+$data[i].userid+}" uid="{+$data[i].userid+}" />删除</a>/
+   {+/if+}
+   <a class='edit' id="edit{+$data[i].userid+}" uid="{+$data[i].userid+}" username='{+$data[i].username+}'  />修改密码</a>/
+   <a class='record'  uid='{+$data[i].userid+}' username='{+$data[i].username+}'  id="showrecord{+$data[i].userid+}"  />操作记录</a>/
+    <a class='logininfo'  uid='{+$data[i].userid+}' username='{+$data[i].username+}'  id="showrecord{+$data[i].userid+}"  />登陆日志</a>
+   </td>
+   </tr>
+    {+/if+}
+   {+/section+}
+   
+   </table>
+   <table class="data_list list pages table_ball" style="margin-top:20px;">
+   <tbody>
+    {+foreach item=i key=k from=$page+}
+     {+if $k==0+}<thead>{+/if+}
+      <tr>
+          {+foreach item=j key=h from=$i+}
+		  			{+if $k!=1+}
+            {+if ($k==0 || $h==0)+} <Th>{+$j+}</Th>{+else+}
+            <TD>{+$j+}</TD>
+			 {+/if+}
+            {+/if+}
+          {+/foreach+}
+      </tr>
+     {+if $k==0+}</thead>{+/if+} 
+    {+/foreach+}
+    </tbody>
+   </table>
+   <input type="hidden" value="{+$uid+}" name='uid' id='uid' />
+</div>
+</div>
+
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-draggable ui-resizable addtb" tabindex="-1" role="dialog" aria-describedby="shares" aria-labelledby="ui-id-1" style="position: absolute; height: 170px; width: 360px; top: 257px; left: 564.5px; display:none; right: auto; bottom: auto;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle"><span id="ui-id-1" class="ui-dialog-title">2988316036# 占成明细</span><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span><span class="ui-button-text">Close</span></button></div><div id="shares" class="popdiv ui-dialog-content ui-widget-content" style="display: block; width: auto; min-height: 96px; max-height: 346px; height: auto;"><table class="data_table">
+<tbody>
+<TR><Th>子帐号</Th><TD><label id='user0'>{+$username+}</label><input type="text" id='user1' maxlength="4" class="txt1" style="width:40px;" /><input type="hidden" id='action' value="add" /></TD></TR>
+      <TR><Th>密码</Th><TD><input type="password" id='pass1x' class="intext" /></TD></TR>
+      <TR><Th>重复密码</Th><TD><input type="password" id='pass2x' class="intext" /></TD></TR>
+      <TR><th colspan="2" class="tcenter"><input type="button" id='addbtn' class="btn1 btnf" value="新增子帐号" />&nbsp;<input type="button" id='closebtn' class="btn1 btnf" value="关闭" /></th></TR>
+</tbody>
+</table></div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div></div>
+
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-draggable ui-resizable recordtb" tabindex="-1" role="dialog" aria-describedby="shares" aria-labelledby="ui-id-1" style="position: absolute; height:400px; width: 360px; top: 257px; left: 564.5px; display:none; right: auto; bottom: auto;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle"><span id="ui-id-1" class="ui-dialog-title">2988316036# 占成明细</span><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span><span class="ui-button-text">Close</span></button></div><div id="shares" class="popdiv ui-dialog-content ui-widget-content" style="display: block; width: auto; min-height: 96px; max-height: 346px; height: auto;">
+<table class="data_table list ltb table_ball">
+</table></div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div></div>
+<div id='test'></div>
+</body>
+</html>

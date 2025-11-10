@@ -1,0 +1,544 @@
+{+include file='header.html'+}
+
+<style>
+body{font-size:12px;overflow:auto}
+
+.now th{width:50px}
+.now td{width:150px}
+.now td,.now td{text-align:left}
+.now{cursor:pointer}
+.now td:hover{background:#0284c3;color:#eee}
+.now th.bred{background:#0284c3;color:#eee}
+.now td,.now th{font-size:11px}
+
+.lib th.bred{background:#0284c3;color:#eee}
+.lib .up{color:#000}
+.lib .down{color:#000}
+.lib .pl{font-size:12px;color:blue;font-weight:bold}
+.lib .f{}
+.lib .s{color:#D50000;width:60px;}
+.lib .t{}
+.lib .f0{width:30%}
+.lib .fi{width:20%}
+.lib .zcxx{color:#F00}
+.lib label.flyxx{color:#000 !important}
+.lib label.zje{color:#000 !important}
+.lib .fly{background:#FC3}
+.lib .m{font-size:13px;font-weight:bold;cursor:pointer;width:60px;;text-align:center;height:26px;}
+.qiua{margin:auto;float:none;width:26px;height:26px;font-size:14px;background:url(../imgn/ball_blue1.png);line-height:26px;text-align:center}
+.qiub{margin:auto;float:none;width:26px;height:26px;font-size:14px;background:url(../imgn/ball_red1.png);line-height:26px;text-align:center}
+.qiuc{margin:auto;float:none;width:26px;height:26px;font-size:14px;background:url(../imgn/ball_green1.png);line-height:26px;text-align:center}
+.lib th{background:0;font-weight:normal}
+.lib .fb{font-size:15px;background:#e9e9e9;width:42px;font-weight:bold;cursor:pointer}
+.lib .sb{text-align:center;}
+.lib th.byellow{background:yellow}
+.lib .bt{background:#0284c3;font-weight:bold;font-size:14px;color:#eee}
+input.btns{margin:0px;margin-right:2px;margin-top:2px;FONT-WEIGHT:normal;color:#222;border:none;background:#fffeee}
+
+input.small{width:30px;font-size:10px;}
+span,label,td{cursor:pointer}
+.thead input{margin:0}
+.thead select,.thead span,.thead label,.thead input{float:left;margin-right:2px}
+.hide{display:none}
+.show{display:block}
+.w1002{width:994px}
+.w1260{width:1260px}
+td.ext{height:100px}
+td.bo{background:#FC6}
+.butb{width:150px;position:absolute;background:#fff;display:none}
+.xxtb{width:950px;position:absolute;background:#fff;display:none;border:2px solid #000}
+.flytb{width:950px;position:absolute;background:#fff;display:none;border:2px solid #000}
+.onepeilvtb{width:150px;position:absolute;background:#fff;display:none;border:2px solid #000}
+.xxtb td,.xxtb th{word-wrap:break-word;word-break:break-all}
+.flytb td,.flytb th{word-wrap:break-word;word-break:break-all}
+a.red{color:#D50000}
+img{border:0}
+th.z1{background:#69F}
+td.z1{background:#0080C0}
+td.z3{background:#EFE9ED}
+
+.libs th{font-weight:bold;background:#F9FAF1;}
+.libs span{margin-right:5px}
+.libs .pages{padding-left:10px;}
+.libs .pages a{margin-right:5px}
+.libs label{margin-left:3px;margin-right:3px;}
+.pset{width:100%;text-align:left;}
+.pset input{margin-right:1px;}
+.pset .v{float:left;}
+.pset td{height:20px;line-height:20px}
+.tinfo td.warn{background-color:#FFF2F0}
+.tinfo th.warn{background-color:#FFF2F0}
+.lib .flys{background:#FF0;text-decoration:underline}
+.lib .flys:hover{text-decoration:none}
+.sendtb{display:none;position:absolute;width:480px;background:#fff;border:2px solid #6CF}
+.sendtb .txt1{width:40px}
+.downfast{color:#D50000}
+
+input.red{color:#D50000}
+input.blue{color:blue}
+input.green{color:green}
+td.tiao{width:55px !important;}
+input.plmodeclick{color:#D50000}
+label.peilv1{color:orange  !important}
+label.mepeilv1{color:red !important}
+label.zhpeilv1{color:blue !important}
+label.mp1{color:#000 !important}
+label.peilv2{color:orange  !important}
+label.mepeilv2{color:red !important}
+label.zhpeilv2{color:blue !important}
+label.mp2{color:#000 !important}
+label.peilv3{color:orange  !important}
+label.mepeilv3{color:red !important}
+label.zhpeilv3{color:blue !important}
+label.mp3{color:#000 !important}
+
+.duoname{width:180px !important;}
+.duoselect{width:160px !important;}
+.duopl{width:100%;}
+.duopl .m{width:50px;}
+.duopl label.pl{color:blue;font-size:14px;}
+.duopl label.peilv1{color:blue}
+.duopl label.peilv2{color:blue}
+.duopl th{font-weight:bold;background:#F9FAF1;}
+</style>
+</head><body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='slib';
+function json_encode_js(aaa) {
+	function je(str) {
+		var a = [],
+			i = 0;
+		var pcs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		for (; i < str.length; i++) {
+			if (pcs.indexOf(str[i]) == -1) a[i] = "\\u" + ("0000" + str.charCodeAt(i).toString(16)).slice(-4);
+			else a[i] = str[i]
+		}
+		return a.join("")
+	}
+	var i, s, a, aa = [];
+	if (typeof(aaa) != "object") {
+		alert("ERROR json");
+		return
+	}
+	for (i in aaa) {
+		s = aaa[i];
+		a = '"' + je(i) + '":';
+		if (typeof(s) == 'object') {
+			a += json_encode_js(s)
+		} else {
+			if (typeof(s) == 'string') a += '"' + je(s) + '"';
+			else if (typeof(s) == 'number') a += s
+		}
+		aa[aa.length] = a
+	}
+	return "{" + aa.join(",") + "}"
+}
+function getResult(num, n) {
+	return Math.round(num * Math.pow(10, n)) / Math.pow(10, n)
+}
+function getresult(num, n) {
+	return num.toString().replace(new RegExp("^(\\-?\\d*\\.?\\d{0," + n + "})(\\d*)$"), "$1") + 0
+}
+function strlen(sString) {
+	var sStr, iCount, i, strTemp;
+	iCount = 0;
+	sStr = sString.split("");
+	for (i = 0; i < sStr.length; i++) {
+		strTemp = escape(sStr[i]);
+		if (strTemp.indexOf("%u", 0) == -1) {
+			iCount = iCount + 1
+		} else {
+			iCount = iCount + 2
+		}
+	}
+	return iCount
+}
+function rhtml(str) {
+	return str.match(/<a\b[^>]*>[\s\S]*?<\/a>/ig)
+}
+</script>
+<div class="xbody1" style="width:1260px;">
+ <table class="tinfo wd100" >
+  <tr>
+   <th style="text-align:left;height:25px;line-height:25px;" class="thead"> <select id=qishu>
+     
+     
+        {+foreach item=i from=$qishu+}
+     
+     <option value="{+$i+}">{+$i+}期</option>
+     
+     {+/foreach+}
+      
+    
+    </select>
+   <select id=reloadtime>
+     <option value="10">10秒</option>
+     <option value="15">15秒</option>
+     <option value="20">20秒</option>
+     <option value="30">30秒</option>
+     <option value="45">45秒</option>
+     <option value="60" selected>60秒</option>
+    </select>
+    <label class="time"></label>
+    <span>秒</span>
+
+   <input type="button" class="btn3 btnf" value="暂停" id='zanting' />
+    <select id=abcd>
+     <option value="0">ABCD盤</option>
+     <option value="A">A</option>
+     <option value="B">B</option>
+     <option value="C">C</option>
+     <option value="D">D</option>
+    </select>
+    <select id=ab>
+     <option value="0">AB盤</option>
+     <option value="A">A</option>
+     <option value="B">B</option>
+    </select>
+    <select id='xsort' style="display:none">
+     <option value="nane">按號碼排</option>
+     <option value="ks" selected>按盈虧排</option>
+     <option value="zje">按總投排</option>
+     <option value="zc">按占成</option>
+     <option value="zs">按註數</option>
+    </select>
+    <select id='userid' layer='{+$layer+}'>
+     <option value="">選擇下線</option>
+     
+     
+{+section name=i loop=$topuser+}
+
+     
+     <option value="{+$topuser[i].userid+}">{+$topuser[i].username+}</option>
+     
+     
+{+/section+}
+      
+    
+    </select>
+  
+   
+
+    <span>显示方式:</span><select class='libstyle'>
+    <option value='0'>占成/已飞+盈亏</option> 
+    <option value='1'>占成/总投+盈亏</option> 
+    </select> 
+             {+if $flytype==1+}<select id='fly' class="hide"><option value="1">内补</option></select>{+/if+}
+         {+if $flytype==2+}<select id='fly' class="hide"><option value="2">外补</option></select>{+/if+}
+         {+if $flytype==3+}<select id='fly' class="hide"><option value="1">内补</option><option value="2">外补</option></select>{+/if+}
+       {+if ($flytype==1 | $flytype==3)+}  <input type="button" class="btn3 btnf" id='pfly' value="批量补货" />{+/if+}
+    <input type="button" class="btn1 btnf" value="刷新" id='reload' />
+
+    {+if $layer==1 & $ifexe==1+}
+    <input type="button" class="btn3 btnf hide" value="赔率設置" id='pset' />
+<span>赔率:</span>
+    <input type="button" class="plmode btn3 btnf" value="上线" v='1' />    
+    <input type="button" class="plmode btn3 btnf plmodeclick" value="当前赔率" v='3' />
+    {+if $pself!=1+}<input type="button" class="plmode btn3 btnf" value="调节值" v='2' />
+    {+else+}<input type="button" class="plmode btn3 btnf" value="默认赔率" v='4' />{+/if+}
+    
+     {+if $pself==1+}
+    <input type="button" class="btn3 btnf moren" value="寫入默認"  ac='writemoren' />
+    <input type="button" class="btn3 btnf moren" value="恢复默認"  ac='resetmoren' />{+/if+}
+    <input type="button" class="btn3 btnf moren{+if $pself==1+} hide{+/if+}" value="清零"  title="如果使用自定赔率，恢复赔率与上级同步，如果使用上级赔率，调节值清零" ac='resetzero' />
+    {+/if+}
+    <input type="button" class="btn1 downfast btnf" value="下载当前注单"  />
+   </th>
+  </tr>
+ </table>
+  {+if $layer==1 & $ifexe==1+}
+ <table class='tinfo pset'  >
+  <tr>
+   <td style="text-align:left;"><div class="v c101v c108v c109v c110v c111v c112v c113v c115v hide">
+     <input value="双面" class="btns btnf" type="button" />
+     <input value="数字" class="btns btnf" type="button" />
+     <input value="全部" class="btns btnf" type="button" />
+    </div>
+    <div class="v c103v c133v c135v c131v c132v c136v hide">
+     <input value="双面" class="btns btnf" type="button" />
+     <input value="方位" class="btns btnf" type="button" />
+     <input value="中发白" class="btns btnf" type="button" />
+     <input value="数字" class="btns btnf" type="button" />
+     <input value="全部" class="btns btnf" type="button" />
+    </div>
+    
+    <div class="v c121v c123v c125v c127v c129v hide">
+     <input value="双面" class="btns btnf" type="button" />
+     <input value="数字" class="btns btnf" type="button" />
+     <input value="全部" class="btns btnf" type="button" />
+    </div>
+   <div class="v c107v hide">
+     <input value="双面" class="btns btnf" type="button" />
+     <input value="数字" class="btns btnf" type="button" />
+     <input value="全部" class="btns btnf" type="button" />
+    </div>
+   <div class="v c151v c152v c153v c155v c157v hide">
+     <input value="双面" class="btns btnf" type="button" />
+     <input value="数字" class="btns btnf" type="button" />
+     <input value="全部" class="btns btnf" type="button" />
+    </div>
+   <div class="v c161v c162v c163v c117v c118v c119v c116v hide">
+     <input value="双面" class="btns btnf" type="button" />
+     <input value="数字" class="btns btnf" type="button" />
+     <input value="全部" class="btns btnf" type="button" />
+    </div>
+    <div style="float:left;margin-left:10px;">
+  <select id='psettype'>
+     <option value="0">減</option>
+     <option value="1">加</option>
+    </select>
+    <input type="text" style="width:35px;" value="0.1" id='psetattvalue' />
+    <input type="button" class="btn1 btnf" value="加/減" id='psetatt' />
+    <input type="button" class="btn1 btnf" value="送出" id='psetsend' />
+    <input type="button" class="btn1 btnf" value="提交" id='psetpost' />
+    <input type="button" class="btn3 btnf" value="取消修改" id='psetcancel' />
+           {+if $layer==1 & $ifexe==1+}
+ 
+    
+   
+     <input type="button" class="btnf"  value="设置所有双面赔率" id='pism' />
+  
+       <input type="button" class="btnf"  value="以我同步其他彩" id='yiwotongbu' />
+       
+    {+/if+}
+    </div>
+    
+    
+    </td>
+  </TR>
+ </table>
+
+
+{+/if+}
+ <table class="wd100 tinfo now">
+  <Tr> {+section name=i loop=$b+}
+   <th class="n{+$b[i].bid+}">{+$b[i].name+}</th>
+   <td bid='{+$b[i].bid+}' bname='{+$b[i].name+}' class="n nx{+$b[i].bid+}"></td>
+   {+if ($b[i].i==5 | $b[i].i==11)+}</Tr>
+  
+  <tr>{+/if+}
+   {+/section+}
+   <TD colspan="4" style="text-align:left;width:400px;">占成/總/走飛:
+    <label class="zc">0</label>
+    /
+    <label class="zong">0</label>
+    /
+    <label  class="fly">0</label></TD>
+  </Tr>
+ </table>
+ 
+ <table class="sandingwei tinfo wd100" style="display:none"><tr><th p=0>0头</th><td p=0 class="p0"></td><th p=1>1头</th><td p=1 class="p1"></td><th p=2>2头</th><td p=2 class="p2"></td><th p=3>3头</th><td p=3 class="p3"></td><th p=4>4头</th><td p=4 class="p4"></td><th p=5>5头</th><td p=5 class="p5"></td><th p=6>6头</th><td p=6 class="p6"></td><th p=7>7头</th><td p=7 class="p7"></td><th p=8>8头</th><td p=8 class="p8"></td><th p=9>9头</th><td p=9 class="p9"></td></tr></table>
+</div>
+<div class="xbody2" style="width:1260px;">
+ <table class="wd100 tinfo lib" >
+ </table>
+</div>
+
+<div class="xbody1">
+
+</div>
+<input type="hidden" class='sort' orderby='time' sorttype='DESC' page='1' xtype='2' con='' />
+<table class="tinfo xxtb">
+ <tr class="bt">
+  <th>期數</th>
+  <th>交易號</th>
+  <th>類型</th>
+  <th>類別</th>
+  <th>大盤</th>
+  <th>小盤</th>
+  <th>內容</th>
+  <th><a href="javascript:void(0);" class="je">金額<img src="{+$globalpath+}img/down.gif" s='up' /></a></th>
+  <th>赔率</th>
+  <th>退水</th>
+  <th>會員</th>
+  <th><a href="javascript:void(0);" class="time">時間<img src="{+$globalpath+}img/down.gif" s='down' /></a></th>
+ </tr>
+</table>
+<table class="tinfo flytb">
+ <tr class="bt">
+  <th>期數</th>
+  <th>交易號</th>
+  <th>類型</th>
+  <th>類別</th>
+  <th>大盤</th>
+  <th>小盤</th>
+  <th>內容</th>
+  <th>金額</th>
+  <th>赔率</th>
+  <th>退水</th>
+  <th>會員</th>
+  <th>時間</th>
+  <th>手自动</th>
+ </tr>
+</table>
+<table class="tinfo onepeilvtb">
+ <tr>
+  <th>項目</th>
+  <TD></td>
+ </tr>
+ <TR>
+  <th>赔率</th>
+  <TD><input type='text' class="txt1" style="width:50px;"  /></TD>
+ </TR>
+ <TR>
+  <td colspan="2" align="center"><input type="button" class="btn1 btnf onesend"  value='提交'  />
+   <input type="button"  value='關閉' class="btn1 btnf oneclose" style="margin-left:10px;" /></td>
+ </TR>
+</table>
+
+<table class="tinfo sendtb">
+
+</table>
+<iframe id="downfastfrm" style="display:none;" ></iframe>
+<input id='test2' type="text" class="hide"  />
+<div id='test'></div>
+
+<script language="javascript">
+layername= new Array();
+{+foreach item=i from=$layername key=key+}
+layername[{+$key+}]="{+$i+}";
+{+/foreach+}
+var maxlayer = layername.length;
+var layer ={+$layer+} ;
+var pself = 0;
+var ifexe = 0;
+{+if $layer==1+}
+ifexe ={+$ifexe+} ;
+pself ={+$pself+} ;
+{+/if+}
+var style = '{+$class+}';
+var ngid= {+$gid+};
+sma =new Array();
+sma['g101'] = new Array();
+sma['g101'][0] = new Array();
+sma['g101'][0]['name'] = "单";
+sma['g101'][0]['ma'] = new Array(1,3,5,7,9);
+sma['g101'][1] = new Array();
+sma['g101'][1]['name'] = "双";
+sma['g101'][1]['ma'] = new Array(0,2,4,6,8);
+sma['g101'][2] = new Array();
+sma['g101'][2]['name'] = "大";
+sma['g101'][2]['ma'] = new Array(5,6,7,8,9);
+sma['g101'][3] = new Array();
+sma['g101'][3]['name'] = "小";
+sma['g101'][3]['ma'] = new Array(0,1,2,3,4);
+sma['g101'][4] = new Array();
+sma['g101'][4]['name'] = "质";
+sma['g101'][4]['ma'] = new Array(1,2,3,5,7);
+sma['g101'][5] = new Array();
+sma['g101'][5]['name'] = "合";
+sma['g101'][5]['ma'] = new Array(0,2,4,6,7);
+sma['g103'] = new Array();
+sma['g103'][0] = new Array();
+sma['g103'][0]['name'] = "单";
+sma['g103'][0]['ma'] = new Array(1,3,5,7,9,11,13,15,17,19);
+sma['g103'][1] = new Array();
+sma['g103'][1]['name'] = "双";
+sma['g103'][1]['ma'] = new Array(2,4,6,8,10,12,14,16,18,20);
+sma['g103'][2] = new Array();
+sma['g103'][2]['name'] = "大";
+sma['g103'][2]['ma'] = new Array(11,12,13,14,15,16,17,18,19,20);
+sma['g103'][3] = new Array();
+sma['g103'][3]['name'] = "小";
+sma['g103'][3]['ma'] = new Array(1,2,3,4,5,6,7,8,9,10);
+sma['g103'][4] = new Array();
+sma['g103'][4]['name'] = "合单";
+sma['g103'][4]['ma'] = new Array(1,3,5,7,9,10,12,14,16,18);
+sma['g103'][5] = new Array();
+sma['g103'][5]['name'] = "合双";
+sma['g103'][5]['ma'] = new Array(2,4,6,8,11,13,15,17,19,20);
+sma['g103'][6] = new Array();
+sma['g103'][6]['name'] = "尾大";
+sma['g103'][6]['ma'] = new Array(5,6,7,8,9,15,16,17,18,19);
+sma['g103'][7] = new Array();
+sma['g103'][7]['name'] = "尾小";
+sma['g103'][7]['ma'] = new Array(1,2,3,4,10,11,12,13,14,20);
+sma['g103'][8] = new Array();
+sma['g103'][8]['name'] = "春";
+sma['g103'][8]['ma'] = new Array(1,2,3,4,5);
+sma['g103'][9] = new Array();
+sma['g103'][9]['name'] = "夏";
+sma['g103'][9]['ma'] = new Array(6,7,8,9,10);
+sma['g103'][10] = new Array();
+sma['g103'][10]['name'] = "秋";
+sma['g103'][10]['ma'] = new Array(11,12,13,14,15);
+sma['g103'][11] = new Array();
+sma['g103'][11]['name'] = "冬";
+sma['g103'][11]['ma'] = new Array(16,17,18,19,20);
+sma['g103'][12] = new Array();
+sma['g103'][12]['name'] = "金";
+sma['g103'][12]['ma'] = new Array(1,6,11,16);
+sma['g103'][13] = new Array();
+sma['g103'][13]['name'] = "木";
+sma['g103'][13]['ma'] = new Array(2,7,12,17);
+sma['g103'][14] = new Array();
+sma['g103'][14]['name'] = "水";
+sma['g103'][14]['ma'] = new Array(3,8,13,18);
+sma['g103'][15] = new Array();
+sma['g103'][15]['name'] = "火";
+sma['g103'][15]['ma'] = new Array(4,9,14,19);
+sma['g103'][16] = new Array();
+sma['g103'][16]['name'] = "土";
+sma['g103'][16]['ma'] = new Array(5,10,15,20);
+
+sma['g103'][17] = new Array();
+sma['g103'][17]['name'] = "东";
+sma['g103'][17]['ma'] = new Array(1,5,9,13,17);
+sma['g103'][18] = new Array();
+sma['g103'][18]['name'] = "南";
+sma['g103'][18]['ma'] = new Array(2,6,10,14,18);
+sma['g103'][19] = new Array();
+sma['g103'][19]['name'] = "西";
+sma['g103'][19]['ma'] = new Array(3,7,11,15,19);
+sma['g103'][20] = new Array();
+sma['g103'][20]['name'] = "北";
+sma['g103'][20]['ma'] = new Array(4,8,12,16,20);
+
+sma['g103'][21] = new Array();
+sma['g103'][21]['name'] = "中";
+sma['g103'][21]['ma'] = new Array(1,2,3,4,5,6,7);
+sma['g103'][22] = new Array();
+sma['g103'][22]['name'] = "发";
+sma['g103'][22]['ma'] = new Array(8,9,10,11,12,13,14);
+sma['g103'][23] = new Array();
+sma['g103'][23]['name'] = "白";
+sma['g103'][23]['ma'] = new Array(15,16,17,18,19,20);
+
+sma['g105'] = new Array();
+sma['g105'][0] = new Array();
+sma['g105'][0]['name'] = "单";
+sma['g105'][0]['ma'] = new Array(1,3,5,7,9);
+sma['g105'][1] = new Array();
+sma['g105'][1]['name'] = "双";
+sma['g105'][1]['ma'] = new Array(2,4,6,8,10);
+sma['g105'][2] = new Array();
+sma['g105'][2]['name'] = "大";
+sma['g105'][2]['ma'] = new Array(6,7,8,9,10);
+sma['g105'][3] = new Array();
+sma['g105'][3]['name'] = "小";
+sma['g105'][3]['ma'] = new Array(1,2,3,4,5);
+
+sma['g107'] = new Array();
+sma['g107'][0] = new Array();
+sma['g107'][0]['name'] = "单";
+sma['g107'][0]['ma'] = new Array(1,3,5,7,9);
+sma['g107'][1] = new Array();
+sma['g107'][1]['name'] = "双";
+sma['g107'][1]['ma'] = new Array(2,4,6,8,10);
+sma['g107'][2] = new Array();
+sma['g107'][2]['name'] = "大";
+sma['g107'][2]['ma'] = new Array(6,7,8,9,10);
+sma['g107'][3] = new Array();
+sma['g107'][3]['name'] = "小";
+sma['g107'][3]['ma'] = new Array(1,2,3,4,5);
+sma['g107'][4] = new Array();
+sma['g107'][4]['name'] = "质";
+sma['g107'][4]['ma'] = new Array(1,2,3,5,7);
+sma['g107'][5] = new Array();
+sma['g107'][5]['name'] = "合";
+sma['g107'][5]['ma'] = new Array(4,6,8,9,10);
+
+</script>
+<iframe name=sfrm id=sfrm style="display:none;"  ></iframe>
+</body>
+</html>

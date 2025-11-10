@@ -1,0 +1,29 @@
+{+include file='header2.html'+}
+<script language="javascript" src="/js/md5.js"></script>
+</head>
+<body>
+<script language="javascript" id=myjs>var mulu='{+$mulu+}';
+var js=1;var sss='changepass2';
+</script>
+<div class="jt-container">
+    <div class="top_info">
+        <span class="title">变更密码</span>
+    </div>
+        <div class="s_main">
+            <table class="data_table info_table table_ball">
+                <thead><tr><th colspan="2">修改密码</th></tr></thead>
+                <tr><th style="width: 40%">原始密码</th><td class="t_left"><input style="text-align: left" id="oldPassword" name="oldpasswd" type="password" required="required" class="input" /></td></tr>
+                <tr><th>新设密码</th><td class="t_left"><input style="text-align: left" id="password" name="newpasswd" type="password" required="required" class="input" /></td></tr>
+                <tr><th>确认密码</th><td class="t_left"><input style="text-align: left" id="ckPassword" name="confirmpasswd" type="password" required="required" class="input" /></td></tr>
+
+            </table>
+            <div class="data_footer control">
+                &nbsp;<input class="button btn1" type="submit" value="确定" />&nbsp;<input type="reset" class="button btn2" value="重置" />
+            </div>
+            <div class="control fter" style="color: red">
+                
+            </div>
+        </div>
+</div>
+</body>
+</html>

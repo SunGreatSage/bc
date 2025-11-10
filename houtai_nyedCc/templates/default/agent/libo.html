@@ -1,0 +1,177 @@
+{+include file='header.html'+}
+<style>
+html { overflow-x:hidden; }   
+body{font-size:12px;overflow-x:hidden;}
+input{font-size:12px;height:15px;padding:0px;}
+
+
+.now{cursor:pointer;width:100%}
+.now th{width:5%;}
+.now td{width:15%;}
+.now td,.now td{text-align:left}
+.now td:hover{background:#F2ECFF}
+th.bred{background:#FC6}
+.now td,.now th{font-size:11px;}
+
+.lib .f{width:12%}
+.lib .s{width:12%}
+.lib .t{width:28%}
+.lib .fo{width:24%}
+.lib .fi{width:24%}
+.lib th{background:none}
+.lib img.dis{FILTER: gray}
+
+.lib td,.lib td{font-size:11px;text-align:left;padding-left:2px;}
+
+.lib .one{width:30%;height:50px;line-height:25px;}
+.lib .two{width:40%;height:50px;line-height:25px;}
+.lib .three{width:30%;height:50px;line-height:25px;}
+.lib .w200{width:100%;}
+
+input.btns{margin:0px;padding:0px;background:#DAE3FE;margin-right:2px;margin-top:2px;}
+input.bred{background:red}
+input.small{width:30px;height:16px;line-height:16px;padding:0px;margin:0px;border:1px solid #000;font-size:12px;}
+span,label,td{cursor:pointer}
+
+.thead input{margin:0px;}
+.thead select,.thead span,.thead label,.thead input{float:left;margin-right:2px;}
+
+
+.hide{display:none}
+.show{display:block}
+
+.pset td{x-height:30px;}
+.pset .btns:hover{background:#FC6}
+.pset input.click{background:#C66}
+
+.w1002{width:994px;}
+.w1330{width:1330px;}
+
+td.ext{height:100px;}
+th.bo{background:#FC6}
+
+.butb{width:150px;position:absolute;background:#fff;display:none;}
+.butbwai{width:150px;position:absolute;background:#fff;display:none;}
+
+.xxtb{width:950px;position:absolute;background:#fff;display:none;border:2px solid #000}
+.flytb{width:950px;position:absolute;background:#fff;display:none;border:2px solid #000}
+.xxtb td,.xxtb th{word-wrap:break-word;word-break:break-all;}
+.flytb td,.flytb th{word-wrap:break-word;word-break:break-all;}
+
+
+a.red{color:#D50000}
+img{border:none}
+
+td.z1{background:#E1E0FE}
+td.z3{background:#F4E8CE}
+
+
+.ztnow {width:100%}
+.ztnow th{width:66px;}
+.ztnow td{width:150px;}
+.ztnow td:hover{background:#F2ECFF}
+
+.libs span{margin-right:5px;}
+.libs .pages a{margin-right:5px;}
+
+</style>
+</head>
+<body >
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='libo';
+</script>
+<div class="xbody1">
+<table class="tinfo wd100" >
+<tr><th style="text-align:left;height:25px;line-height:25px;" class="thead">
+      <select id=qishu>
+        {+foreach item=i from=$qishu+}<option value="{+$i+}">{+$i+}期</option>{+/foreach+}
+      </select><span>刷新</span><select id=reloadtime>
+        <option value="10">10秒</option><option value="15">15秒</option><option value="20">20秒</option><option value="30">30秒</option><option value="45">45秒</option><option value="60" selected>60秒</option>
+      </select><label class="time"></label><span>秒刷新</span><!--<select id=goods><option value="0">实货</option><option value="1">虚货</option></select>--><span>盘口</span><select id=abcd>
+      {+if $pantype=='0'+}
+      <option value="0">大盘</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
+      {+else+}
+     <option value="{+$pantype+}">{+$pantype+}</option>
+      {+/if+}
+      </select>
+      <select id=ab><option value="0">AB盘</option><option value="A">A</option><option value="B">B</option></select><input type="checkbox" value="1" id=huama /><span>化码</span>
+
+      <select id='xsort'><option value="nane">按号码排</option><option value="ks" selected>按盈亏排</option><option value="zje">按总投排</option><option value="zc">按占成</option><option value="zs">按注数</option></select>
+      <select id='userid' layer='{+$layer+}'>
+<option value="">选择下线</option>
+{+section name=i loop=$topuser+}
+<option value="{+$topuser[i].userid+}">{+$topuser[i].username+}</option>
+{+/section+}
+      </select><input type="hidden" id='setks' value="0" />
+      <span class="ks">亏损</span><input type="text" id="maxksvalue" value="{+$maxks+}" other='{+$maxcm+}' tm='{+$maxks+}' style="width:45px;" /><input type="button" id='maxksbtn' value="修改" class="btn1 btnf" />
+      {+if $fly!=0+}
+         {+if $fly==1+}<select id='fly'><option value="1">内补</option></select>{+/if+}
+         {+if $fly==2+}<select id='fly'><option value="2">外补</option></select>{+/if+}
+         {+if $fly==3+}<select id='fly'><option value="1">内补</option><option value="2">外补</option></select>{+/if+}
+         <input type="button" class="btn3 btnf" id='pfly' value="批量补货" />
+      {+/if+}
+      <input type="button" class="btn1 btnf" value="刷新" id='reload' /><input type="button" class="btn1 btnf" value="打印" id='print' /><!--<a href='http://baidu.com/read/agent.html' target="_blank" style="margin-left:10px;color:#D50000">使用说明</a>-->
+      </th></tr>
+
+</table>
+
+<table class="wd100 tinfo now">
+  <Tr> 
+{+section name=i loop=$b+}
+<th class="n{+$b[i].cid+}">{+$b[i].name+}</th><td cid='{+$b[i].cid+}' cname='{+$b[i].name+}' class="n nx{+$b[i].cid+}"></td>
+  {+if ($b[i].i==4 | $b[i].i==9 | $b[i].i==14)+}</Tr><tr>{+/if+}
+{+/section+}
+<TD colspan="3" style="text-align:left;;">占成/总/补货:<label class="zc">0</label>/<label class="zong">0</label>/<label  class="fly">0</label></TD>
+<td colspan="5" style="white-space:nowrap;">0/0/0/0 分别是:实占成/总投/注单数/补货 &nbsp;&nbsp;注:补货金额不能大于占成金额</td>
+</Tr>
+</table>
+
+<table class="wd100 tinfo ztnow" style="display:none" >
+  <Tr> 
+{+section name=i loop=$zt+}
+<th class="zt{+$zt[i].cid+}">{+$zt[i].name+}</th><td cid='{+$zt[i].cid+}' cname='{+$zt[i].name+}' class="zt{+$zt[i].cid+}"></td>
+{+/section+}
+</tr>
+</table>
+
+</div>  
+<div class="xbody1">
+<table class="wd100 tinfo lib ">
+
+</table>
+</div>
+<table class="butb tinfo">
+<tr><th>类别</th><td></td></tr>
+<tr><th>项目</th><td><label pid=''></label></td></tr>
+<tr><th>赔率</th><td><label></label><input type="text" class="bupeilv1 txt1" /></td></tr>
+<tr><th>赔率2</th><td><label></label><input type="text" class="bupeilv2 txt1" value="0" /></td></tr>
+<tr><th>退水</th><td><input type="text" class="bupoints txt1" /></td></tr>
+<tr><th>金额</th><td><input type="text" class="buje txt1" /></td></tr>
+<tr><th>投|注内容</th><td></td></tr>
+<tr><th>补货类型</th><td><select class="fly"></select></td></tr>
+<tr><td colspan="2"><input type="button" class="btn1 btnf sendbu" value="补" /><input style="margin-left:20px;" type="button" 
+class="btn1 btnf cbtn" value="取消" /></td></tr>
+</table>
+<div class="xbody1">
+<table class="wd100 tinfo libs hide">
+<tr><th colspan="3">每页显示：<span>30</span><span class="red">60</span><span>90</span><span>150</span><span>300</span><input  type="hidden" class="spage" value="1" /></th><th colspan="6" style="padding-left:10px;" class='pages'></th></tr>
+<tr><th>期数</th><th>类别</th><th>内容</th><th>注数</th><th>总投</th><th>占成</th><th>预计亏损</th><th>已飞</th><th>补</th></tr>
+</table>
+
+
+</div>
+<input type="text"  class='tests hide' />
+<input type="hidden" class='sort' orderby='time' sorttype='DESC' />
+<input type="hidden" class='page' value='1' />
+<input type="hidden" class='ttype' value='2' />
+<table class="tinfo xxtb">
+<tr class="bt"><th>期数</th><th>交易号</th><th>类型</th><th>类别</th><th>大盘</th><th>小盘</th><th>内容</th><th><a href="javascript:void(0);" class="je">金额<img src="{+$globalpath+}img/down.gif" s='up' /></a></th><th>赔率</th><th>退水</th><th>会员</th><th><a href="javascript:void(0);" class="time">时间<img src="{+$globalpath+}img/down.gif" s='down' /></a></th></tr>
+</table>
+
+<table class="tinfo flytb">
+<tr class="bt"><th>期数</th><th>交易号</th><th>类型</th><th>类别</th><th>大盘</th><th>小盘</th><th>内容</th><th>金额</th><th>赔率</th><th>退水</th><th>会员</th><th>时间</th><th>手自动</th></tr>
+</table>
+<iframe name=sfrm id=sfrm style="display:none;"  ></iframe>
+<div id='test'></div>
+</body>
+</html>

@@ -1,0 +1,60 @@
+{+include file='header2.html'+}
+</head>
+<body id="topbody">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='flyrecd';
+</script>
+<style>
+   table td .pagination {
+    text-align: left!important;
+   
+}
+  .time {
+            width: 15%;
+        }
+</style>
+<div class="jt-container">
+<div class="top_info">
+<span class="title">资料变更记录</span>
+ <span class="right"><a onclick="history.back()" class="back" href="javascript:;">返回</a></span>
+</div>
+<div class="s_main">
+<table class="table_ball data_list list ">
+<thead><tr><th>序  号</th><th>变更时间</th><th>变更类别</th><th>原始值</th><th>变更值</th><th>变更人</th><th>IP</th><th>IP归属</th><th>操作人</th><th>被改帐号</th></tr></thead>
+<tbody>
+{+section name=i loop=$log+}
+<tr>
+	<td>{+$log[i].id+}</td>
+    <td class="time">{+$log[i].moditime+}</td>
+    <td>{+$log[i].title+}</td>
+    <td>{+$log[i].oldvalue+}</td>
+    <td>{+$log[i].newvalue+}</td>
+    <td>{+$log[i].modiuser+}(代理)</td>
+	<td>{+$log[i].ip+}</td>
+	<td>{+$log[i].addr+}</td>
+	<td>{+$log[i].modiuser+}(代理)</td>
+	<td>{+$log[i].modiuser+}(代理)</td>
+	</tr>
+{+/section+}
+</tbody>
+</table>
+<table>
+            <tbody><tr>
+                <td style="width:420px">
+                    <div class="info_tishi">注意：修改记录最少被保留15天、超过15天部分最多保留最后50笔。
+                     
+                    </div>
+                </td>
+                <td>
+                    <div class="pagination page_info page_control page" id="OperationLog_page" page="{+$page+}" pcount="{+$pcount+}" uid='{+$uid+}' ></div>
+                </td>
+            </tr>
+        </tbody></table>
+
+</div>
+
+
+
+</div>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="renderer" content="webkit" />
+    <title>最新公告</title>
+    
+    
+        <link href="/Areas/Mobile/Scripts/jqWeUi/lib/weui.min.css" type="text/css" rel="stylesheet" />
+        <link href="/Areas/Mobile/Scripts/jqWeUi/css/jquery-weui.min.css" type="text/css" rel="stylesheet" />
+        <link href="/Areas/Mobile/Content/css/main.min1.css" rel="stylesheet" type="text/css" />
+        <link href="/Areas/Mobile/Content/font/iconfont.min.css" rel="stylesheet" type="text/css" />
+        <link href="/Areas/Mobile/Content/LCalendar/css/LCalendar.min.css" rel="stylesheet" type="text/css" />
+        <link href="/Areas/Mobile/Content/css/blue/skin.min.css" rel="stylesheet" type="text/css" />
+<div class="head_box">
+    <h1>最新公告</h1>
+</div>
+<div class="list_notice_container">
+    <div class="content-wrap">
+        <div class="content">
+            <div class="main marT">
+                <div class="news_box">
+				{+section name=i loop=$news+}
+                                <div class="item">
+                                    <h2>{+$news[i].time+}</h2>
+                                    <div class="con">
+                                        {+$news[i].content+}
+                                    </div>
+                                </div>
+								{+/section+}
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="list_notice_fdown">
+    <div class="btn_menu">
+        <a class="red_btn" href="/Mobile/Index?xtype=show">立即投注</a>
+    </div>
+    <div id="pager"></div>
+</div>
+    
+</body>
+</html>

@@ -1,0 +1,664 @@
+.jt-container {
+    padding: 10px
+}
+
+.top_w {
+    background: url("images/top_bg.jpg") repeat-x
+}
+
+.top_w .top_menu a {
+    background: url("images/top_menu.png") no-repeat center;
+    color: #ffe288
+}
+
+.top_w .top_menu a:hover {
+    color: #fff
+}
+
+.top_w .top_box {
+    background: url("images/top_box.png") no-repeat center
+}
+
+.sub_w {
+    background: url("images/sub_bg.png") #2161b3 repeat-x top center
+}
+
+.sub_w .right_btns a {
+    border: 1px solid #fccf62
+}
+
+.sub_w .right_btns a.left_arrow {
+    background: url("images/left_arrow.png") no-repeat center
+}
+
+.sub_w .right_btns a.right_arrow {
+    background: url("images/right_arrow.png") no-repeat center
+}
+
+.sub_w .up_btns a {
+    border: 1px solid #fccf62
+}
+
+.sub_w .up_btns a.arrowup {
+    background: url("images/up_arrow.png") #fccf62 no-repeat center
+}
+
+.sub_w .up_btns a.arrowdown {
+    background: url("images/down_arrow.png") #fccf62 no-repeat center
+}
+
+.sub_box {
+    background: url("images/ss_bg.png") repeat-x center top
+}
+
+.sub_box li {
+    border-left: 1px solid #a0a0a0;
+    color: #fff
+}
+
+.sub_box a {
+    color: #3c4454;
+    border: 1px solid transparent
+}
+
+.sub_box a:hover {
+    background: #e91c2c;
+    color: #fff;
+    border: 1px solid #d81020
+}
+
+.sub_box a.c_curr {
+    background: #e91c2c;
+    color: #fff;
+    border: 1px solid #d81020
+}
+
+.tab_con a {
+    color: #fff;
+    margin-top: 2px
+}
+
+.tab_con a.hover {
+    background: #fcf1ca;
+    color: #921b00
+}
+
+.sider-left {
+    background: #e6e6e6;
+    box-shadow: -2px 0 5px #c2baad inset
+}
+
+.left_menu .acc_box {
+    border: 1px solid #d5af6e
+}
+
+.left_menu .acc_box table {
+    background: #fff;
+    border-radius: 5px
+}
+
+.left_menu .acc_box tr td {
+    border-bottom: 1px solid #d8c28a
+}
+
+.pk_con li {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    border-radius: 2px;
+    border: 1px solid #bfcad0;
+    background: #fff;
+    margin-right: 2px;
+    color: #808080;
+    cursor: pointer
+}
+
+.pk_con li.p_curr {
+    color: #f00;
+    background: #e7f2f8
+}
+
+.left_btn {
+    background: url("images/btn_bg4.png") repeat-x center;
+    color: #fff;
+    border: 1px solid #d5af6e;
+    box-shadow: 0 0 1px #fff inset
+}
+
+.left_btn:hover {
+    background: #c09134
+}
+
+.menu1 {
+    padding: 5px;
+    color: #ffd100
+}
+
+.left_tab {
+    background: url("images/btn_bg2.png") repeat-x center;
+    color: #fffbd0;
+    display: block;
+    border: 1px solid #d5af6e
+}
+
+.left_tab a {
+    border-right: 1px solid #debe79;
+    color: #fff
+}
+
+.left_tab a.hover {
+    color: #fcf307;
+    font-weight: bold
+}
+
+.left_con {
+    border: 1px solid #d5af6e;
+    background: #fff
+}
+
+.acc_box tr {
+    border: none
+}
+
+.three_btns a {
+    background: url("images/btn_bg5.png") #eb611c repeat-x top center;
+    color: #fff;
+    border: 1px solid #f4521b
+}
+
+.three_btns a:hover {
+    background: #f40
+}
+
+.kf_btn {
+    background: url("images/btn_bg4.png") repeat-x center;
+    border: 1px solid #c09134
+}
+
+.kf_btn:hover {
+    background: #c09134
+}
+
+.menu1 .draw_number {
+    font-weight: bold;
+    color: #fff
+}
+
+.menu1 a i {
+    color: #fff
+}
+
+.plus {
+    color: #fff
+}
+
+body {
+    background-color: #fff
+}
+
+.lottery_info {
+    background: #f1f1f1;
+    border: 1px solid #d5af6e
+}
+
+.floatright {
+    color: #333
+}
+
+.table_ball thead th {
+    background: url("images/bg2.png") repeat-x left top;
+    color: #921b00
+}
+
+.table_ball tbody th {
+    background: #fcfaed
+}
+
+.list th,.list td {
+    border: 1px solid #dad4cb;
+    color: #4f4d4d
+}
+
+.list th {
+    padding: 0 5px
+}
+
+.lottery_info #gameName {
+    color: #333;
+    background: url("images/m_ico2_c.png") no-repeat 0 center
+}
+
+#header .result {
+    color: #fff
+}
+
+#bresult {
+    border: 1px solid #c3a318
+}
+
+.top_info .right a {
+    color: #921b00
+}
+
+.bet_panel .name {
+    background: none repeat 0 0 #fffadc
+}
+
+.table_ball thead th,.table_ball .head th {
+    background: url("images/bg2.png") repeat-x left bottom;
+    color: #613122
+}
+
+.control .buttons {
+    bordeer: 1px solid #dad4cb;
+    vertical-align: top
+}
+
+.control .buttons {
+    vertical-align: top
+}
+
+.control .money_btns a {
+    height: 24px;
+    line-height: 24px
+}
+
+.control .button {
+    background: url(images/btn_bg1.png) repeat-x 0 0;
+    border: 1px solid #f4521b;
+    box-shadow: 0 0 1px #fff inset
+}
+
+.control .button:hover {
+    background: url("images/btn_bg1.png") repeat-x 0 0
+}
+
+#changlong a {
+    color: #762d08
+}
+
+.tab .tou_btns .button {
+    background: url(images/btn_bg1.png) repeat-x 0 0;
+    border: 1px solid #f4521b;
+    box-shadow: 0 0 1px #fff inset
+}
+
+.tab .tou_btns .button:hover {
+    background: #f97b09
+}
+
+.table_ball th,.table_ball td {
+    border-color: #dad4cb;
+    color: #4f4d4d
+}
+
+.tab_title02 {
+    background: url(images/tab_bg10.png) repeat-x center bottom
+}
+
+.tab_title02 a {
+    background: url(images/tab_bg10.png) no-repeat left -32px;
+    color: #555
+}
+
+.tab_title02 .on {
+    color: #921b00;
+    background: url(images/tab_bg10.png) no-repeat left top
+}
+
+.tab_title02 a:hover {
+    color: #921b00
+}
+
+.bet_panel .amount input {
+    border: #dad4cb 1px solid;
+    background: url(images/text_input.gif) #fff repeat-x left top
+}
+
+#changlong .table_side,.skin_blue .quick_sec_table .table_side {
+    background: url("images/bg2_org.png") repeat-x left top;
+    color: #921b00
+}
+
+.bar_tit {
+    border-bottom: 2px solid #d8c28a
+}
+
+.bar_tit b {
+    color: #921b00;
+    border-bottom: 2px solid #921b00
+}
+
+.search input {
+    border: 1px solid #bbc4ce
+}
+
+.search select {
+    border: 1px solid #bbc4ce
+}
+
+.search .button {
+    background: url(images/btn_bg1.png) #eb611c repeat-x 0 0;
+    box-shadow: 0 0 1px #fff inset
+}
+
+.sub_w2 {
+    background: #ffe8b7;
+    border: 1px solid #dad4cb
+}
+
+.sub_w2 .right_btns a {
+    border: 1px solid #fccf62
+}
+
+.sub_w2 .right_btns a.left_arrow {
+    background: url("images/left_arrow.png") #79470c no-repeat center
+}
+
+.sub_w2 .right_btns a.right_arrow {
+    background: url("images/right_arrow.png") #79470c no-repeat center
+}
+
+.tab_con2 a {
+    color: #921b00
+}
+
+.tab_con2 a.hover {
+    border-left: 1px solid #dad4cb;
+    border-right: 1px solid #dad4cb;
+    border-top: 2px solid #dad4cb;
+    border-bottom: 1px solid #f1ece4;
+    color: #bd0000;
+    background: #fff
+}
+
+.data_table tbody th {
+    background: url("images/right_bg.png") #fff repeat-x left top;
+    color: #921b00
+}
+
+.kj_style tbody th {
+    background: url("images/bg2.png") #f9f9f9 repeat-x left bottom;
+    color: #921b00
+}
+
+#pager ul.pages li.pgEmpty {
+    border: 1px solid #ddd;
+    color: #921b00;
+    background: #f9f9f9
+}
+
+#pager ul.pages li.pgCurrent {
+    border: 1px solid #921b00;
+    color: #fff;
+    background-color: #921b00
+}
+
+.tit_box {
+    background: #f4f4f4;
+    color: #921b00
+}
+
+.user_top {
+    background: url("images/user_top.jpg") #f8f5fa no-repeat right top;
+    border-bottom: 2px solid #921b00
+}
+
+.user_top p .ico_phone {
+    background: url("images/ico_phone.png") no-repeat center
+}
+
+.user_top p .ico_mail {
+    background: url("images/ico_mail.png") no-repeat center
+}
+
+.user_top p .ico_bri {
+    background: url("images/ico_bri.png") no-repeat center
+}
+
+.user_top .user_menu a {
+    background: url("images/user_m2.png") repeat-x center
+}
+
+.user_top .user_menu a.hover {
+    background: url("images/user_m1.png") repeat-x center
+}
+
+.orange_btn {
+    background: url(images/btn_bg5.png) #eb611c repeat-x 0 0;
+    border: 1px solid #f4521b
+}
+
+.blue_btn {
+    background: url(images/btn_bg5.png) #2161b3 repeat-x 0 0;
+    border: 1px solid #f4521b;
+    color: #fff !important;
+    text-decoration: none !important
+}
+
+.blue_btn:hover {
+    background: #f40
+}
+
+.safe_tip {
+    background: url("images/bell.png") #fffbeb no-repeat 5px center;
+    padding-left: 22px
+}
+
+.safe_box li i .ico_finish {
+    background: url(images/ico_finish.png) no-repeat 0 0
+}
+
+.safe_box li .safe_1 {
+    background: url(images/safe_1.png) no-repeat center
+}
+
+.safe_box li .safe_2 {
+    background: url(images/safe_2.png) no-repeat center
+}
+
+.safe_box li .safe_3 {
+    background: url(images/safe_3.png) no-repeat center
+}
+
+.safe_box li .safe_4 {
+    background: url(images/safe_4.png) no-repeat center
+}
+
+.safe_box li .safe_5 {
+    background: url(images/safe_5.png) no-repeat center
+}
+
+.safe_box li .safe_6 {
+    background: url(images/safe_6.png) no-repeat center
+}
+
+.safe_box li .safe_7 {
+    background: url(images/safe_7.png) no-repeat center
+}
+
+.d_bank_list .select i {
+    background: url(images/selected.png) no-repeat
+}
+
+.msg_box {
+    border: 1px solid #d5af6e
+}
+
+.msg_box .msg_tit {
+    background: url(images/btn_bg2.png) repeat-x center
+}
+
+.no_read {
+    background: url(images/no_read.png) no-repeat 5px center
+}
+
+.user_tit {
+    border-bottom: 1px solid #ddd
+}
+
+.user_tit b {
+    border-bottom: 1px solid #921b00;
+    color: #921b00
+}
+
+.u_tab a.hover {
+    border-bottom: 1px solid #921b00;
+    color: #921b00
+}
+
+.step-header li span {
+    background: url(images/cell.png) center top no-repeat
+}
+
+.step-header li.step-active span {
+    background: url(images/cell-active.png) center top no-repeat
+}
+
+.step-bar {
+    background: url(images/bar-bg.png)
+}
+
+.step-bar-active {
+    background: url(images/bar-bg-active.png)
+}
+
+.s_tab a.hover {
+    color: #921b00;
+    border-top: 1px solid #faba4c
+}
+
+.jy_box a {
+    color: #921b00
+}
+
+#cdClose {
+    color: #e4430a;
+    background: #fff;
+    border: 1px solid #e6b7b7
+}
+
+#cdDraw {
+    color: #e4430a;
+    background: #fff;
+    border: 1px solid #e6b7b7
+}
+
+#bresult {
+    color: #e4430a;
+    background: #fff;
+    border: 1px solid #e6b7b7
+}
+
+#header .result {
+    color: #f22000
+}
+
+.tab_right {
+    margin: 0;
+    margin-bottom: 10px
+}
+
+.tab_right .tab_title02 a {
+    margin-left: 0
+}
+
+.tab_right .tab_title02 a:nth-child(2) {
+    margin-left: 4px
+}
+
+.tb_jiao td {
+    background-color: #ddd
+}
+
+.tb_jiao td.name {
+    background-color: #ddd
+}
+
+.ui-dialog-buttonset {
+    border: 1px solid #f1deb2;
+    text-align: center;
+    padding: 8px 0;
+    -webkit-border-bottom-right-radius: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    background: #f1deb2
+}
+
+.ui-dialog-buttonset button:hover {
+    background: #ca8e40
+}
+
+.spritearrow {
+    background: url(images/arrowsprite.png) no-repeat top left
+}
+
+.lotterys .selected {
+    background: #fcf1ca
+}
+
+.lotterys a:hover {
+    background: #fcf1ca;
+    color: #1e579f
+}
+
+.lotterys .selected2 {
+    background: #fcf1ca;
+    color: #1e579f !important
+}
+
+.lotterys .selected2 #moregameicon {
+    background: url(images/down_arrow2.png) no-repeat 90% center
+}
+
+.lotterys .selected2 a:hover {
+    background: #845d15;
+    color: #1e579f
+}
+
+.lotterys .gamecontainer a.selected {
+    background: #845d15
+}
+
+.menumoregame {
+    background: #886015
+}
+
+.gamecontainer {
+    background-color: #e7e7e7;
+    border: 1px solid #e7e7e7
+}
+
+.lotterys .gamecontainer a {
+    background-color: #855f15
+}
+
+.lotterys .gamecontainer a:hover {
+    background-color: #845d15;
+    color: #fff
+}
+
+.gamebtn1 {
+    background-color: #ca8e40;
+    border: 1px solid #ca8e40
+}
+
+.trans_btn {
+    background: url("images/btn_bg5.png") #eb611c repeat-x top center;
+    color: #fff;
+    border: 1px solid #f4521b
+}
+
+.trans_btn:hover {
+    background: #f40
+}
+
+.menue_btn_back {
+    background: url(images/btn_bg3.png) repeat-x 0 0;
+    border: 1px solid #bb9205
+}

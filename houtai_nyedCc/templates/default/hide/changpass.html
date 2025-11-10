@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>{+$title+}</title>
+<link href="/css/default/jquery-ui.css" rel="stylesheet" type="text/css" />
+<link href="/css/default/master.css" rel="stylesheet" type="text/css" />
+<link href="/css/default/layout.css" rel="stylesheet" type="text/css" />
+<script language="javascript" src="/js/jquery-1.8.3.min.js"></script>
+<script language="javascript" src="/js/md5.js"></script>
+<script type="text/javascript">
+{+if $first==0+}
+  alert("您已經超{+$passtime+}天沒有更改密碼，必須更改密碼才能登陸");
+{+else+}
+  alert("您第一次登陸，必須更改密碼後才能登陸");
+{+/if+}
+</script>
+</head>
+<body class="{+$skin+}">
+<script type="text/javascript" id="myjs">var mulu='{+$mulu+}';
+var js=1;
+var sss="changepass";
+</script>
+<div class="main">
+<div class="top_info">
+<span class="title">变更密码</span>
+</div>
+<div class="contents">
+<table class="data_table info_table">
+<tr><th>原始密码</th><td><input id="oldpassword" type="password" class="input" /></td></tr>
+<tr><th>新设密码</th><td><input id="password" type="password" class="input" /></td></tr>
+<tr><th>确认密码</th><td><input id="ckpassword" type="password" class="input" /></td></tr>
+</table>
+</div>
+<div class="data_footer control">&nbsp;<input class="button qd" type="button" value="确定修改" />&nbsp;</div>
+</div>
+</body>
+</html>

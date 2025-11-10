@@ -1,0 +1,62 @@
+{+include file='header2.html'+}
+<body class="L_HK6">
+  <script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='betinfo';</script>  
+
+
+
+<div class="jt-container s_main">
+    <div class="header clear">
+    </div> 
+    <div id="middle-content" class="middle-content clear" style="height: 2048px;"> 
+        <div class="main-content">
+            <div class="main-content-in">
+                <div id="content" class="content ios" style="height: 2048px;">
+                    <table class="data_table info_table panel">
+                        <thead><tr><th colspan="2">注单备份</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <th class="ft_sd te-rt" width="20%">下注账号：</th>
+                                <td>
+                                    <input type="text" name="agentId" id="agentId" />  说明：选填，若不填则导出所有注单。
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="ft_sd te-rt">彩种：</th>
+                                <td>
+                                    <select id="lotteryType">
+                                        <option value="">请选择彩种</option>
+										{+section name=i loop=$game+}
+    {+if $game[i].fast==0+}<option value="{+$game[i].gid+}">{+$game[i].gname+}</option>{+$game[i].gname+}</a>{+/if+}
+    {+/section+}
+                                           
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="ft_sd te-rt">导出期数：</th>
+                                <td>
+                                   <span id=qishu>选择彩种后获取期数</span>
+                                </td>
+                            </tr>
+							 <tr>
+                                <th class="ft_sd te-rt">导出状态：</th>
+                                <td>
+                                   <span id=status>选择彩种后获取状态</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="data_footer control">
+                        <input type="button" id="ExportBetInfo" class="button bnt_1" value="导出注单" />
+                    </div>
+					
+                </div>
+            </div>
+        </div>
+
+    </div> 
+</div>
+   <iframe id="downfastfrm" style="display:none;" ></iframe> 
+
+</body>
+</html>

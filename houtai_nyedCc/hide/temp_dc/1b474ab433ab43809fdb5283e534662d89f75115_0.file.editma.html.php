@@ -1,0 +1,240 @@
+<?php
+/* Smarty version 3.1.48, created on 2024-05-07 19:40:33
+  from '/www/wwwroot/lhc/houtai/templates/default/hide/editma.html' */
+
+/* @var Smarty_Internal_Template $_smarty_tpl */
+if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
+  'version' => '3.1.48',
+  'unifunc' => 'content_663a1331a6dd19_30229900',
+  'has_nocache_code' => false,
+  'file_dependency' => 
+  array (
+    '1b474ab433ab43809fdb5283e534662d89f75115' => 
+    array (
+      0 => '/www/wwwroot/lhc/houtai/templates/default/hide/editma.html',
+      1 => 1681187126,
+      2 => 'file',
+    ),
+  ),
+  'includes' => 
+  array (
+    'file:header2.html' => 1,
+  ),
+),false)) {
+function content_663a1331a6dd19_30229900 (Smarty_Internal_Template $_smarty_tpl) {
+$_smarty_tpl->_subTemplateRender('file:header2.html', $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array(), 0, false);
+?>
+<link href="/default/css/jquery.loadmask.css" rel="stylesheet" />
+<?php echo '<script'; ?>
+ src="/js/sitetool.js?v=004"><?php echo '</script'; ?>
+>
+<?php echo '<script'; ?>
+ src="/js/jquery.loadmask.js?v=004"><?php echo '</script'; ?>
+>
+<?php echo '<script'; ?>
+ id=myjs language="javascript">var mulu='<?php echo $_smarty_tpl->tpl_vars['mulu']->value;?>
+';var js=1;var sss='editma';<?php echo '</script'; ?>
+>
+</head>
+<body>
+<div class="jt-container">
+	<div class="top_info">
+        <span class="title">玩法属性</span>
+        <div class="center">
+
+        </div>
+        <div class="right" style="display:inline;">
+            <input type="button" value="保存" class="button edit btn4">
+        </div>
+    </div>
+	<div class="s_main">
+	<div id="con_six" class="hover" >
+    <table class="layout">
+        <tr>
+            <td class="panel">
+                <table class="list table_ball at_2 s_tb">
+ <thead>
+ <TR>
+ <th>种类</th><th>号码</th><th>操作</th><th style="display: none;">删除</th>
+ </TR></thead>
+ <tbody class="tablelist">
+ <?php
+$_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['ma']->value, 'cc', false, 'key', 'co', array (
+  'index' => true,
+));
+$_smarty_tpl->tpl_vars['cc']->do_else = true;
+if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['key']->value => $_smarty_tpl->tpl_vars['cc']->value) {
+$_smarty_tpl->tpl_vars['cc']->do_else = false;
+$_smarty_tpl->tpl_vars['__smarty_foreach_co']->value['index']++;
+?>
+  <?php if ((isset($_smarty_tpl->tpl_vars['__smarty_foreach_co']->value['index']) ? $_smarty_tpl->tpl_vars['__smarty_foreach_co']->value['index'] : null) <= $_smarty_tpl->tpl_vars['nums']->value) {?>
+   <TR>
+       <th class="para_pjName"><INPUT  style="display: none;" type='text'  class="name"  value="<?php echo $_smarty_tpl->tpl_vars['key']->value;?>
+" size=10  /><?php echo $_smarty_tpl->tpl_vars['key']->value;?>
+</th>
+       <td class='v'><INPUT type='text'  style="width: 250px;" class="val"   value="<?php echo $_smarty_tpl->tpl_vars['cc']->value;?>
+" size=100 /></td>
+       <td></td>
+       <td style="display: none;"><input type="button" class='del btnf' value='删除' /></td>
+   </TR>
+    <?php }?>
+ <?php
+}
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?>
+ </tbody>
+  </table>
+           </td>     
+		   
+		   <td class="panel">
+                <table class="list table_ball at_2 s_tb">
+ <thead>
+ <TR>
+ <th>种类</th><th>号码</th><th>操作</th><th style="display: none;">删除</th>
+ </TR></thead>
+ <tbody class="tablelist">
+ <?php
+$_from = $_smarty_tpl->smarty->ext->_foreach->init($_smarty_tpl, $_smarty_tpl->tpl_vars['ma']->value, 'cc', false, 'key', 'co', array (
+  'index' => true,
+));
+$_smarty_tpl->tpl_vars['cc']->do_else = true;
+if ($_from !== null) foreach ($_from as $_smarty_tpl->tpl_vars['key']->value => $_smarty_tpl->tpl_vars['cc']->value) {
+$_smarty_tpl->tpl_vars['cc']->do_else = false;
+$_smarty_tpl->tpl_vars['__smarty_foreach_co']->value['index']++;
+?>
+  <?php if ((isset($_smarty_tpl->tpl_vars['__smarty_foreach_co']->value['index']) ? $_smarty_tpl->tpl_vars['__smarty_foreach_co']->value['index'] : null) > $_smarty_tpl->tpl_vars['nums']->value) {?>
+   <TR>
+       <th class="para_pjName"><INPUT  style="display: none;" type='text'  class="name"  value="<?php echo $_smarty_tpl->tpl_vars['key']->value;?>
+" size=10  /><?php echo $_smarty_tpl->tpl_vars['key']->value;?>
+</th>
+       <td class='v'><INPUT type='text' style="width: 250px;" class="val"   value="<?php echo $_smarty_tpl->tpl_vars['cc']->value;?>
+" size=100 /></td>
+       <td></td>
+       <td style="display: none;"><input type="button" class='del btnf' value='删除' /></td>
+   </TR>
+    <?php }?>
+ <?php
+}
+$_smarty_tpl->smarty->ext->_foreach->restore($_smarty_tpl, 1);?>
+ </tbody>
+  </table>
+           </td>     
+		   
+                                  
+                         <tr>
+	<td height="30" colspan="2" align="center">
+						
+						<div class=" data_footer control">
+			<input type="button" value="保存" class="button edit btn1">
+			<input type="button" value="取消" class="button cancel btn1">
+		</div>
+                               </td>
+        </tr>
+		 </table>
+</div>
+</div>
+</div>
+<div id='test'></div>
+<SCRIPT language="javascript">
+var ma = new Array();
+ma['單']= new Array(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49);
+
+ma['雙']=new Array(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48);
+
+ma['大']= new Array(25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49);
+
+ma['合單']= new Array(1,3,5,7,9,10,12,14,16,18,21,23,25,27,29,30,32,34,36,38,41,43,45,47,49);
+
+ma['合雙']= new Array(2,4,6,8,11,13,15,17,19,20,22,24,26,28,31,33,35,37,39,40,42,44,46,48);
+
+ma['尾大']= new Array(5,6,7,8,9,15,16,17,18,19,25,26,27,28,29,35,36,37,38,39,45,46,47,48,49);
+
+ma['尾小']= new Array(1,2,3,4,10,11,12,13,14,20,21,22,23,24,30,31,32,33,34,40,41,42,43,44);
+
+ma['紅']= new Array(1,2,7,8,12,13,18,19,23,24,29,30,34,35,40,45,46);
+
+ma['藍']= new Array(3,4,9,10,14,15,20,25,26,31,36,37,41,42,47,48);
+
+ma['綠']= new Array(5,6,11,16,17,21,22,27,28,32,33,38,39,43,44,49);
+
+ma['1头']= new Array(10,11,12,13,14,15,16,17,18,19);
+
+ma['2头']=new Array(20,21,22,23,24,25,26,27,28,29);
+
+ma['3头']=new Array(30,31,32,33,34,35,36,37,38,39);
+
+ma['4头']=new Array(40,41,42,43,44,45,46,47,48,49);
+
+ma['0头']= new Array(01,02,03,04,05,06,07,08,09);
+
+ma['1尾']= new Array(01,11,21,31,41);
+
+ma['2尾']=new Array(02,12,22,32,42);
+
+ma['3尾']=new Array(03,13,23,33,43);
+
+ma['4尾']=new Array(04,14,24,34,44);
+
+ma['5尾']=new Array(05,15,25,35,45);
+
+ma['6尾']=new Array(06,16,26,36,46);
+
+ma['7尾']= new Array(07,17,27,37,47);
+
+ma['8尾']= new Array(08,18,28,38,48);
+
+ma['9尾']= new Array(09,19,29,39,49);
+
+ma['0尾']= new Array(10,20,30,40);
+
+ma['全部']=new Array(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49);
+
+ma['小']=new Array(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24);
+
+ma['家畜']= new Array("牛","馬","羊","雞","狗","豬");
+
+ma['野獸']=new Array("鼠","虎","兔","龍","蛇","猴");
+
+ma['前']=new Array("鼠","虎","兔","龍","蛇","牛");
+
+ma['後']= new Array("猴","馬","羊","雞","狗","豬");
+
+ma['紅單']= new Array(1,7,13,19,23,29,35,45);
+
+ma['紅雙']= new Array(2,8,12,18,24,30,34,40,46);
+
+ma['紅大']= new Array(29,30,34,35,40,45,46);
+
+ma['紅小']= new Array(1,2,7,8,12,13,18,19,23,24);
+
+ma['藍單']= new Array(3,9,15,25,31,37,41,47);
+
+ma['藍雙']= new Array(4,10,14,20,26,36,42,48);
+
+ma['藍大']=new Array(25,26,31,36,37,41,42,47,48);
+
+ma['藍小']=new Array(3,4,9,10,14,15,20);
+
+ma['綠單']= new Array(5,11,17,21,27,33,39,43,49);
+
+ma['綠雙']= new Array(6,16,22,28,32,38,44);
+
+ma['綠大']= new Array(27,28,32,33,38,39,43,44,49);
+
+ma['綠小']= new Array(5,6,11,16,17,21,22);
+
+ma['内围'] = new Array(9,10,11,12,13,16,17,18,19,20,23,24,25,26,27,30,31,32,33,34,37,38,39,40,41);
+	
+ma['外围'] = new Array(1,2,3,4,5,6,7,8,14,15,21,22,28,29,35,36,42,43,44,45,46,47,48,49);
+
+ma['合大'] = new Array(7,8,9,16,17,18,19,25,26,27,28,29,34,35,36,37,38,39,43,44,45,46,47,48,49);
+	
+ma['合小'] = new Array(1,2,3,4,5,6,10,11,12,13,14,15,20,21,22,23,24,30,31,32,33,40,41,42);
+
+ma['合尾大'] = new Array(5,6,7,8,9,14,15,16,17,18,23,24,25,26,27,32,33,34,35,36,41,42,43,44,45);
+	
+ma['合尾小'] = new Array(1,2,3,4,10,11,12,13,19,20,21,22,28,29,30,31,37,38,39,40,46,47,48,49);
+
+</SCRIPT>
+</body>
+</html><?php }
+}

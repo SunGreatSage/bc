@@ -1,0 +1,170 @@
+{+include file='header2.html'+}
+<link href="/default/css/control.css" rel="stylesheet" />
+<link href="/default/css/Site.css" rel="stylesheet" />
+<link href="/default/css/jquery.loadmask.css" rel="stylesheet" />
+<script src="/js/sitetool.js?v=004"></script>
+<script src="/js/jquery.loadmask.js?v=004"></script>
+<script type="text/javascript" src="/default/js/function.js"> </script>
+</head>
+<body id="topbody">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='auto';
+</script>
+
+
+<div class="jt-container">
+<div class="top_info">
+            <span class="title" style="color:#000000">降赔设置</span>
+        </div>
+		<div class="s_main">
+             <div class="sub_w2" style="margin:0px;">
+             <div class="right_btns">
+                <span class="left_arrow" id="toleft2"><a class="bx-prev disabled"></a></span><span class="right_arrow" id="toright2"><a class="bx-next disabled" ></a></span>
+            </div>
+
+            <div class="page-tabs">
+                <div class="tab_con2 clear " id="scroll_div2">
+                    <ul id="sliderLottery">
+					{+if $config.slowtype==1+}
+<li>
+{+section name=i loop=$game+}
+    {+if $game[i].fast==0+}<a href="javascript:void(0)" class="g{+$game[i].gid+}" gid='{+$game[i].gid+}'>{+$game[i].gname+}</a>{+/if+}
+ {+/section+}
+</li>
+{+/if+}
+                    </ul>
+                </div>
+            </div>
+        </div>
+				 <div class="sider-left floatR" id="menuleft">
+
+            <div class="main_set" id="quickSetting" style="display:">
+                <table style="border: none" class="t_list" width="100%">
+                    <tbody>
+                        <tr style="border: none">
+                            <td height="27" align="center" style="border: none; text-align: justify" nowrap="nowrap" id="tdMaxWinlostCode">
+                                赔率设置
+								<span class="right" style="float: right; padding-right: 10px"><input type="checkbox" id="chkAll" ><label for="chkAll">全选</label></span>
+                            </td>
+							
+                        </tr>
+
+                    </tbody>
+                    <tbody id="quickSetting"  style=" text-align:center">
+						<tr style="border: none">
+						 <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap">
+                        </select>累计方法：<select id="quickjsff" style="float: none;" >
+				        <option value="0">选择</option>
+                        <option value="1">总额</option>
+                        <option value="2">占成</option>
+						 </select>
+                    </td>
+					</tr>
+						<tr style="border: none">
+                    <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap">
+                        <select id="selectsetting">
+                            <option value="startje">自动赔率累计金额</option>
+                            <option value="startpeilv">累计金额降赔值</option>
+                            <option value="addje">自动赔率金额变动</option>
+                                <option value="attpeilv">金额变动降赔值</option>
+                            <option value="lowpeilv">最低赔率</option>
+                        </select>
+                    </td>
+                </tr>
+						<tr style="border: none">
+                    <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap"><input id="txtSetValue"></td>
+                </tr>
+				<tr style="border: none">
+                            <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap">
+                                <input type="button"  value="确定" id="quickbtn"  class="button btn1" />
+								 &nbsp;
+								<input type="button"  value="保存"  class="button btn4 send" />
+								
+                            </td>
+                        </tr>
+				
+						<tr style="border: none">
+                            <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap">
+                                <input type="button" gid="{+$gid+}" class="button btn7 yiwotongbu" value="以我同步其他彩" >
+								
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+
+            </div>
+        </div>
+		 <div class="toggle floatR"><div class="sider-toggle"><span title="收缩" style="top:50px">切换&nbsp;</span></div></div>
+		<div id="con_six" class="hover" style="margin-top:10px;">
+    <table class="layout">
+        <tr>
+            <td class="panel">
+                <table class="list table_ball pantb ">
+ <thead>
+  <TR>
+   <th  align="center" nowrap="nowrap"  style="display: none;"><input type="checkbox"  class="all" />全选</th>
+   <th align="center" nowrap="nowrap" >项目名称</th>
+   <th align="center" nowrap="nowrap"><font class="font_r">累计方法</font></th>
+   <th align="center" nowrap="nowrap"><font class="font_r">累计金额-降赔值</font></th>
+   <th align="center" nowrap="nowrap"><font class="font_r">金额变动-降赔值</font></th>
+   <th align="center" nowrap="nowrap" style="display: none;">开始下调期数-下调赔率[限快开]</th>
+   <th align="center" nowrap="nowrap" style="display:none">停止下注金额</th>
+   <th align="center" nowrap="nowrap"><font class="font_g">最低赔率</font></th>
+   <th align="center" nowrap="nowrap">预降</th>
+   <th align="center" nowrap="nowrap">自动开关</th>
+  </TR>
+  </thead>
+   <tbody class="tablelist">
+  {+section name=i loop=$auto+}
+  <tr f='{+$auto[i].ftype+}' class="nr">
+  <td style="display: none;"><input type="checkbox"  /><input type="button" class="s1 pantb" value="同步选中" /></td>
+   <th  align="center" nowrap="nowrap" class="para_pjName" >{+$auto[i].name+}</th>
+   <td><select class='ifzc'>
+     <option {+if $auto[i].ifzc==0+}selected{+/if+} value="0">总额</option>
+     <option {+if $auto[i].ifzc==1+}selected{+/if+}  value="1">占成</option>
+    </select></td>
+   <td><input type="text" class="flag startje"  style="ime-mode: disabled; width: 60px" value="{+$auto[i].startje+}" />
+    -
+    <input type="text" class="flag startpeilv"  style="ime-mode: disabled; width: 60px" value="{+$auto[i].startpeilv+}" /></td>
+   <td><input type="text" class="flag addje"  style="ime-mode: disabled; width: 60px" value="{+$auto[i].addje+}" />
+    -
+    <input type="text" class="flag attpeilv" style="ime-mode: disabled; width: 60px"  value="{+$auto[i].attpeilv+}" /></td>
+   <td style="display: none;"><input type="text" class="flag qsnum"   value="{+$auto[i].qsnum+}" />
+    -
+    <input type="text" class="flag qspeilv"   value="{+$auto[i].qspeilv+}" /></td>
+   <td  style="display:none"><input type="text" class="flag stopje"  value="{+$auto[i].stopje+}" /></td>
+   <td><input type="text" class="flag lowpeilv"  style="ime-mode: disabled; width: 60px" value="{+$auto[i].lowpeilv+}" /></td>
+   <td><input type="checkbox" class="yj" {+if $auto[i].yj==1+}checked{+/if+} /></td>
+   <td><input type="checkbox" class="ifok" {+if $auto[i].ifok==1+}checked{+/if+} /></td>
+  </tr>
+  {+/section+}
+
+                    </tbody>
+
+                </table>
+            </td>
+
+        </tr>
+        <tr>
+ 
+
+	 <td height="30" colspan="2" align="center">
+		 		<div class=" data_footer control">
+			<input type="button" value="修改" class="button send btn1">
+			 &nbsp;
+			<input type="button" value="取消" class="button cancel btn1">
+		</div>
+		    </td>
+        </tr>
+		 </table>
+
+</div>
+</div>
+</div>
+<script language="javascript">
+var gid={+$gid+};
+</script>
+<div id='test'></div>
+</body>
+</html>

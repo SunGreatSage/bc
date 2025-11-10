@@ -1,0 +1,110 @@
+{+include file='headers.html'+}
+
+</head>
+<style>
+ 
+    .list tbody .hover td, .list tbody .hover:nth-child(even) { background: rgb(255,255,198); }
+</style>
+<body class='L_HK6 {+$skin+}'>
+    <script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='userinfo';</script>
+<div class="jt-container pad10">
+<div class="bar_tit">
+        <b>个人资讯</b>
+    </div>
+<table class="list table user_info table_ball">
+        <thead><tr><th colspan="2">基本信息</th></tr></thead>
+        <tbody>
+            <tr><th>账号</th><td>{+$username+}({+$name+})</td></tr>
+            <tr>
+                <th class="tit">账户状态</th>
+                <td>{+$status+}</td>
+            </tr>
+                                <tr>
+                        <th>{+if $moneytype eq 1+}现金{+else+}信用{+/if+}额度</th>
+                        <td class="t_left">{+$kmaxmoney+} (余额:{+$kmoney+})</td>
+                    </tr>
+            
+            <tr>
+                <th>盘口</th>
+                <td>{+$panstr+}盘</td>
+            </tr>
+        </tbody>
+    </table>
+<div class="info_body">
+ <div class="sub_w2" style="margin-bottom:10px;">
+                <div class="right_btns">
+                <span class="left_arrow" id="toleft2"><a class="bx-prev disabled" ></a></span><span class="right_arrow" id="toright2"><a class="bx-next disabled" ></a></span>
+            </div>
+
+                <div class="page-tabs">
+                    <div class="tab_con2 clear" id="scroll_div2">
+                        <ul id="sliderLottery" style="margin: 0;padding: 0;border: 0;overflow: hidden;">
+						{+section name=i loop=$game+}
+ <li><a href="javascript:void(0);" gid='{+$game[i].gid+}' class="games">{+$game[i].gname+}</a> 
+{+/section+}
+                                </li> 
+
+                        </ul>
+                    </div>
+                </div>
+            </div>
+		 <div id="con_six_1" class="hover" style="">
+                <div id="tabs-MCHK6">
+<table class="list table data_table table_ball">
+<thead>
+        <Tr>
+             <th style="width:120px" nowrap="nowrap">玩法</th>
+            <th  style="display:none">保底赔率</th> 
+            {+foreach item=i from=$span+}
+            <th  class="{+$i+} p">{+$i+}盘退水%</th>
+            {+/foreach+}
+            <th>单注最低</th>
+            <th>单注金额</th>
+            <th>单期金额</th>
+            
+            
+
+           
+
+        </Tr>
+
+        </thead>
+
+        <tbody>
+        {+section name=i loop=$game+}
+        {+assign var=pan value=$game[i].pan+}
+        {+section name=j loop=$pan+}
+        <tr class="gametr g{+$game[i].gid+}">
+            <td class="{+$pan[j].class+}" gid='{+$game[i].gid+}'>{+$pan[j].name+}</td>
+           
+            
+            
+
+            {+if $pan[j].abcd==1+}
+            {+foreach item=k from=$span+}
+            {+assign var='m' value=$k|@strtolower+}
+            {+if $pan[j].ab==1+}
+            {+assign var="tmp1" value="points`$m`a"+}
+            {+assign var="tmp2" value="points`$m`b"+}
+            <td>{+$pan[j].$tmp1+}/{+$pan[j].$tmp2+}</td>
+            {+else+}
+            {+assign var="tmp" value="points`$m`0"+}
+            <td>{+$pan[j].$tmp+}</td>
+            {+/if+}
+            {+/foreach+}
+            {+else+}
+            {+assign var="tmp" value=$span|@count+}
+            {+assign var="tmp2" value=$tmp*2+}
+            <td colspan="{+$tmp2+}">{+$pan[j].pointsa0+}</td>
+            {+/if+}
+            <td>{+$pan[j].minje+}</td>
+            <td>{+$pan[j].maxje+}</td>
+             <td>{+$pan[j].cmaxje+}</td>
+
+        </tr>
+        {+/section+}
+        {+/section+}
+        </tbody>
+</table>
+</div></div></div></div></body>
+</html>

@@ -1,0 +1,60 @@
+{+include file='headers.html'+}
+<style type="text/css">
+    .AutoNewline {
+        word-break: break-all; /*必须*/
+        width: 350px;
+    }
+
+    .az {
+        color: blue;
+    }
+
+        .az:hover {
+            text-decoration: underline;
+        }
+
+    .list tbody .hover td, .list tbody .hover:nth-child(even) {
+        background: rgb(255,255,198);
+    }
+	.table .color {
+    color: #2836f4;
+}
+	
+</style>
+</head>
+<body class="L_HK6 {+$skin+}">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='baoweek';</script>
+<div class="main report jt-container pad10">
+   <div class="bar_tit">
+        <b>账户投注历史</b>
+    </div>
+	<div style="height: 5px"></div>
+	 <div id="bet_panel" class="bet_panel input_panel">
+<div class="main history">
+<table class="list table table_ball">
+<thead><tr><th class="date" height="20" width="15%">日期</th><th class="count" width="15%">注数</th><th class="amount" width="27.5%">下注金额</th><th class="cm" width="15%">退水</th><th class="dividend" width="27.5%">盈亏</th></tr></thead>
+<tbody>
+{+section name=i loop=$upbao+}
+<tr date='{+$upbao[i].date+}'><td clss="date"><a class="az" href="javascript:void(0)">{+$upbao[i].date+}</a></td><td>{+$upbao[i].zs+}</td><td class="money">{+$upbao[i].zje+}</td><td class="money">{+$upbao[i].points+}</td><td><a href="javascript:void(0)" class="color result">{+$upbao[i].rs+}</a></td></tr>
+{+/section+}
+</tbody>
+<tfoot>
+<tr><th>上周</th><td>{+$t.uzs+}</td><td class="money">{+$t.uzje+}</td><td class="money">{+$t.upoints+}</td><td class="result color">{+$t.urs+}</td></tr>
+</tfoot>
+</table>
+<table class="list mt table table_ball">
+<thead><tr><th class="date" height="20" width="15%" >日期</th><th class="count" height="20" width="15%" >注数</th><th class="amount" width="27.5%">下注金额</th><th class="cm" width="15%">退水</th><th class="dividend" width="27.5%">盈亏</th></tr></thead>
+<tbody>
+{+section name=i loop=$bao+}
+<tr date='{+$bao[i].date+}'><td clss="date"><a class="az" href="javascript:void(0)">{+$bao[i].date+}</a></td><td>{+$bao[i].zs+}</td><td class="money">{+$bao[i].zje+}</td><td class="money">{+$bao[i].points+}</td><td><a href="javascript:void(0)" class="color result">{+$bao[i].rs+}</a></td></tr>
+{+/section+}
+</tbody>
+<tfoot>
+<tr><th>本周</th><td>{+$t.zs+}</td><td class="money">{+$t.zje+}</td><td class="money">{+$t.points+}</td><td class="result color">{+$t.rs+}</td></tr>
+</tfoot>
+</table>
+</div>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{+include file='header.html'+}
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='longloto';</script>
+<div class="xbody1">
+<table class="tinfo kjtb" style="width:100%;">
+ <tr bgColor=#ebf5fe>
+  <td align=center>期數</td>
+  <td align=center>開獎日(星期)</td>
+  <td align=center>號碼落球序</td>
+ </tr>
+ {+section name=i loop=$kj+}{+if $kj[i].qishu%10==0+}
+ <tr>
+  <TD colspan=6 style="height:1px;background:#06F"></TD>
+ </tr>
+ {+/if+}
+ <tr>
+  <td align=center>{+$kj[i].qishu+}</td>
+  <td align=center>{+$kj[i].date+}(<font color=blue>{+$kj[i].week+}</font>)</td>
+  <td align=center>{+foreach item=j key=m from=$kj[i].ma+}{+if $havetm==1+}{+if $m==$mnum+}&nbsp;&nbsp;特别号：{+/if+}{+/if+}&nbsp;&nbsp;<img class='hand' src="{+$globalpath+}imgs/{+$j+}.gif" border=0 />{+/foreach+}</td>
+ </tr>
+ {+/section+}
+ </TD>
+ </tr>
+</table>
+
+</div>  
+<div id='test'></div>
+</body>
+</html>

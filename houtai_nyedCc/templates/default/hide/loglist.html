@@ -1,0 +1,102 @@
+{+include file='header2.html'+} 
+<script language="javascript" type="text/javascript" src="../js/My97DatePicker/WdatePicker.js"></script>
+<style>
+a.red{color:#D50000}
+</style>
+</head>
+<body>
+<script id=myjs language="javascript">var js=0;var sss='flylist';</script>
+<div class="main">
+    <div class="top_info">
+        <span class="title">飞单记录</span><span class="right"></span>
+    </div>
+<div class="contents param_panel">
+    
+        <div class="control">
+        <span>{+$page+}</span><span><input type="button" value="删除" class="button del"  /><INPUT type="text" value="{+$deldate+}" class="deldate" style="width: 80px;" size=8 />之前</span>
+    </div>  
+ <table class="data_table data_list nrtb" style="width: 100%;word-break:break-all;">
+ <thead><TR>
+ <th><input type="checkbox" id='clickall' />全选</th><th>编号</th><th>游戏</th><th>会员</th><th>IP</th><th>时间</th><th class="data">数据</th><th><input type="button" class="btn3 btnf" id='delselect'  value="删除选中" /></th>
+ </TR></thead> 
+ {+section name=i loop=$l+}
+<TR><td><input type="checkbox" value='{+$l[i].id+}' /></td><td>{+$l[i].id+}</td><td>{+$l[i].gname+}--{+$l[i].type+}</td><td>{+$l[i].user+}</td><td>{+$l[i].ip+}</td><td>{+$l[i].time+}</td><td  style="width: 600px !important;">{+$l[i].content+}</td><td><input type="button" class="delone btn1 btnf" value='删除' /></td></TR>
+ {+/section+}
+  </table>
+    </div>
+</div>
+<script language="javascript">
+    var page = 'show';
+
+    </script>
+<div id='test'></div>
+<script type="text/javascript">
+$(function(){
+    changeh(document.documentElement.scrollHeight+500);
+    $(".data_table tr").mouseover(function(){$(this).addClass('hover')}).mouseout(function(){$(this).removeClass('hover')});
+    $(".deldate").click(function() {
+        //WdatePicker();
+    });
+    
+
+    $("select").unbind("change");
+    $("select").change(function() {
+        window.location.href = "loglist.php?xtype=loglist&PB_page=" + $(this).val();    
+    });
+    
+    $("#clickall").click(function() {
+        if ($(this).prop('checked') == true) {
+            $(this).parent().parent().parent().parent().find("input:checkbox").attr("checked", true)
+        } else {
+            $(this).parent().parent().parent().parent().find("input:checkbox").attr("checked", false)
+        }
+    });
+    $("#delselect").click(function() {
+        dellogin(1)
+    });
+    $(".delone").click(function() {
+        $("input:checkbox").attr("checked", false);
+        $(this).parent().parent().find("input:checkbox").attr("checked", true);
+        dellogin(0)
+    });
+    $(".del").click(function() {
+        dellogin('date')
+    })
+});
+function winopen(){
+    return false;
+}
+function getid() {
+    var i = 0;
+    var idarr = '[';
+    $(".nrtb").find("input:checkbox").each(function() {
+        if ($(this).prop('checked') == true && !isNaN($(this).val())){
+            if (i > 0) idarr += ','
+            idarr += '"' + $(this).val() + '"';
+            i++
+        }
+    });
+    idarr += ']';
+    return idarr
+}
+function dellogin(val) {
+    if (val == 'date') {
+        var idarr = $(".deldate").val() + "&type=date"
+    } else {
+        var idarr = getid()
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: 'loglist.php',
+        data: 'xtype=dlist&id=' + idarr,
+        success: function(m) {
+            if (Number(m) == 1) {
+                window.location.href = "loglist.php?xtype=loglist&page=" + 1
+            }
+        }
+    })
+}        
+</script>
+</body>
+</html>

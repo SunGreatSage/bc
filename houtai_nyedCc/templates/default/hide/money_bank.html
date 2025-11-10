@@ -1,0 +1,33 @@
+{+include file='headers.html'+}
+</head>
+<body style="overflow:hidden">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='money_bank';</script>
+
+				<table class="data_table list bank" style="width:500px;">
+					<thead>
+						<tr>
+                            <th>ID</th>
+							<th>银行名称</th>
+                            <th>代号</th>
+                            <th>删除</th>
+						</tr>
+					</thead>
+					<tbody>
+                    {+section name=i loop=$bank+}
+                     <tr><td>{+$bank[i].bankid+}</td>
+                     <td><input type='text' class="input bankname" value="{+$bank[i].bankname+}" /></td>
+                     <td><input type='text' class="input en" value="{+$bank[i].en+}" /></td>
+                     <td  class='tcenter'><input type="button" class="button del" value="删除" /></td>
+                     </tr>
+                    {+/section+}
+					<tr>
+                    <td colspan="4"  class='tcenter'>
+                       <input type="button" class="button add" value="新增" />
+                       <input type="button" class="button save" value="保存" />
+                    </td>
+                    </tr>
+					</tbody>
+				</table>
+
+
+</body></html>

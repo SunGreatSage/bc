@@ -1,0 +1,90 @@
+{+include file='headers.html'+}
+<link href="/css/default/user.css" rel="stylesheet" type="text/css">
+<link href="/css/default/jquery-ui.css" rel="stylesheet" type="text/css">
+<script language="javascript" src="/js/md5.js"></script>
+<script type="text/javascript" src="../js/ui/jquery-ui.js"></script>
+<script type="text/javascript" src="../js/ui/dialog-hi.js"></script>
+<script type="text/javascript" src="../js/jquery.ui.datepicker-zh-CN.js"></script>
+<style type="text/css">
+.td100{width:110px !important;}
+.td200{width:180px !important;}
+.tleft{text-align:left !important; padding-left:3px;}
+.tright{text-align:right !important; padding-right:3px;}
+.wd td{font-weight:bold !important}
+</style>
+</head>
+<body style="overflow:hidden">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='money_notices';</script>
+
+
+
+<div class="main">
+		<div class="top_info">
+			<span class="title"><label>会员消息管理</label></span>
+			<div class="center">
+				<div class="query_panel">
+					<span class="input_panel">
+					 <label>搜索：</label>&nbsp;&nbsp;<label>账号或名称：</label><input name="name" class="input" id="usernames">&nbsp;&nbsp;<label>开始日期:</label><input class="input" id="sdate" value="{+$sdate+}">&nbsp;&nbsp;<label>结束日期:</label><input class="input" id="edate" value="{+$edate+}">
+					</span> <input type="button" value="查找" class="query searchbtn">
+                    
+                    <input id='delselect' value='删除选定'  type="button" class="s1" />
+     <input type="hidden" name="fid"  id="fid" value="" />
+
+				</div>
+				
+   
+			</div>
+			<div class="right">
+				
+			</div>
+		</div>
+		<div class="contents">
+			<div class="user_list">
+				<table class="data_table list user_tb" >
+					<thead>
+						<tr>
+                            <th class="td100"><input type="checkbox" class="all" /></th>
+                            <th style='display:none;'>ID</th>
+							<th class="td100">用户名(姓名)</th>
+                             <th>标题</th>
+                             <th style='display:none;'>内容</th>
+                             <th class="td100">状态</th>
+                             <th class="td100">发送人</th>
+                             <th class="td200">时间</th>
+                             <th class="td100">操作</th>     
+						</tr>
+					</thead>
+					<tbody>
+                  {+section name=i loop=$notices+}
+						<tr uid='{+$notices[i].userid+}' {+if $notices[i].du==0+}class='wd'{+/if+}>
+                        <th><input type="checkbox" class="d" value="{+$notices[i].id+}"  /></th>
+                        <td style='display:none;'>{+$notices[i].id+}</td>
+                        <td>{+$notices[i].username+}({+$notices[i].tname+})</td>
+                        <td class="title">{+$notices[i].title+}</td>
+                        <td style="display:none;">{+$notices[i].content+}</td>
+                        <td>{+if $notices[i].du==1+}已读{+else+}未读{+/if+}</td>
+                        <td>{+$notices[i].senduser+}</td>
+                        <td>{+$notices[i].time+}</td>
+                        <td><a href='javascript:void(0)' class="showxx">编辑</a>&nbsp;&nbsp;&nbsp;<a href='javascript:void(0)' class="del">删除</a></td>
+						</tr>
+                  {+/section+}		           
+					</tbody>
+				</table>
+                
+				<div class="page"><div class="page_info" upage='{+$upage+}' pcount='{+$pcount+}' rcount='{+$rcount+}'>
+<span class="record">共 <span>{+$rcount+}</span> 条记录</span>
+<span class="page_count">共 <span>{+$pcount+}</span> 页</span>
+<span class="page_control">
+
+</span>
+</div>
+</div>
+			</div>
+		</div>
+	</div>
+    
+    <div id="statusPanel" class="popdiv" style="position:absolute; display: none;"><div class="title">修改帐户状态<i></i></div><div class="statuslist"><label><input name="ustatus" type="radio" value="1">启用</label><label><input name="ustatus" type="radio" value="2">冻结</label><label><input name="ustatus" type="radio" value="0">停用</label></div></div>
+<script language="javascript">
+
+</script>
+</body></html>

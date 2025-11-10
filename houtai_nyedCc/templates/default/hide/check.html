@@ -1,0 +1,81 @@
+{+include file='header.html'+}
+</head><body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='check';</script>
+<div class="xbody1" style="width:1155px;">
+ <table class="tinfo wd100">
+   <tr>
+      <th colspan="2">自动开关盘</th><th colspan="2">自动补货</th><th colspan="2">自动开奖结算</th><th rowspan="3"><input type="button" class="edit btnf" value="修改" /></th>
+   </tr>
+   <tr>
+      <th>开关</th><th>时间</th><th>开关</th><th>时间</th><th>开关</th><th>时间</th>
+   </tr>
+   <tr>
+      <td><input type="checkbox" class="autoopenpan" {+if $autoopenpan==1+}checked{+/if+} /></td><td><label>{+$autoopenpantime+}</label></td>
+      <td><input type="checkbox" class="autofly" {+if $autofly==1+}checked{+/if+} /></td><td><label>{+$autoflytime+}</label></td>
+      <td><input type="checkbox" class="kjjs" {+if $kjjs==1+}checked{+/if+} /></td><td><label>{+$kjjstime+}</label></td>
+
+   </tr>
+ </table>
+ <BR />
+  <table class="tinfo wd100">
+   <tr>
+   <th>注单表UPDATE</th><th>注单表DELETE</th><th>PLAY表UPDATE</th><th>控盘员功能开放</th>
+   </tr>
+   <tr><td>
+   {+if $updatelib==1+}
+   <label>存在</label><input type="button" value="删除" class="tg" ac='del' name='ulib' />
+   {+else+}
+    <label>不存在</label><input type="button" value="增加" class="tg"  ac='add' name='ulib' />
+   {+/if+}
+   </td><td>
+      {+if $deletelib==1+}
+   <label>存在</label><input type="button" value="删除" class="tg"  ac='del' name='dlib' />
+   {+else+}
+    <label>不存在</label><input type="button" value="增加" class="tg" ac='add' name='dlib'  />
+   {+/if+}
+   </td>
+   <td>
+      {+if $updateplay==1+}
+   <label>存在</label><input type="button" value="删除" class="tg"  ac='del' name='uplay' />
+   {+else+}
+    <label>不存在</label><input type="button" value="增加" class="tg" ac='add' name='uplay'  />
+   {+/if+}
+   </td>
+   <td>
+     <input type="button" value="更新功能"  class="upgn"  /><BR />
+     {+section name=i loop=$xpage+}
+<input type="checkbox" class="{+$xpage[i].xpage+}" {+if $xpage[i].ifhide==0+}checked{+/if+}  />{+$xpage[i].pagename+}<BR />
+    {+/section+}
+   </td>
+   </tr>
+   </table>
+   
+    <BR />
+  <table class="tinfo wd100">
+   <tr>
+   <th>err表</th><th>注单MRG</th><th>MRG表</th>
+   </tr>
+    <tr><td>
+    <LABEL>{+$liberrnum+}</LABEL>
+    <input type="button" value="清空" class="qkerr" />
+   </td>
+   <td>
+   {+if $bigdata==1+}
+      <label>存在</label><input type="button" value="恢复" class="mrg"  ac='hf'  />
+   {+else+}
+      <label>不存在</label><input type="button" value="生成" class="mrg"  ac='sc'  />
+   {+/if+}
+   </td>
+   <td style="text-align:left;padding-left:10px;">
+   {+if $bigdata==1+}<input type="button" value="重新整理" class="mrg"  ac='resc'  />{+/if+}<input type="button" value="删除选中" class="mrg"  ac='scxz'  />
+   <BR />
+   <input type="checkbox" class="clickall" />全选<BR />
+   {+section name=i loop=$mrg+}
+       <input class='mrgs' value="{+$mrg[i].tb+}" {+if ($mrg[i].in==1 & $bigdata==1)+}checked{+/if+} type="checkbox" />&nbsp;{+$mrg[i].tb+}(<LABEL>{+$mrg[i].num+}</LABEL>)<BR/>
+   {+/section+}
+   </td>
+   </table>
+</div>
+<div id='test'></div>
+</body>
+</html>

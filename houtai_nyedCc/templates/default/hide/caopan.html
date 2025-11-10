@@ -1,0 +1,72 @@
+{+include file='header2.html'+}
+<script language="javascript" src="/js/md5.js"></script>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='caopan';</script>
+<div class="main">
+	<div class="top_info">
+		<span class="title">管理员管理</span><div class="right">
+			<a class="back" onclick="javascript:history.back(-1);" href="javascript:void(0);">返回</a>
+			</div>
+			 {+if $data[0].adminid==10000+}
+			<div class="center" style="float: right;margin-right: 100px;">
+<a class="ico_add add" id="add{+$data[0].userid+}" href="javascript:void(0);" >新增管理员</a>
+</div>
+ {+/if+}
+
+	</div>
+	<div class="contents s_main">
+   <table class="list  user_list table_ball">
+   <thead>
+   <TR>
+   
+<th>管理员</th><th>新增日期</th><th style="display: none;">登陆次数</th><th>最后登录IP</th><th>最后登录时间</th><th style="display: none;">最后修改密码时间</th><th style="width: 25%;">功能</th>
+
+   </TR>   </thead>  
+   {+section name=i loop=$data+}
+   <tr><td >{+$data[i].adminname+}</td><td>{+$data[i].regtime+}</td><td style="display: none;">{+$data[i].logintimes+}</td><td>{+$data[i].lastloginip+}[{+$data[i].lastloginfrom+}]</td><td>{+$data[i].lastlogintime+}</td><td style="display: none;">{+$data[i].passtime+}</td>
+   <td style="width:180px;">
+   {+if $data[i].adminid!=10000+}
+   <a  class='del'  id=del"{+$data[i].adminid+}" aid="{+$data[i].adminid+}" />删除</a>/
+   {+/if+}
+    <a class='edit' id=edit"{+$data[i].adminid+}" aid="{+$data[i].adminid+}" />修改密码</a>/
+   <a  class='record'  aid='{+$data[i].adminid+}' username='{+$data[i].adminname+}'  id=showrecord"{+$data[i].adminid+}"  />记录</a>/
+     <a class='logininfo'  aid='{+$data[i].adminid+}' username='{+$data[i].adminname+}'   id="showlogininfo{+$data[i].adminid+}" />日志</a>
+   </td>
+   </tr>
+   {+/section+}
+   </table>
+    <table class="data_list list pages table_ball" style="margin-top:20px;">
+    {+foreach item=i key=k from=$page+}
+     {+if $k==0+}<thead>{+/if+}
+      <tr>
+          {+foreach item=j key=h from=$i+}
+            {+if ($k==0 || $h==0)+} <Th>{+$j+}</Th>{+else+}
+            <TD>{+$j+}</TD>
+            {+/if+}
+          {+/foreach+}
+      </tr>
+      {+if $k==0+}</thead>{+/if+}
+    {+/foreach+}
+   </table>
+   </div>
+
+  <input type="hidden" value="{+$aid+}" name='aid' id='aid' />
+</div>
+
+
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-draggable ui-resizable addtb" tabindex="-1" role="dialog" aria-describedby="shares" aria-labelledby="ui-id-1" style="position: absolute; height: 152.28px; width: 360px; top: 257px; left: 564.5px; display:none; right: auto; bottom: auto;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle"><span id="ui-id-1" class="ui-dialog-title">2988316036#明细</span><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span><span class="ui-button-text">Close</span></button></div><div id="shares" class="popdiv ui-dialog-content ui-widget-content" style="display: block; width: auto; min-height: 96px; max-height: 346px; height: auto;"><table class="data_table">
+<tbody>
+<TR><Th>管理员</Th><TD><label id='user0'>{+$username+}</label><input type="text" id='user1' maxlength="10" class="txt1" style="width:80px;" /><input type="hidden" id='action' value="add" /></TD></TR>
+      <TR><Th>密码</Th><TD><input type="password" id='pass1x' class="intext" /></TD></TR>
+      <TR><Th>重复密码</Th><TD><input type="password" id='pass2x' class="intext" /></TD></TR>
+      <TR><th colspan="2" class="tcenter"><input type="button" id='addbtn' class="btn1 btnf" value="新增子帐号" />&nbsp;<input type="button" id='closebtn' class="btn1 btnf" value="关闭" /></th></TR>
+</tbody>
+</table></div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div></div>
+
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-draggable ui-resizable recordtb" tabindex="-1" role="dialog" aria-describedby="shares" aria-labelledby="ui-id-1" style="position: absolute; height:400px; width: 360px; top: 257px; left: 564.5px; display:none; right: auto; bottom: auto;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle"><span id="ui-id-1" class="ui-dialog-title">2988316036# 占成明细</span><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span><span class="ui-button-text">Close</span></button></div><div id="shares" class="popdiv ui-dialog-content ui-widget-content" style="display: block; width: auto; min-height: 96px; max-height: 346px; height: auto;">
+<table class="data_table list ltb  table_ball">
+</table></div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div></div>
+<div id='test'></div>
+</body>
+</html>

@@ -1,0 +1,176 @@
+{+include file='header2.html'+}
+<link href="/default/css/control.css" rel="stylesheet" />
+<link href="/default/css/Site.css" rel="stylesheet" />
+<link href="/default/css/jquery.loadmask.css" rel="stylesheet" />
+<script src="/js/sitetool.js?v=004"></script>
+<script src="/js/jquery.loadmask.js?v=004"></script>
+<script type="text/javascript" src="/default/js/function.js"> </script>
+</head>
+<body id="topbody">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='warn';
+</script>
+
+<div class="jt-container">
+	<div class="top_info">
+		<span class="title" style="color:#000000">注单预警金额设置</span>
+	</div>
+
+		<div class="s_main">
+			<div class="sub_w2" style="margin:0px;">
+              <div class="right_btns">
+                <span class="left_arrow" id="toleft2"><a class="bx-prev disabled" ></a></span><span class="right_arrow" id="toright2"><a class="bx-next disabled" ></a></span>
+            </div>
+
+            <div class="page-tabs">
+                <div class="tab_con2 clear " id="scroll_div2">
+                    <ul id="sliderLottery">
+					{+if $config.slowtype==1+}
+<li>
+{+section name=i loop=$game+}
+    {+if $game[i].fast==0+}<a href="javascript:void(0)" class="g{+$game[i].gid+}" gid='{+$game[i].gid+}'>{+$game[i].gname+}</a>{+/if+}
+ {+/section+}
+</li>
+{+/if+}
+                    </ul>
+                </div>
+            </div>
+        </div>
+		
+		 <div class="sider-left floatR" id="menuleft">
+
+             <div class="main_set" id="quickSetting" style="display:">
+                <table style="border: none" class="t_list" width="100%">
+                    <tbody>
+                        <tr style="border: none">
+                            <td height="27" align="center" style="border: none; text-align: justify" nowrap="nowrap" id="tdMaxWinlostCode">
+                                设置：
+                            </td>
+                        </tr>
+
+                    </tbody>
+                    <tbody id="quickSetting"  style=" text-align:center">
+						<tr style="border: none">
+                    <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap">
+                        <select id="selectsetting">
+                            <option value="je">实占金额预警</option>
+                            <option value="ks">止损金额</option>
+                        </select>
+                    </td>
+                </tr>
+						<tr style="border: none">
+                    <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap"><input id="txtSetValue"></td>
+                </tr>
+                        <tr style="border: none">
+                            <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap">
+                                <input type="button" value="确定" id="quickbtn"  class="button btn1" />
+								 &nbsp;
+								<input type="button" value="保存"  class="button btn4 send" />
+								
+                            </td>
+                        </tr>
+						<tr style="border: none">
+                            <td height="27" align="center" style="border: none; padding:1px 6px;" nowrap="nowrap">
+                                <input type="button" gid="{+$gid+}" class="button btn7 yiwotongbu" value="以我同步其他彩" >
+								
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+
+            </div>
+        </div>
+		 <div class="toggle floatR"><div class="sider-toggle"><span title="收缩" style="top:50px">切换&nbsp;</span></div></div>
+ 	<div id="con_six" class="hover" style="margin-top:10px;">
+    <table class="layout">
+        <tr>
+				<td class="panel">
+					<table class="list table_ball">
+					<thead>
+					<tr>
+						<th style="display: none;">
+							<input type="checkbox" class="all">全选
+						</th>
+						<th>
+							种类
+						</th>
+						<th>
+						<font class="font_r">实占金额预警(变色)</font>
+						</th>
+						<th>
+							<font class="font_r">止损金额(计算手补)</font>
+						</th>
+					</tr>
+					</thead>
+					<tbody class="tablelist">
+                    
+   {+section name=i loop=$warn step=1 +}
+     {+if $smarty.section.i.index<=$nums+}
+   <TR class='nr' f='{+$warn[i].ftype+}'>
+    <td style="display: none;"><input type="checkbox"  class="pantbc"  /><input type="button" class="s1 pantb" value="同步选中" /></td>
+    <th class="para_pjName" >{+$warn[i].name+}</th>
+    <td><input type="text" value='{+$warn[i].je+}'  class="flag je" /></td>
+    <td><input type="text" value='{+$warn[i].ks+}'  class="flag ks" /></td>
+   </TR>
+   {+/if+}
+   {+/section+}
+   					</tbody>
+					</table>
+				</td>
+				<td class="panel">
+					<table class="list table_ball">
+					<thead>
+					<tr>
+						<th style="display: none;">
+							<input type="checkbox" class="all">全选
+						</th>
+						<th>
+							种类
+						</th>
+						<th>
+						<font class="font_r">实占金额预警(变色)</font>
+						</th>
+						<th>
+						<font class="font_r">止损金额(计算手补)</font>
+						</th>
+					</tr>
+					</thead>
+					<tbody class="tablelist">
+   {+section name=i loop=$warn step=1 +}
+     {+if $smarty.section.i.index>$nums+}
+   <TR class='nr' f='{+$warn[i].ftype+}'>
+    <td style="display: none;" ><input type="checkbox"  class="pantbc"  /><input type="button" class="s1 pantb" value="同步选中" /></td>
+    <th class="para_pjName">{+$warn[i].name+}</th>
+    <td><input type="text" value='{+$warn[i].je+}'  class="flag je" /></td>
+    <td><input type="text" value='{+$warn[i].ks+}'  class="flag ks" /></td>
+   </TR>
+   {+/if+}
+   {+/section+}
+   					</tbody>
+					</table>
+					 </td>
+ </tr>
+        <tr>
+ 
+
+	 <td height="30" colspan="2" align="center">
+			<div class=" data_footer control">
+			<input type="button" value="保存" class="button send btn1">
+			<input type="button" value="取消" class="button cancel btn1">
+		</div>
+	
+		</td>
+        </tr>
+		 </table>
+
+</div>
+</div>
+</div>
+
+<div id='test'></div>
+<script language="javascript">
+var gid={+$gid+};
+</script>
+</body>
+</html>

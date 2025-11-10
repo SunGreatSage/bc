@@ -1,0 +1,116 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>会员中心</title>
+		<link rel="stylesheet" href="../css/default/xj/jquery-ui.css">
+        <link rel="stylesheet" href="../css/default/master.css">
+        <link rel="stylesheet" href="../css/default/style.css">
+        <link rel="stylesheet" href="../css/default/center.css">
+        <link rel="stylesheet" href="../css/default/popup.css">
+        <link rel="stylesheet" href="../css/default/margin.css">
+        <link rel="stylesheet" href="../css/default/daviddeposit.css">
+        <link rel="stylesheet" href="../css/default/font-awesome.min.css">
+        <style type="text/css">
+		   .table .chu td{font-weight:bold;}
+        </style>
+        <script language="javascript" src="/js/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" src="../js/ui/jquery-ui.js"></script>
+<script type="text/javascript" src="../js/ui/dialog-hi.js"></script>
+    </head>
+<body>
+<script type="text/javascript" id="myjs">var mulu='{+$mulu+}';
+var js=1;
+var sss="mem_notices";
+</script>
+<div class="content">
+<div class="memberheader">
+	<div class="account-info">
+		<div class="user-icon">
+			<img src="../css/default/img/user-icon.png">
+		</div>
+		<div class="user-info">
+			<h3 class="account-greetings">
+				<script language="javaScript">
+					now = new Date(), hour = now.getHours()
+					if (hour < 6) {
+						document.write("凌晨好")
+					} else if (hour < 9) {
+						document.write("早上好")
+					} else if (hour < 12) {
+						document.write("上午好")
+					} else if (hour < 14) {
+						document.write("中午好")
+					} else if (hour < 17) {
+						document.write("下午好")
+					} else if (hour < 19) {
+						document.write("傍晚好")
+					} else if (hour < 22) {
+						document.write("晚上好")
+					} else {
+						document.write("夜里好")
+					}
+				</script>
+				，<span>{+$xing+} </span>
+			</h3>
+			<p></p>
+			<ul>
+				<li>真实姓名： <span> {+$tname+} </span></li>
+
+			</ul>
+		</div>
+	</div>
+</div>				<div class="membersubnavi">
+                            <div class="subnavi blue">
+                            	<a href="member.php?xtype=uinfo">个人资料</a>
+                            </div>
+                            <div class="subnavi blue">
+                            	消息中心
+                            	<div class="subnaviarrow"></div>
+                            </div>
+               	</div>
+<div class="account-content-container">
+					<div class="account-content">
+						<h3 class="title">消息中心</h3>
+						<div class="notification-list">
+							<table class="table">
+								<thead>
+									<tr>
+										<th bgcolor="#217eec" colspan="4"><i class="fa fa-envelope-o fa-lg"></i> 未读 <span class="badge">{+$weidu+}</span></th>
+									</tr>
+								</thead>
+								<tbody>
+                                {+section name=i loop=$news+}
+									<tr {+if $news[i].du==0+}class='chu'{+/if+} id='{+$news[i].id+}' du='{+$news[i].du+}'>
+										<td>
+										</td>
+										<td>{+$news[i].title+}</td>
+                                        <td style="display:none;">{+$news[i].content+}</td>
+										<td class="notification-date-time">{+$news[i].time+}   (<a class='xiangqing' href="javascript:void(0);">详情</a>)</td>
+									</tr>
+                                    {+/section+}
+								<tr><td colspan="6"><div class="page_info">
+<span class="record">共 {+$rcount+} 条记录</span>
+<span class="page_control" pcount='{+$pcount+}'>
+<a class="previous">前一页</a>
+{+foreach item=i from=$parr+}
+  {+if $i==$tpage+}
+     <span class="current">{+$i+}</span>
+   {+else+}  
+     <a href='javascript:void(0);'>{+$i+}</a>
+  {+/if+}
+{+/foreach+}
+<a class="next">后一页</a>
+</span>
+</div>
+</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+</div>
+
+</body>
+</html>

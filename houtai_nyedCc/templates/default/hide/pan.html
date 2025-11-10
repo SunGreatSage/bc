@@ -1,0 +1,254 @@
+{+include file='header.html'+}
+<style>
+.top_tb th{width:130px;cursor:pointer}
+.top_tb th,.top_tb td{height:30px;line-height:30px;text-align:left;}
+
+.top_tb td{padding-left:10px;text-align:left;}
+.top_tb th{padding-left:10px;text-align:left;}
+
+.kjtb{margin-bottom:10px;}
+.small{width:40px;}
+.kjtb img{clear:both}
+.txtx{width:30px;}
+</style>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='pan';</script>
+<div class="xbody1">
+ <table class="tinfo wd100 kjtb">
+  <tr><th>年份</th><th>期数</th><th>正1</th><th>正2</th><th>正3</th><th>正4</th><th>正5</th><th>正6</th><th>特碼</th><th rowspan="2">
+     <input type="button" class="kj btn1 btnf" value="开奖"  />
+    </th></tr>
+    <TR><td><label>{+$thisyear+}</label></td><td><label>{+$thisqishu+}</label></td>
+       <Td><input type="text" class="p1 small num tw0" value="{+$p1+}" /><BR /><img /></Td>
+       <Td><input type="text" class="p2 small num tw0" value="{+$p2+}" /><BR /><img /></Td>
+       <Td><input type="text" class="p3 small num tw0" value="{+$p3+}" /><BR /><img /></Td>
+       <Td><input type="text" class="p4 small num tw0" value="{+$p4+}" /><BR /><img /></Td>
+       <Td><input type="text" class="p5 small num tw0" value="{+$p5+}" /><BR /><img /></Td>
+       <Td><input type="text" class="p6 small num tw0" value="{+$p6+}" /><BR /><img /></Td>
+       <Td><input type="text" class="tm small num tw0" value="{+$tm+}" /><BR /><img /></Td>
+       </TR>
+ </table>
+ <table class="tinfo wd100 top_tb">
+   <tr>
+     <Th>网站名称</Th>
+     <TD><input type="text" class="txt3" id='webname' name='webname' value="{+$webname+}" /><label>{+$webname+}</label></TD>
+     <th>AB盘赔率差</th>
+     <TD>特碼:<input type="text"  class="txt1 txtx"  id='abcha' name=abcha value="{+$abcha+}" /><label>{+$abcha+}</label>正特:<input type="text"  class="txt1 txtx"  id='ztabcha' name=ztabcha value="{+$ztabcha+}" /><label>{+$ztabcha+}</label>正码:<input type="text"  class="txt1 txtx"  id='zmabcha' name=zmabcha value="{+$zmabcha+}" /><label>{+$zmabcha+}</label></TD>
+     <Th>开放访问</Th>
+     <TD><input type='checkbox' value="1" id='ifclose' name='ifclose' {+if $ifclose==1+}checked{+/if+} /><label><img src='{+$globalpath+}img/{+$ifclose+}.gif' class="ifclose" /></label></TD>
+   </TR>
+   <tr><Th>特碼盘口状态</Th><TD>
+     <input type="checkbox" id=tepan value='{+$tepan+}' {+if $tepan==1+}checked{+/if+} /><label><img src='{+$globalpath+}img/{+$tepan+}.gif' class="tepan" /></label>
+     </TD> 
+     <th>正码盘口状态</th><TD><input type="checkbox" id=otherpan value='{+$otherpan+}' {+if $otherpan==1+}checked{+/if+} /><label><img src='{+$globalpath+}img/{+$otherpan+}.gif' class="otherpan" /></label></TD>
+     
+     <Th>自动开关盘</Th><TD>
+       <input type="checkbox" id=autoopenpan value='{+$autoopenpan+}' {+if $autoopenpan==1+}checked{+/if+}  /><label><img src='{+$globalpath+}img/{+$autoopenpan+}.gif' class="autoopenpan" /></label>
+       
+       </TD>
+     
+     
+   </TR>
+   <TR>
+      <th>当前年份</th><TD>
+       <input class="txt2 num" id=thisyear value="{+$thisyear+}" /><label>{+$thisyear+}</label>年
+      </TD>
+
+      <th>当前期数</th><TD>
+       <input class="txt2 num" id=thisqishu value="{+$thisqishu+}" /><label>{+$thisqishu+}</label>期
+      </TD><th>当前年柱</th><TD>
+       <input class="txt2" id=thisbml value="{+$thisbml+}" /><label>{+$thisbml+}</label>
+      </TD>
+
+   </TR>
+   <TR>
+      <th>第几个号码自动关盘</th><TD>正
+    <input class="txt1 num2" id=closema value="{+$closema+}" /><label>{+$closema+}</label> 
+      </TD><th>每次赔率下调</th><TD>
+      <input class="txt1 num two" id=kpeilvatt value="{+$kpeilvatt+}" /><label>{+$kpeilvatt+}</label> 
+      </TD><th>报表开关</th><Td><input type="checkbox" id=baostatus value='{+$baostatus+}' {+if $baostatus==1+}checked{+/if+} /><label><img src='{+$globalpath+}img/{+$baostatus+}.gif' class="baostatus" /></label></Td>
+   </TR>
+
+   <TR>   
+   <Th>开盘时间</Th><TD > <input class="txt3 day" id=opentime value="{+$opentime+}" /><label>{+$opentime+}</label> </TD>
+ 
+   <Th>特碼关盘时间</Th><TD ><input class="txt3 day" id=temaclosetime value="{+$temaclosetime+}" /><label>{+$temaclosetime+}</label></TD>
+  
+   <Th>正码关盘时间</Th><TD><input class="txt3 day" id=otherclosetime value="{+$otherclosetime+}" /><label>{+$otherclosetime+}</label></TD>
+
+ 
+   </TR>  
+   <TR><Th>会员提前关盘时间</Th><Td>
+     <select name="userclosetime" id="userclosetime">
+       <script language="javascript">
+	   for(i=10;i<=100;i+=10){
+         document.write("<option value='"+i+"'>"+i+"</option>");
+	   }
+	   
+       </script>
+     </select><label>{+$userclosetime+}</label>秒
+   </td>
+     <Th>补货赔率调整</Th>
+   <TD>特碼:<select name="flyattpeilv" id="flyattpeilv">
+   <option value="0">0</option>
+   <option value="0.1">0.1</option>
+   <option value="0.2">0.2</option>
+   <option value="0.3">0.3</option>
+   <option value="0.4">0.4</option>
+   
+       <option value="0.5">0.5</option>
+       <option value="0.6">0.6</option>
+       <option value="0.7">0.7</option>
+       <option value="0.8">0.8</option>
+       <option value="0.9">0.9</option>
+       <option value="1">1</option>
+       <option value="1.5">1.5</option>
+       <option value="2">2</option>
+       <option value="3">3</option>
+       <option value="4">4</option>
+       <option value="5">5</option>
+     </select><label>{+$flyattpeilv+}</label>双面波色：<select name="flyattpeilvps" id="flyattpeilvps">
+     <option value="0">0</option>
+            <option value="0.01">0.01</option>
+       <option value="0.02">0.02</option>
+       <option value="0.03">0.03</option>
+       <option value="0.04">0.04</option>
+       <option value="0.05">0.05</option>
+       <option value="0.10">0.10</option>
+       <option value="0.15">0.15</option>
+       <option value="0.20">0.20</option>
+       <option value="0.25">0.25</option>
+       <option value="0.30">0.30</option>
+       <option value="0.35">0.35</option>
+       <option value="0.40">0.40</option>
+       <option value="0.45">0.45</option>
+       <option value="0.50">0.50</option>
+       <option value="0.55">0.55</option>
+       <option value="0.60">0.60</option>
+     </select><label>{+$flyattpeilvps+}</label></TD>
+   <TD colspan="2"><input type="button" id='editbtn' class="btn1 btnf" value="修改" /><input style="display:none;margin-left:5px;" type="button" class="btn1 btnf" id='sendbtn' value="确定" /><input type="button" class="btn3 btnf" id='cancelbtn' style="display:none;margin-left:5px;"  value="取消修改" />
+     <a href="javascript:void(0)" class="xinyong">信用恢复</a>&nbsp;<a href="javascript:void(0)" class="baodel">删除选中报表</a>
+     </TD></TR>
+     <tr><th>单双高峰</th><td>
+     <select name='dsgf' id='dsgf'>
+      <option value="0">无</option>
+      <option value="1">单</option>
+      <option value="2">双</option>
+     </select>
+     <label>{+if $dsgf==1+}单{+elseif $dsgf==2+}双{+else+}无{+/if+}</label>
+     </td>
+     
+        <th>代理修改占成</th><td>    <input type="checkbox" id=editzc value='{+$editzc+}' {+if $editzc==1+}checked{+/if+}  /><label><img src='{+$globalpath+}img/{+$editzc+}.gif' class="editzc" /></label>
+       </td>
+     <th>代理删除用户</th><td>    <input type="checkbox" id=deluser value='{+$deluser+}' {+if $deluser==1+}checked{+/if+}  /><label><img src='{+$globalpath+}img/{+$deluser+}.gif' class="deluser" /></label>
+       </td></tr>
+     
+     <tr><th>生肖赔率调整</th><td colspan="3">
+         {+section name=i  loop=$sxtz start=0 loop=12 step=1+}
+            {+$sxtz[i].name+}:<label>{+$sxtz[i].peilv+}</label><input xname='{+$sxtz[i].name+}' value="{+$sxtz[i].peilv+}" class="txtx sxtz num3" key='{+$smarty.section.i.index+}' type="text"  />
+         {+/section+}
+     
+     </td>
+     <th>使用网络报码</th><td><select name="autobaoma" id='autobaoma'><option value="0">关</option><option value="1">开</option></select><label>{+if $autobaoma==1+}开{+else+}关{+/if+}</label></td>
+     </tr>
+     <tr><th>尾数赔率调整</th><td colspan="5">
+         {+section name=i loop=$wstz start=0 loop=10 step=1+}
+            {+$wstz[i].name+}:<label>{+$wstz[i].peilv+}</label><input xname='{+$wstz[i].name+}' value="{+$wstz[i].peilv+}" class="txtx wstz num3" key='{+$smarty.section.i.index+}' type="text"  />
+         {+/section+}
+     
+     </td></tr>
+     <tr><th>代理登陆提示</th><td colspan="5"><input type="text" name="amess" id='amess' value="{+$amess+}"  style="width:600px;" /><label>{+$amess+}</label>&nbsp;&nbsp;&nbsp;注:请不要输入双引号["]</td></tr>
+     <tr><th>会员登陆提示</th><td colspan="5"><input type="text" name="umess" id='umess' value="{+$umess+}" style="width:600px;" /><label>{+$umess+}</label>&nbsp;&nbsp;&nbsp;注:请不要输入双引号["]</td></tr>
+ </table>
+ <script language="javascript">
+    $("#userclosetime").val('{+$userclosetime+}');
+	$("#flyattpeilv").val('{+$flyattpeilv+}');
+	$("#flyattpeilvps").val('{+$flyattpeilvps+}');
+	$("#dsgf").val('{+$dsgf+}');
+	$("#autobaoma").val('{+$autobaoma+}');
+ </script>
+<div id="kj_jr" style="margin:0px;width:100%;float:left;margin-top:10px;">
+	   <table   border="1" style="BORDER-COLLAPSE: collapse;width:100%" borderColor=#111111>
+       <tr bgColor=#ebf5fe>
+       <td><input type="checkbox" class="clickall" /></td>
+       <td align=center>年份</td>
+ 	   <td align=center>开奖日(星期)</td>
+	   <td align=center>年柱</td>
+	   <td align=center>期数</td>
+       <td align=center>号码落球序</td>
+       <td align=center>号码</td>
+       <td align=center>特肖</td>
+       <td align=center>单双</td>
+       <td align=center>大小</td>
+       <td align=center>五行</td>
+       <td align=center colspan="3">总分</td>
+	   <td align=center>家/兽</td>
+       <td align=center colspan=2>特尾</td>
+       <td align=center>合大小</td>
+       <td align=center>合单双</td>
+       
+       <td align=center>操作</td>
+   </tr>
+   {+section name=xk loop=$kj+}
+
+    <tr>
+       <td><input type="checkbox" v='{+$kj[xk].year+}{+$kj[xk].qishu+}' class="s" /></td>
+          <td align=center>{+$kj[xk].year+}</td>
+       <td align=center>{+$kj[xk].date+}(<font color=blue>{+$kj[xk].week+}</font>)</td>
+       <td align=center>{+$kj[xk].bml+}</td>
+       <td align=center>{+$kj[xk].qishu+}</td>
+       <td align=center>
+              <img class='hand' id='img{+$kj[xk].year+}{+$kj[xk].qishu+}{+$kj[xk].p1+}' val='{+$kj[xk].p1+}' src="{+$globalpath+}imgs/{+$kj[xk].p1+}.gif" border=0  />
+              <img class='hand' id='img{+$kj[xk].year+}{+$kj[xk].qishu+}{+$kj[xk].p2+}' val='{+$kj[xk].p2+}' src="{+$globalpath+}imgs/{+$kj[xk].p2+}.gif" border=0  />
+		      <img class='hand' id='img{+$kj[xk].year+}{+$kj[xk].qishu+}{+$kj[xk].p3+}' val='{+$kj[xk].p3+}' src="{+$globalpath+}imgs/{+$kj[xk].p3+}.gif" border=0  />
+		      <img class='hand' id='img{+$kj[xk].year+}{+$kj[xk].qishu+}{+$kj[xk].p4+}'  val='{+$kj[xk].p4+}' src="{+$globalpath+}imgs/{+$kj[xk].p4+}.gif" border=0  />
+		      <img class='hand' id='img{+$kj[xk].year+}{+$kj[xk].qishu+}{+$kj[xk].p5+}' val='{+$kj[xk].p5+}' src="{+$globalpath+}imgs/{+$kj[xk].p5+}.gif" border=0  />
+		      <img class='hand' id='img{+$kj[xk].year+}{+$kj[xk].qishu+}{+$kj[xk].p6+}' val='{+$kj[xk].p6+}' src="{+$globalpath+}imgs/{+$kj[xk].p6+}.gif" border=0  /></td>
+	   <td align=center> <img class='hand' id='img{+$kj[xk].year+}{+$kj[xk].qishu+}{+$kj[xk].tm+}' val='{+$kj[xk].tm+}' src="{+$globalpath+}imgs/{+$kj[xk].tm+}.gif" border=0 /></td>
+	   <td align=center>{+$kj[xk].tmsx+}</td>
+	   <td align=center><font color=blue> {+$kj[xk].danshuang+}</font></td>
+	   <td align=center><font color=blue> {+$kj[xk].daxiao+}</font></td>
+       <td align=center>{+$kj[xk].wuhang+}</td>
+       <td align=center> {+$kj[xk].zongfen+}</td>
+       <td align=center> {+$kj[xk].zfdx+}</td>
+       <td align=center> {+$kj[xk].zfds+}</td>
+       <td align=center><font color=red>{+$kj[xk].jiashou+}</font></td>
+       <td align=center>{+$kj[xk].weishudaxiao+}</td>
+       <td align=center> {+$kj[xk].weishu+}</td>
+       <td align=center> {+$kj[xk].heshudaxiao+}</td>
+       <td align=center><font color=blue>{+$kj[xk].heshudanshuang+}</font></td>    
+        <td align=center bgColor=#ffffff><input type="button" class="btn1 btnf editkj" value='编辑' />&nbsp;<!--<input type="button" class="btn1 btnf delkjjr" value='删除' />-->&nbsp;<input type="button" class="btn1 btnf js" value="结算" /></td>       
+   </tr>
+   {+/section+}
+</table>
+     </TD>
+	 </tr>
+</table>
+	
+	</div>
+</div>
+
+<table style="background:#FFF;border:1px #393 solid;position:absolute;display:none;" class="edittb">
+<TR><Th>年份</Th><Th>期数</Th><Th>日期</Th><Th>正1</Th><Th>正2</Th><Th>正3</Th><Th>正4</Th><Th>正5</Th><Th>正6</Th><Th>特碼</Th><Th>操作</Th></TR>
+<tr><TD><input type="text" class=year /></TD>
+   <TD><input type="text" class=qishu /></TD>
+   <TD><input type="text" class=tdate /></TD>
+   <TD><input type="text" class=p1 /></TD>
+   <TD><input type="text" class=p2 /></TD>
+   <TD><input type="text" class=p3 /></TD>
+   <TD><input type="text" class=p4 /></TD>
+   <TD><input type="text" class=p5 /></TD>
+   <TD><input type="text" class=p6 /></TD>
+      <TD><input type="text" class=tm /></TD>
+       <TD><input type="button" class='editbtn btn1 btnf'  value="修改" /> <input type="button" class='btn1 btnf closebtn'  value="取消" /></TD>
+</tr>
+</table>
+<input type="hidden" value="{+$yy+}" id=y />
+<input type="hidden" value="{+$mm+}" id=m />
+<input type="hidden" value="{+$dd+}" id=d />
+
+<div id='test' style="clear:both"></div>
+
+</body>
+</html>

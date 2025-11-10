@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<meta charset="UTF-8">
+<meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0" name="viewport">
+<title>{+$webname+}</title>
+<link href="/css/jquery-weui.min.css" type="text/css" rel="stylesheet" />
+<link href="/css/makes2.css" type="text/css" rel="stylesheet" />
+<link href="/css/iconfont.min.css" type="text/css" rel="stylesheet" />
+<link href="/css/weui.min.css" type="text/css" rel="stylesheet" />
+<script language="javascript" src="/js/jquery-1.8.3.min.js"></script>
+<script language="javascript" src="/js/jquery.cookie.js"></script>
+<script language="javascript" src="/js/md5.js"></script>
+</head>
+<body >
+<script id=myjs language="javascript">var mulu="{+$mulu+}";
+var js=1;var sss='other';
+</script>  
+<div id="root">
+  <div class="home">
+    <div class="oc2pj9-1 ilDBjU">
+      <div class="pn_title">
+        {+if ($type=='baoweek')+}
+           <a style="display: none;"><div class="lb_back"></div></a>
+        {+/if+}
+        <div style="flex: 1 1 0%;">
+		<div class="left_btn">
+            <a href="javascript:history.back();"><i class="ico_back"></i></a>
+        </div>
+        </div>
+        <div style="flex: 1 1 0%;">
+            {+if ($type=='kj')+}
+		    <div style="color: white;">开奖结果</div>
+            {+elseif ($type=='wjs')+}
+            <div style="color: white;">未结明细</div>
+            {+elseif ($type=='changepass')+}
+            <div style="color: white;">重置密码</div>
+            {+elseif ($type=='baoday')+}
+            <div style="color: white;">今天已结</div>
+            {+elseif ($type=='baoweek')+}
+            <div style="color: white;">报表查询</div>
+            {+elseif ($type=='rule')+}
+			<div class="i1h1lp-1 jhcQwh gamemenu"><div class="i1h1lp-2 epExtR"><span class="text">{+$gname+}规则</span><span class="arrow"></span></div></div>
+            {+elseif ($type=='userinfo')+}
+            <div style="color: white;">个人资讯</div>
+            {+elseif ($type=='nft')+}
+            <div style="color: white;">历史公告</div>
+            {+/if+}  
+		  
+        </div>
+        <div style="flex: 1 1 0%;">
+          <div class="menu">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="main-content" style="{+if ($type=='userinfo')+}bottom: 0.5em;{+elseif ($type=='nft')+}bottom: 0.5em;{+elseif ($type=='changepass')+}bottom: 0em;{+elseif ($type=='kj')+}bottom: 2.2em;{+/if+}">
+        {+if ($type=='kj')+}
+		<link href="/css/odds.css" rel="stylesheet" type="text/css" />
+      <div>
+        <div class="sc-1a472n4-0 ehMKLs">
+         <div class="i1h1lp-1 jhcQwh gamemenu" style="position: relative;"><div class="i1h1lp-2 kIYJcB"><span class="text">{+$gname+}</span><span class="arrow"></span></div></div>
+        </div>
+       
+        <div class="rough_lines">
+        </div>
+        <div class="sc-1a472n4-4 gpQeaD">
+          <div class="zyzeo4-2 fEtITC">
+            <div class="zyzeo4-5 cJXNwD">
+              <div class="zyzeo4-3 kEsQus">
+                期数
+              </div>
+              <div class="zyzeo4-3 kEsQus">
+                时间
+              </div>
+            </div>
+            <div class="zyzeo4-5 jewTjd kjbt">
+            </div>
+          </div>
+   
+       <div class="zyzeo4-0 gemcaE" style="position: relative;">
+            <div style="overflow: visible;background: #fff;">
+              <div aria-label="grid" aria-readonly="true" class="ReactVirtualized__Grid ReactVirtualized__List" role="grid" tabindex="0"style="box-sizing: border-box; direction: ltr;position: relative; overflow: hidden auto;">
+                <div class="ReactVirtualized__Grid__innerScrollContainer kjlist" role="rowgroup" style="width: 100%; overflow: hidden; position: relative;background: #fff;">
+                  <div class="zyzeo4-1 xucEQ">
+                    <div class="zyzeo4-5 cJXNwD">
+                      <span class="title"></span><span class="title"></span>
+                    </div>
+                    <div class="zyzeo4-5 jewTjd">
+                      <div class="pk10 sc-1dsf9oj-1 kkdzbL">
+                        
+                      </div>
+                      <div class="pk10 sc-1dsf9oj-1 hILneq">
+                        
+                      </div>
+                      <div class="pk10 sc-1dsf9oj-1 gUOQKP">
+                        
+                      </div>
+                      <div class="pk10 sc-1dsf9oj-1 imarRC">
+                        
+                      </div>
+                      <div class="pk10 sc-1dsf9oj-1 hdvgbX">
+                        
+                      </div>
+                      <div class="pk10 sc-1dsf9oj-1 giqFCZ">
+                        
+                      </div>
+                      <div class="pk10 sc-1dsf9oj-1 vnjNK">
+                        
+                      </div>
+                      <div class="pk10 sc-1dsf9oj-1 jsCbDZ">
+                        
+                      </div>
+                      <div class="pk10 sc-1dsf9oj-1 kVqski">
+                        
+                      </div>
+                      <div class="pk10 sc-1dsf9oj-1 imJTGY">
+                        
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+			</div>
+            <div class="resize-triggers">
+              <div class="expand-trigger">
+                <div style="width: 401px; height: 571px;">
+                </div>
+              </div>
+              <div class="contract-trigger">
+              </div>
+            </div>
+   
+
+
+        </div>
+		<div class="page_box">
+    <div id="pager"><li><a class="pgEmpty prev">上一页</a><dd><span class="red_f pager1" v='1'>1</span><span class="pager2">/1</span></dd><a class="next" >下一页</a></li></div>
+</div>
+      </div>
+      {+elseif ($type=='wjs')+}
+<div class="sc-1fs8umj-0 ettwvL"><div class="table-header"><div class="col colw4">注单号</div><div class="col colw3">玩法</div><div class="col colw2">金额</div><div class="col colw1" >可赢</div></div><div class="table-content wjslist"><div class="no_date"><i><img src="/images/no_data.png"></i><p>暂无数据</p></div></div>
+<div class="page_box">
+    <div id="pager"><li><a class="pgEmpty prev">上一页</a><dd><span class="red_f pager1" v='1'>1</span><span class="pager2">/1</span></dd><a class="next" >下一页</a></li></div>
+    <li>
+        <dt>本页：<span class="green_f" id="pageCount">0</span> &nbsp;金额：<span class="blue_f" id="pageBettingAmount">0</span> &nbsp;输赢：<span class="red_f" id="pageResult">0</span></dt>
+    </li>
+    <li>
+        <dt>总计：<span class="green_f" id="totalCount">0</span> &nbsp;金额：<span class="blue_f" id="totalBettingAmount">0</span> &nbsp;输赢：<span  class="red_f"id="totalResult">0</span></dt>
+    </li>
+</div>
+      {+elseif ($type=='userinfo')+}
+      <div class="sc-1mp5qhc-0 jEffvY userinfocon" ></div>
+      {+elseif ($type=='changepass')+}
+      <div class="ggagnp-0 ghAhQy passcon">
+	  
+	  </div>
+      {+elseif ($type=='rule')+}
+<link href="/Areas/Mobile/Content/css/main.min.css" rel="stylesheet" type="text/css" />
+<link href="/Areas/Mobile/Content/LCalendar/css/LCalendar.min.css" rel="stylesheet" type="text/css" />
+<link href="/Areas/Mobile/Content/css/blue/skin.min.css" rel="stylesheet" type="text/css" />
+<div class="bibxzc-0 dESQLw">
+    <div class="scroll-wrapper rulecon">
+     
+    </div>
+</div>
+      {+elseif ($type=='nft')+}
+	  <div class="list_notice_container" style="bottom: 5px;">
+	  </div>
+      {+elseif ($type=='baoday')+}
+<div class="sc-1fs8umj-0 ettwvL"><div class="table-header"><div class="col colw4">注单号</div><div class="col colw3">玩法</div><div class="col colw2">金额</div><div class="col colw1">结果</div></div><div class="table-content wjslist"></div>
+<div class="page_box">
+    <div id="pager"><li><a class="pgEmpty prev">上一页</a><dd><span class="red_f pager1" v='1'>1</span><span class="pager2">/1</span></dd><a class="next" >下一页</a></li></div>
+    <li>
+        <dt>本页：<span class="green_f" id="pageCount">0</span> &nbsp;金额：<span class="blue_f" id="pageBettingAmount">0</span> &nbsp;输赢：<span id="pageResult">0</span></dt>
+    </li>
+    <li>
+        <dt>总计：<span class="green_f" id="totalCount">0</span> &nbsp;金额：<span class="blue_f" id="totalBettingAmount">0</span> &nbsp;输赢：<span id="totalResult">0</span></dt>
+    </li>
+</div></div> 
+
+     {+elseif ($type=='baoweek')+}
+<html>
+ <head></head>
+ <body>
+  <div class="sc-1x64nms-1 bxmSdB baozong">
+   <ul class="sc-1x64nms-0 bpTAPs baoctrl">
+    <li><a class="active">本周</a></li>
+    <li><a class="">上周</a></li>
+   </ul>
+   <div class="rough_lines"></div>
+   <div class="sc-1fs8umj-0 ettwvL thisweek">
+    <div class="table-header">
+       <div class="col colb5">
+      日期
+     </div>
+     <div class="col colb4">
+      注数
+     </div>
+     <div class="col colb3">
+      下注金额
+     </div>
+     <div class="col colb2">
+      退水
+     </div>
+     <div class="col colb1">
+      盈亏
+     </div>
+    </div>
+    <div class="table-content">
+     <a class="table-row" href="javascript:void(0);">
+      <div class="col colb5"></div>
+      <div class="col colb4">
+       0
+      </div>
+      <div class="col colb3">
+       0
+      </div>
+      <div class="col colb2">
+       0
+      </div>
+      <div class="col colb1">
+       <span class="">0</span>
+      </div></a>
+     <a class="table-row" href="javascript:void(0);">
+      <div class="col colb5"></div>
+      <div class="col colb4">
+       0
+      </div>
+      <div class="col colb3">
+       0
+      </div>
+      <div class="col colb2">
+       0
+      </div>
+      <div class="col colb1">
+       <span>0</span>
+      </div></a>
+     <a class="table-row" href="javascript:void(0);">
+      <div class="col colb5"></div>
+      <div class="col colb4">
+       0
+      </div>
+      <div class="col colb3">
+       0
+      </div>
+      <div class="col colb2">
+       0
+      </div>
+      <div class="col colb1">
+       <span>0</span>
+      </div></a>
+     <a class="table-row" href="javascript:void(0);">
+      <div class="col colb5"></div>
+      <div class="col colb4">
+       0
+      </div>
+      <div class="col colb3">
+       0
+      </div>
+      <div class="col colb2">
+       0
+      </div>
+      <div class="col colb1">
+       <span>0</span>
+      </div></a>
+     <a class="table-row" href="javascript:void(0);">
+      <div class="col colb5"></div>
+      <div class="col colb4">
+       0
+      </div>
+      <div class="col colb3">
+       0
+      </div>
+      <div class="col colb2">
+       0
+      </div>
+      <div class="col colb1">
+       <span class="">0</span>
+      </div></a>
+     <a class="table-row" href="javascript:void(0);">
+      <div class="col colb5"></div>
+      <div class="col colb4">
+       0
+      </div>
+      <div class="col colb3">
+       0
+      </div>
+      <div class="col colb2">
+       0
+      </div>
+      <div class="col colb1">
+       <span class="">0</span>
+      </div></a>
+     <a class="table-row" href="javascript:void(0);">
+      <div class="col colb5"></div>
+      <div class="col colb4">
+       0
+      </div>
+      <div class="col colb3">
+       0
+      </div>
+      <div class="col colb2">
+       0
+      </div>
+      <div class="col colb1">
+       <span class="">0</span>
+      </div></a>
+	  <div class="table-footer">
+     <div class="col colb5">
+      总计
+     </div>
+     <div class="col colb4">
+      0
+     </div>
+     <div class="col colb3">
+      0.0
+     </div>
+     <div class="col colb2">
+      0
+     </div>
+     <div class="col colb1">
+      <span>0</span>
+     </div>
+    </div>
+    </div>
+    
+   </div>
+   <div class="sc-1fs8umj-0 ettwvL lastweek" style="display: none;">
+    <div class="table-header">
+     <div class="col colb5">
+      日期
+     </div>
+     <div class="col colb4">
+      注数
+     </div>
+     <div class="col colb3">
+      下注金额
+     </div>
+     <div class="col colb2">
+      退水
+     </div>
+     <div class="col colb1">
+      盈亏
+     </div>
+    </div>
+    <div class="table-content">
+     <a class="table-row" href="javascript:void(0);">
+      <div class="col colb5"></div>
+      <div class="col colb4">
+       0
+      </div>
+      <div class="col colb3">
+       0
+      </div>
+      <div class="col colb2">
+       0
+      </div>
+      <div class="col colb1">
+       <span class="">0</span>
+      </div></a>
+       <a class="table-row" href="javascript:void(0);">
+      <div class="col colb5"></div>
+      <div class="col colb4">
+       0
+      </div>
+      <div class="col colb3">
+       0
+      </div>
+      <div class="col colb2">
+       0
+      </div>
+      <div class="col colb1">
+       <span class="">0</span>
+      </div></a>
+       <a class="table-row" href="javascript:void(0);">
+      <div class="col colb5"></div>
+      <div class="col colb4">
+       0
+      </div>
+      <div class="col colb3">
+       0
+      </div>
+      <div class="col colb2">
+       0
+      </div>
+      <div class="col colb1">
+       <span class="">0</span>
+      </div></a>
+      <a class="table-row" href="javascript:void(0);">
+      <div class="col colb5"></div>
+      <div class="col colb4">
+       0
+      </div>
+      <div class="col colb3">
+       0
+      </div>
+      <div class="col colb2">
+       0
+      </div>
+      <div class="col colb1">
+       <span class="">0</span>
+      </div></a>
+       <a class="table-row" href="javascript:void(0);">
+      <div class="col colb5"></div>
+      <div class="col colb4">
+       0
+      </div>
+      <div class="col colb3">
+       0
+      </div>
+      <div class="col colb2">
+       0
+      </div>
+      <div class="col colb1">
+       <span class="">0</span>
+      </div></a>
+      <a class="table-row" href="javascript:void(0);">
+      <div class="col colb5"></div>
+      <div class="col colb4">
+       0
+      </div>
+      <div class="col colb3">
+       0
+      </div>
+      <div class="col colb2">
+       0
+      </div>
+      <div class="col colb1">
+       <span class="">0</span>
+      </div></a>
+       <a class="table-row" href="javascript:void(0);">
+      <div class="col colb5"></div>
+      <div class="col colb4">
+       0
+      </div>
+      <div class="col colb3">
+       0
+      </div>
+      <div class="col colb2">
+       0
+      </div>
+      <div class="col colb1">
+       <span class="">0</span>
+      </div></a>
+	      <div class="table-footer">
+     <div class="col colb5">
+      总计
+     </div>
+     <div class="col colb4">
+      0
+     </div>
+     <div class="col colb3">
+      0
+     </div>
+     <div class="col colb2">
+      0
+     </div>
+     <div class="col colb1">
+      <span>0</span>
+     </div>
+    </div>
+    </div>
+   </div>
+  </div> 
+ </body>
+</html><div class="sc-1fs8umj-0 ettwvL detail" style="display: none;"><div class="table-header"><div class="col colw4">期数</div><div class="col colw3">玩法</div><div class="col colw2">金额</div><div class="col colw1">输赢</div></div><div class="table-content wjslist"><div class="no_date"><i><img src="/images/no_data.png"></i><p>暂无数据</p></div></div>
+<div class="page_box">
+    <div id="pager"><li><a class="pgEmpty prev">上一页</a><dd><span class="red_f pager1" v='1'>1</span><span class="pager2">/1</span></dd><a class="next" >下一页</a></li></div>
+    <li>
+        <dt>本页：<span class="green_f" id="pageCount">0</span> &nbsp;金额：<span class="blue_f" id="pageBettingAmount">0</span> &nbsp;输赢：<span id="pageResult">0</span></dt>
+    </li>
+    <li>
+        <dt>总计：<span class="green_f" id="totalCount">0</span> &nbsp;金额：<span class="blue_f" id="totalBettingAmount">0</span> &nbsp;输赢：<span id="totalResult">0</span></dt>
+    </li>
+</div>
+</div> 
+      {+/if+}
+
+    </div>
+
+  
+  </div>
+  <div class="slevm5-0 ivfTfC zhao" data-show="false">
+  </div>
+
+  <div class="slevm5-1 iJamhB menulist" data-show="false">
+	<div class="menu_top">
+            <i><img src="/images/logo_w.png"></i>
+            <h2>会员：{+$username+}</h2>
+            <h2>额度：<span class="accountLimit" style="color:#f00">{+$accountLimit+}</span></h2>
+        </div>
+    <div class="menu_list">
+                <a type="/Mobile/Index" href="javascript:void(0)" >
+                    <i class="icon iconfont icon-shouye-copy"></i>
+                    <dd>首页<i class="icon iconfont icon-you"></i></dd>
+                </a>
+            <a type="/Mobile/UnCheckBetting" href="javascript:void(0)">
+                <i class="icon iconfont icon-mingxibiao"></i>
+                <dd>未结明细<i class="icon iconfont icon-you"></i></dd>
+            </a>
+            <a type="/Mobile/CheckBetting" href="javascript:void(0)">
+                <i class="icon iconfont icon-yijiesuan"></i>
+                <dd>今天已结<i class="icon iconfont icon-you"></i></dd>
+
+            </a>
+            <a type="/Mobile/HistoryBetList" href="javascript:void(0)">
+                <i class="icon iconfont icon-wendang"></i>
+                <dd>报表查询<i class="icon iconfont icon-you"></i></dd>
+            </a>
+            <a type="/Mobile/ResultHistory" href="javascript:void(0)">
+                <i class="icon iconfont icon-tubiaozhizuomoban"></i>
+                <dd>开奖结果<i class="icon iconfont icon-you"></i></dd>
+            </a>
+            <a type="/Mobile/Info" href="javascript:void(0)">
+                <i class="icon iconfont icon-zixun"></i>
+                <dd>个人资讯<i class="icon iconfont icon-you"></i></dd>
+            </a>
+            <a type="/Mobile/GameRule"  type="" href="javascript:void(0)">
+                <i class="icon iconfont icon-toufangguize"></i>
+                <dd>活动规则<i class="icon iconfont icon-you"></i></dd>
+            </a>
+            <a href="/Mobile/Notification">
+                <i class="icon iconfont icon-gonggao"></i>
+                <dd>历史公告<i class="icon iconfont icon-you"></i></dd>
+            </a>
+            <a  type="/Mobile/ChangePassword" href="javascript:void(0)" >
+                <i class="icon iconfont icon-weibiaoti1"></i>
+                <dd>密码设置<i class="icon iconfont icon-you"></i></dd>
+            </a>
+            <a type="logout" href="javascript:void(0)">
+                <i class="icon iconfont icon-tuichu"></i>
+                <dd>退出<i class="icon iconfont icon-you"></i></dd>
+            </a>
+        </div>
+  </div>
+</div>
+<div id="modal">
+</div>
+
+<div class="weui-mask weui-mask--visible" style="display: none;">
+<div class="weui-dialog weui-dialog--visible">
+<div class="weui-dialog__hd">
+<strong class="weui-dialog__title">错误</strong></div>
+<div class="weui-dialog__bd"></div>
+<div class="weui-dialog__ft"><a href="javascript:;" class="weui-dialog__btn primary">确定</a><a href="javascript:;" class="weui-dialog__btn {+if ($type=='changepass')+}setpass{+elseif ($type=='userinfo')+}setabcd{+/if+}" style="display: none;">确定</a></div>
+</div>
+</div>
+
+<div class="i1h1lp-3 iULZxB gamelist" tabindex="1" style="display: none;{+if ($type=='kj')+}top: 4.7em;{+/if+}">
+    <div class="game-div">
+        <div class="game-item-wrapper">
+            {+section name=i loop=$gamecs+}<span class="game-item" gid="{+$gamecs[i].gid+}">{+$gamecs[i].gname+}</span>{+/section+}
+        </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+var style = '{+$class+}';//alert(style);
+var ngid= {+$gid+};//alert(ngid);
+var globalpath = '{+$globalpath+}';//alert(globalpath);
+var kjurl='{+$kjurl+}';//alert(kjurl);
+var fenlei='{+$fenlei+}';//alert(fenlei);
+var type = '{+$type+}';//alert(type);
+var app='{+$app+}';//alert(app);
+sma=[];
+sma['紅'] = new Array(1,2,7,8,12,13,18,19,23,24,29,30,34,35,40,45,46); 
+sma['藍'] = new Array(3,4,9,10,14,15,20,25,26,31,36,37,41,42,47,48); 
+sma['綠'] = new Array(5,6,11,16,17,21,22,27,28,32,33,38,39,43,44,49); 
+ </script>
+</body>
+</html>

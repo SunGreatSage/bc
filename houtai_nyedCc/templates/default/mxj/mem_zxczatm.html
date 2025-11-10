@@ -1,0 +1,93 @@
+<div class="scrollable ng-scope others zxczatms">
+<link rel="stylesheet" href="../css/mobile/mobile-cash.css">
+<link rel="stylesheet" href="../css/default/xj/jquery-ui.css">
+<div class="scrollable-content member-setting overthrow">
+
+<div>
+    <h1>订单提交</h1>
+
+
+    <div class="col-xs-12">
+       <!-- ATM/柜台 -->    
+        <div class="settingContainer">
+        {+if ($en=='WXZF' | $en=='ZFB')+}
+					<h4>请下载图片扫一扫支付</h4>
+					<img src="../xj/{+$en+}.jpg"/>
+
+        {+else+}
+            <div class="padding20">
+      请转账至下列银行账户中：
+    </div>
+          <div class="padding20">
+            <div class="textbox clearfix">
+              <div class="col1 fl">银行</div>
+                <div class="col2 fl"><img src="../css/default/xj/{+$en+}_s.jpg"></div>
+            </div>
+            <div class="textbox clearfix">
+              <div class="col1 fl">姓名</div>
+                <div class="col2 fl">{+$name+}</div>
+            </div>
+            <div class="textbox clearfix">
+              <div class="col1 fl">帐号</div>
+                <div class="col2 fl">{+$num+}<input type="hidden" id="copy_cardid" value="{+$num+}" class="needsclick" ></div>
+            </div>
+            <div class="textbox clearfix safetips_address">
+              <div class="col1 fl">地址</div>
+                <div class="col2 fl">{+$kaihuhang+}</div>
+            </div>
+            <div class="gap20"></div>
+          </div>
+          {+/if+}
+        </div>
+        <!-- <div class="fullwidth">
+          <div class="container">
+            <a target="_blank" id="btnToBank" class="submitbtn3">去充值</a>
+            <p>如果不懂如何填写附言, 请查看此教程。</p>
+          </div>
+        </div> -->
+      </div>
+
+      <div class="padding20">
+        <h3>存款信息</h3>
+      </div>
+
+      <div class="col-xs-12">
+       <!-- ATM/柜台 -->    
+        <div class="settingContainer">
+          <div>
+            <div class="textbox clearfix">
+              <div class="col1 fl">存款金额</div>
+                <div class="col2 fl"><input type="text" id="amount" class="textfield1 needsclick" placeholder="(请填写)" ></div>
+            </div>
+            <div class="post-info">
+              <div class="textbox clearfix">
+                <div class="col1 fl">用户姓名</div>
+                  <div class="col2 fl"><input type="text" id="userName" class="textfield1 needsclick" placeholder="(请填写)" ></div>
+              </div>
+              <div class="textbox clearfix">
+                <div class="col1 fl">存款帐号</div>
+                  <div class="col2 fl"><input type="text" id="cardId" class="textfield1 needsclick" placeholder="(请填写)" ></div>
+              </div>
+              <div class="textbox clearfix safetips_address">
+                <div class="col1 fl">存款时间</div>
+                  <div class="col2 fl"><input type="text" id="depostitTime" class="textfield1 needsclick" placeholder="(请填写)" ></div>
+              </div>
+            </div>
+            <div class="gap20"></div>
+            <div class="submitbtn cnbig btnradius orderatm" >开始充值</div>
+          </div>
+        </div>
+        <!-- <div class="fullwidth">
+          <div class="container">
+            <a target="_blank" id="btnToBank" class="submitbtn3">去充值</a>
+            <p>如果不懂如何填写附言, 请查看此教程。</p>
+          </div>
+        </div> -->
+        <div class="gap100" style="height:200px;"></div> 
+      </div>
+
+    </div>
+    
+  </div>
+   <div class="gap100" style="height:200px;"></div> 
+</div>

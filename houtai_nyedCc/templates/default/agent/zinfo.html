@@ -1,0 +1,32 @@
+{+include file='header.html'+}
+<style>
+.zinfotb label{float:left;margin-left:5px;display:block;clear:both;width:500px;text-align:left;}
+</style>
+</head><body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='zinfo';
+</script>
+<div class="xbody1">
+ <table class="tinfo zinfotb"  style="width:700px;margin:0px;">
+<tr><Td style="width:30%"><select class='qishu'>
+{+foreach item=i from=$qishu+}
+<option value='{+$i+}' {+if $i==$q+}selected{+/if+}>{+$i+}期</option>
+{+/foreach+}
+</select>
+</TD><td style="text-align:right;padding-right:5px;"></td></tr>
+<tr><th>一等奖</th><td>
+ {+section name=i loop=$ydeng+}
+ <label title="{+$ydeng[i].con+}">会员-{+$ydeng[i].user+}&nbsp;&nbsp;<!--奖金-{+$ydeng[i].prize+}&nbsp;&nbsp;-->号码：{+$ydeng[i].con+}</label>
+ {+/section+}
+</td></tr>
+<tr><th>二等奖</th><td>
+ {+section name=i loop=$edeng+}
+ <label title="{+$edeng[i].con+}">会员-{+$edeng[i].user+}&nbsp;&nbsp;注数-{+$edeng[i].z2+}&nbsp;&nbsp;号码：{+$edeng[i].con+}</label>
+ {+/section+}
+</td></tr>
+</table>
+
+</div>
+<div id='test'></div>
+</body>
+</html>

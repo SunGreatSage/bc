@@ -1,0 +1,51 @@
+{+include file='header.html'+}
+<style>
+.addtb{width:200px;display:none;position:absolute;background:#fff}
+.addtb td{text-align:left;}
+input.bc{background:#fff}
+.s_tb tr:hover{background:#FCF}
+</style>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='classpan';</script>
+</head>
+<body>
+<div class="xbody1">
+
+ <table class="tinfo wd100 s_tb">
+ <tr><th colspan="1">玩法归类</th><td colspan="2">
+ <select class="game">
+     
+     
+     
+ {+section name=i loop=$game+}
+  
+     
+     
+     <option value="{+$game[i].gid+}" {+if $game[i].gid==$gid+}selected{+/if+}>{+$game[i].gname+}</option>
+     
+     
+     
+  {+/section+}
+ 
+    
+    
+    </select>
+ </td><th colspan="2"><input type="button" class="edit btn1 btnf" value='修改' /></th></tr>
+ <TR>
+ <th>ID</th><th>名称</th><th class="abcd">ABCD</th><th class="ab">AB</th><th class="ifok">ifok</th>
+ </TR>
+ {+section name=i loop=$pan+}
+   <TR>
+       <td><INPUT type='text'  class="class"  value="{+$pan[i].class+}" style="display:none" />{+$pan[i].class+}</td>
+       <td class="name">{+$pan[i].name+}</td>
+       <TD><INPUT type='checkbox'  class="abcd" value="{+$pan[i].abcd+}" {+if $pan[i].abcd==1+}checked{+/if+} /></TD>
+       <TD><INPUT type='checkbox'  class="ab" value="{+$pan[i].ab+}" {+if $pan[i].ab==1+}checked{+/if+} /></TD>
+       <TD><INPUT type='checkbox'  class="ifok" value="{+$pan[i].ifok+}" {+if $pan[i].ifok==1+}checked{+/if+} /></TD>
+
+   
+   </TR>
+ {+/section+}
+  </table>
+</div>
+<div id='test'></div>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{+include file='header.html'+}
+<style type="text/css">
+td,th{line-height:30px;}
+</style>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='faq';
+</script>
+<div class="xbody1">
+<table class="tinfo wd100">
+<TR><Th colspan="2">常见问题</Th></TR>
+<TR><TD style="width:40%" valign="top">
+<table class="tinfo wd100 ">
+<TR><th>时间</th><th>标题</th></TR>
+{+section name=i loop=$news+}
+<TR><td>{+$news[i].time+}</td><TD style="text-align:left;padding-left:10px;"><a href='javascript:void(0);'>{+$news[i].title+}</a><span>{+$news[i].content+}</span></TD></TR>
+{+/section+}
+</table>
+</TD><td style="padding-left:10px;text-align:left;height:400px;" id="content" valign="top"></TD></TR>
+</table>
+</div>
+</body>
+</html>

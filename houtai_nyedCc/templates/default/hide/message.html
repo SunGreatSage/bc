@@ -1,0 +1,32 @@
+{+include file='header.html'+}
+<style type="text/css">
+td.w400{width:300px;padding-left:10px;text-align:left;}
+td,th{line-height:30px;}
+</style>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='message';</script>
+<div class="xbody1">
+
+ <table class="tinfo wd100 m_tb">
+ <tr><th colspan="4">消息</th><th colspan="3">{+$page+}</th></tr>
+ <TR>
+ <th><input type="checkbox" id='clickall' /></th><th>编号</th><th>会员名称</th><th class="w400">内容</th><th class="w400">回复</th><th >时间</th><th><input type="button" class="btn3 btnf" id='delall'  value="删除选中" /></th>
+ </TR>
+ {+section name=i loop=$m+}
+<TR><td><input type="checkbox" value='{+$m[i].id+}' /></td><td>{+$m[i].id+}</td><td>{+$m[i].user+}</td><td class="w400" style="text-align:left;">{+$m[i].content+}</td><td class="w400" style="text-align:left;">{+$m[i].response+}</td><td>{+$m[i].time+}</td><td><input type="button" class="delone btn1 btnf" value='删除' /><input type="button" class="response btn1 btnf" value='回复' /></td></TR>
+ {+/section+}
+  </table>
+</div>
+<table id='responsediv' class="tinfo" style="width:500px;background:#fff;display:none;position:absolute">
+<TR><Th>回复内容</Th><TD>
+   <textarea id='response' cols="50" rows="5"></textarea>
+   </TD>
+  <TR><Th></Th><TD><input type="hidden" value="" id='messageid' name="messageid" />
+    <input type="button" value="发表回复"  class="btn3 btnf" id='sendbtn' />
+  </TD></TR> 
+   
+</table>
+<div id='test'></div>
+</body>
+</html>

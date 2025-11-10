@@ -1,0 +1,33 @@
+{+include file='headers.html'+}
+</head>
+<body id="topbody">
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='money_log';
+</script>
+<div class="jt-container">
+<div class="top_info">
+<span class="title">{+$username+} 额度变更记录</span>
+<span class="right">
+				<a class="back" onclick="javascript:history.back(-1);" href="javascript:void(0);">返回</a>
+			</span>
+</div>
+<div class="contents  s_main">
+<table class="data_table list table_ball">
+<thead><tr><th>时间</th><th>额度类型</th><th>操作金额</th><th>余额</th><th>操作</th><th>IP</th><th>IP归属地</th><th>操作员</th></tr></thead>
+<tbody>
+{+section name=i loop=$log+}
+<tr>
+    <td class="time">{+$log[i].time+}</td>
+    <td>{+if $log[i].type==0+}信用额度{+elseif $fudong==1+}现金额度{+else+}信用额度{+/if+}</td>
+    <td>{+$log[i].money+}</td>
+    <td>{+$log[i].usermoney+}</td>
+    <td>{+$log[i].bz+}</td>
+    <td>{+$log[i].ip+}</td><td>{+$log[i].addr+}</td><td>{+$log[i].modiuser+}({+$log[i].modisonuser+})</td></tr>
+{+/section+}
+</tbody>
+</table>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,96 @@
+{+include file='header2.html'+}
+</head>
+<style>
+	.xxtb{display:none;position: absolute;width:1000px;background: #fff}
+	.click{background-color: rgb(255, 255, 162) !important;}
+	.page{border: 1px solid #ddd;
+    color: #2161b3 !important;
+    background: #f9f9f9;
+	 padding: 4px 8px;}
+		.current{border: 1px solid #2161b3;
+    color: #fff !important;
+    background-color: #2161b3;
+    padding: 4px 8px;}
+</style>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='online';</script>
+<div class="jt-container">
+<div class="s_main">  
+<TABLE class="list table_ball">
+ <thead>
+ <tr><th>所有</th><th>总公司</th><th>总代</th><th>一级</th><th>二级</th><th>三级</th><th>四级</th><th>五级</th><th>六级</th><th>七级</th><th>八级	</th><th>会员</th></tr></thead>
+<tr>{+foreach item=i key=k from=$num+}<td class="type{+if $type==$k+} click{+/if+}" type='{+$k+}' style="cursor: pointer;" >{+$i+}</td>{+/foreach+}</tr>
+</TABLE><BR />
+
+   <table class="list table_ball on_tb ">
+   <thead>
+   <TR><th style="display: none;"><input type="checkbox" id='clickall' />全选</th><th style="display: none;">ID</th><th>级别</th><th>登陆名</th><th>名称</th><th>客户端</th>
+   {+if $type==11+}
+     <th>信用额度/余额</th>
+     <th>未结算</th>
+   {+/if+}
+   <th>IP</th><th>地址</th><th>登陆时间</th><th>最后活动时间</th><th>操作<input   type="button" value="踢出选中" id='delall' style="width: 70px;display: none;"  /></th></TR></thead>
+    {+section name=i loop=$on+}
+    <TR class="com" id="{+$on[i].com+}">
+       <TD style="display: none;"><input type="checkbox" value="{+$on[i].uid+}" />{+$on[i].i+}</TD>
+	   <TD style="display: none;">{+$on[i].i+}</TD>
+	   {+if $on[i].xtype==0+}
+       <td>总公司</td>
+	   {+else if $on[i].xtype==1+}
+	    {+if $on[i].layer==1+}
+		<td>一级</td>
+		{+else if $on[i].layer==2+}
+		<td>二级</td>
+		{+else if $on[i].layer==3+}
+		<td>三级</td>
+		{+else if $on[i].layer==4+}
+		<td>四级</td>
+		{+else if $on[i].layer==5+}
+		<td>五级</td>
+		{+else if $on[i].layer==6+}
+		<td>六级</td>
+		{+else if $on[i].layer==7+}
+		<td>七级</td>
+		{+else if $on[i].layer==8+}
+		<td>八级</td>
+		{+/if+}
+	    {+else if $on[i].xtype==2+}
+		<td>会员</td>
+       {+/if+}
+        <Td class='tl'>{+$on[i].username+}</Td>
+		<Td class='tl'>{+$on[i].name+}</Td>
+		<td class='os'>{+$on[i].os+}</td>
+         {+if $type==11+}
+     <td class="tl" style="color: red;" >{+$on[i].maxmoney+}/{+$on[i].money+}</td>
+     <td class='tl' uid='{+$on[i].uid+}'>{+$on[i].z9+}</td>
+   {+/if+}  
+        
+		<Td>{+$on[i].ip+}</Td>
+		<Td class="ip" ip=''>{+$on[i].addr+}</Td>
+        <Td >{+$on[i].logintime+}</Td>
+        	<Td>{+$on[i].savetime+}</Td>
+        <Td><input type="button" value="踢出" /></Td>
+     </TR>
+    {+/section+}
+   </table>
+ <div class="control">
+		<span>{+$page+}</span>
+	</div>	
+</div>
+</div>
+<table class="data_table data_list list xxtb">
+ <tr class="bt">
+ <th>彩种</th>
+  <th>期數</th>  
+  <th>類別</th>
+  <th>金額</th>
+  <th>赔率</th>
+  <th>退水</th>
+  <th>會員</th>
+  <th>時間</th>
+ </tr>
+</table>
+<input type="hidden" class='sort' orderby='time' sorttype='DESC' page='1' xtype='2' js='0' gid='99' con='' />
+<div id='test'></div>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   {+if $rkey==0+}oncontextmenu="return false"{+/if+}><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>{+$title+}</title> 
+<link href="/default/css/member/makes/bettingm.min.css" type="text/css" rel="stylesheet" />
+<link href="/default/css/member/makes/jqueryuib.min.css" type="text/css" rel="stylesheet" />
+{+if $gid==100+}
+<link id="lotBetPageStyle" href="/default/css/member/makes/yellow/skinbd.min.css"type="text/css" rel="stylesheet" />
+{+else+}
+<link id="lotBetPageStyle" href="/default/css/member/makes/skinbd.min.css"type="text/css" rel="stylesheet" />
+{+/if+}
+
+<script language="javascript" src="/js/jquery-1.8.3.min.js"></script>
+<script language="javascript" src="/js/public.js"></script>
+<script language="javascript" src="/js/jquery.cookie.js"></script>
+<script src="/js/default/jsuxj/makeuser.js?date=2023" language="javascript"></script>
+{+if $fenlei==100+}
+<script src="/js/default/jsuxj/lhcuser.js" language="javascript"></script>
+{+else+}
+<script src="/js/default/jsuxj/ssuser.js" language="javascript"></script>
+{+/if+}
+<script type="text/javascript" src="/js/default/jsuxj/libs.js"></script>
+<style type="text/css">
+  .fantan td,.fantan th{height:30px;line-height: 30px;}
+  .fantansan td,.fantansan th{height:60px;line-height: 30px;}
+</style>
+<script type="text/javascript">
+$(function(){myready()});
+</script>
+</head>
+<body class="{+$skin+}  {+if $gid==100+}L_HK6{+else+}L_MCHK6{+/if+}">
+<script type="text/javascript" id="myjs">var mulu='{+$mulu+}';
+var js=0;
+var sss="make";
+var ustatus = {+$status+};
+</script>
+<div class="sub main" style="display: none;">
+<ul>
+{+if $fenlei!=100+}<li><a href='javascript:void(0)' bid='' >两面盘</a></li> {+/if+}
+      {+if $fenlei==107+}<li><a href='javascript:void(0)' bid='15'>单号1 ~ 10</a></li>{+/if+}
+      {+if $fenlei==103+}<li><a href='javascript:void(0)' bid='15'>单球1～8</a></li>{+/if+}
+      {+if $fenlei==121+}<li><a href='javascript:void(0)' bid='15'>1~5球号</a></li>{+/if+}
+      {+if $fenlei==100+}
+          {+section name=i loop=$b+}
+             {+if $smarty.section.i.index>0+}{+/if+}
+             {+if $smarty.section.i.index==3+}
+                <li><a href='javascript:void(0)' bid='1-6'>正特1~6</a></li>
+             {+/if+}
+             {+if ($b[i].name=='番摊')+} 
+                <li><a href='javascript:void(0)' bid='{+$b[i].bid+}' t='2'>{+$b[i].name+}</a></li>
+             {+else+}
+                <li><a href='javascript:void(0)' bid='{+$b[i].bid+}'>{+$b[i].name+}</a></li>
+                {+/if+}
+             
+          {+/section+}
+          
+      {+elseif ($fenlei!=151)+}    
+          {+section name=i loop=$b+}    
+             {+if ($fenlei==107)+} 
+               {+if ($b[i].name=='冠亚军组合' || ($b[i].name=='番摊' && $ft==1))+}<li><a href='javascript:void(0)' bid='{+$b[i].bid+}'>{+$b[i].name+}</a></li>{+/if+}<!-- || $b[i].name=='番摊'-->
+               {+if ($b[i].name=='任选牛牛' & $pk10niu==1)+}<li><a href='javascript:void(0)' bid='{+$b[i].bid+}'>{+$b[i].name+}</a></li>{+/if+}
+             {+elseif ($fenlei==121)+} 
+               {+if ($b[i].name=='正码' || $b[i].name=='连码' || $b[i].name=='番摊')+}<li><a href='javascript:void(0)' bid='{+$b[i].bid+}'>{+$b[i].name+}</a></li>{+/if+}
+             {+elseif ($fenlei==103)+} 
+               {+if ($b[i].name!='总和龙虎')+}<li><a href='javascript:void(0)' bid='{+$b[i].bid+}'>{+$b[i].name+}</a></li>{+/if+}
+             {+else+}
+              <li><a href='javascript:void(0)' bid='{+$b[i].bid+}'>{+$b[i].name+}</a></li>
+             {+/if+}   
+          {+/section+}
+      {+/if+}
+	    </ul>
+</div>
+<div class="jt-container pad10 hk6">
+{+if $fenlei==100+}
+<style type="text/css">
+.kuai1,.kuai2{cursor: pointer;}
+.fasttb th.noselected{background:#edf4fe}
+.fasttb .selected {
+    background: none repeat 0 0 #FFC214;
+}
+</style>
+<div id="right">
+<table id="quick_sec_table" class="fasttb table_ball jj01" >
+<thead><tr class="kz">
+<th colspan="5" class="table_side">快选</th>
+</tr></thead>
+<tbody>
+         <tr class='m'><td class="1">01</td><td class="11">11</td><td class="21">21</td><td class="31">31</td><td class="41">41</td></tr>
+         <tr class='m'><td class="2">02</td><td class="12">12</td><td class="22">22</td><td class="32">32</td><td class="42">42</td></tr>
+         <tr class='m'><td class="3">03</td><td class="13">13</td><td class="23">23</td><td class="33">33</td><td class="43">43</td></tr>
+         <tr class='m'><td class="4">04</td><td class="14">14</td><td class="24">24</td><td class="34">34</td><td class="44">44</td></tr>
+         <tr class='m'><td class="5">05</td><td class="15">15</td><td class="25">25</td><td class="35">35</td><td class="45">45</td></tr>
+         <tr class='m'><td class="6">06</td><td class="16">16</td><td class="26">26</td><td class="36">36</td><td class="46">46</td></tr>
+         <tr class='m'><td class="7">07</td><td class="17">17</td><td class="27">27</td><td class="37">37</td><td class="47">47</td></tr>
+         <tr class='m'><td class="8">08</td><td class="18">18</td><td class="28">28</td><td class="38">38</td><td class="48">48</td></tr>
+         <tr class='m'><td class="9">09</td><td class="19">19</td><td class="29">29</td><td class="39">39</td><td class="49">49</td></tr>
+         <tr class='m'><td class="10">10</td><td class="20">20</td><td class="30">30</td><td class="40">40</td></tr>
+		 <tr class="kz">
+                    <td colspan="5" class="control xzbtn">
+                        <table cellspacing="0" cellpadding="0" style="border-collapse:collapse;border-width:0px; border-style:hidden;">
+                            <tbody><tr>
+
+                                <td colspan="2"  class="xzbtn" style="padding: 2px 10px; border-top: none; border-left: none; border-right: none; text-align: center; width: 50%"><label style="font-weight: bold" id="lblName" class="bg01">金额:&nbsp;</label><input type="text" name="money" size="10" class="txtDefaultAmount zje" id="txtDefaultAmount1"  style="background-color: rgb(255, 255, 255);"></td>
+                            </tr>
+                            <tr style="text-align: center;">
+                                <td colspan="2"  class="xzbtn" style="padding: 2px 10px; border-top: none; border-left: none; border-right: none;border-bottom: none; text-align: center;">
+                                    <input class="button exe"  id="btnQuickBet" value="下注" type="button">
+                                    &nbsp;&nbsp;
+                                    <input class="button cancel" value="重置" name="cancel" type="reset">
+                                </td>
+
+                            </tr>
+                        </tbody></table>
+
+                    </td>
+                </tr>
+		 
+  <tr  style="font-size: 12px">
+       <td class="red">紅</td>
+       <td class="blue">藍</td>
+       <td class="green">綠</td>
+       <td></td>
+	   <td></td>
+    </tr>
+  <tr  style="font-size: 12px">
+       <td class="red">紅大</td>
+       <td class="blue">藍大</td>
+       <td class="green">綠大</td>
+	   <td class="red">大</td>
+	   <td>金</td>
+    </tr>
+  <tr style="font-size: 12px">
+       <td class="red">紅小</td>
+       <td class="blue">藍小</td>
+       <td class="green">綠小</td>
+	   <td class="red">小</td>
+	   <td>木</td>
+    </tr>
+  <tr style="font-size: 12px">
+       <td class="red">紅單</td>
+       <td class="blue">藍單</td>
+       <td class="green">綠單</td>
+	   <td class="red">單</td>
+	   <td>水</td>
+    </tr>
+	<tr style="font-size: 12px">
+       <td class="red">紅雙</td>
+       <td class="blue">藍雙</td>
+       <td class="green">綠雙</td>
+	   <td class="red">雙</td>
+	   <td>火</td>
+    </tr>
+	<tr style="font-size: 12px">
+       <td class="red">合大</td>
+       <td class="red">合小</td>
+       <td class="blue">合單</td>
+	   <td class="blue">合雙</td>
+	   <td>土</td>
+    </tr>
+	<tr style="font-size: 12px">
+       <td class="red">尾大</td>
+       <td class="red">尾小</td>
+       <td class="blue">内围</td>
+	   <td class="blue">外围</td>
+	   <td>鼠</td>
+    </tr>
+	<tr  style="font-size: 12px">
+       <td class="red">家畜</td>
+       <td class="red">野獸</td>
+       <td class="blue">前</td>
+	   <td class="blue">後</td>
+	   <td>牛</td>
+    </tr>
+	<tr  style="font-size: 12px">
+      <td>虎</td>
+      <td>兔</td>
+       <td>龍</td>
+       <td>蛇</td>
+	    <td>馬</td>
+    </tr>
+	<tr  style="font-size: 12px">
+       <td>羊</td>
+       <td>猴</td>
+       <td>雞</td>
+       <td>狗</td>
+       <td>豬</td>
+    </tr>
+
+</tbody>
+</table>
+</div>
+{+/if+}
+
+<div id="main">
+<div id="header">
+<div class="lottery_info">
+<div class="lottery_info_left floatleft"><span class="gameName" id="gameName"></span><span class="result">&nbsp;今日输赢：<span id="bresult" class='synow'>0.0</span></span></div>
+<div class="lottery_info_right floatright">
+  <span id="drawNumber" class="thisqishu" upqishu='{+$upqishu+}'>{+$thisqishu+}</span>期<span class="cdContainer panstatus"  s='{+$panstatus+}' time0='{+$pantime+}' time1='{+$othertime+}' os='{+$otherstatus+}'>&nbsp;&nbsp;{+if $panstatus==1+}距离封盘:{+else+}距离开盘:{+/if+}
+    <span class="color_lv bold"><span id="cdClose" class="time0">{+$pantime+}</span></span></span>
+     &nbsp;&nbsp;距离开奖：<span class="color_lv bold kjstatus"><span id="cdDraw" class="kjtime" timek='{+$kjtime+}'>{+$kjtime+}</span></span>
+<span id="cdRefresh" style="float:right;width: 50px;"><span>30</span></span>
+</div>
+<div class="clearfloat"></div>
+</div>
+</div>
+
+<div id="bet_panel" class="bet_panel input_panel">
+
+
+<ul class="tab">
+          <li class="tab_title02 smenu">
+		        <a href="javascript:void(0)"  class="ab" v='A'>特码A</a>
+                <a href="javascript:void(0)"  class="ab" v='B'>特码B</a>  
+            </li>
+ </ul>
+{+if $fenlei==100+}
+<table class="lists table_ball make" style>
+
+</table>
+<br/><table class="lists table_zh2 table_ball table_betbox">
+
+</table>
+
+ <table class="duoexetb table_ball" style="display:none;">
+    <tr>
+     <th style="text-align:left;">
+      <ul class="tab">
+          <li class="tab_title02"  style="background:none;">
+                <a href="javascript:void(0)"  class="mode" mode=1>普通模式</a>
+                <a href="javascript:void(0)"  class="mode" mode=2>拖头模式</a>
+                <a href="javascript:void(0)"  class="mode" mode=3>生肖對碰</a>
+                <a href="javascript:void(0)"  class="mode" mode=4>尾數對碰</a>
+                <a href="javascript:void(0)"  class="mode" mode=5>混和對碰</a>
+                
+            </li>
+ </ul>
+      </th>
+     <td style="text-align:right" class="control">
+	 <label id="quickAmount" class="quickAmount"><span class="color_lv bold">金额</span> <input class="duoje jes" /></label>
+      <input type="button" class="exe button" value="确定" />
+      <input type="button" class="button cancel" value="重置" /></td>
+    </tr>
+ </table>
+ <table style="display:none;" class='ggmesstb table_ball'><tr><th style="text-align:left;padding-left:5px;">※ 说明:每个正特至多选择二项！    </th><td style="text-align:right;width:50%" class="control">
+ 总赔率:<label class="ggpeilv red">0</label>&nbsp;&nbsp;&nbsp;
+ <label id="quickAmount" class="quickAmount"><span class="color_lv bold">过关金额</span> <input class='ggje jes' /></label>
+    <input  class="exe button" value="确定" type="button" /> <input type="button" class="button cancel" value="重置" />   
+</td></tr>
+
+   </table>
+
+
+<input type="hidden" class="duotb2str" value="<table class='duotb2 table_ball' cellpadding='0' cellspacing='0' >
+    <tr class='mtr duotr'><td class='wd100'>
+      <TABLE cellpadding='0' cellspacing='0' class='table_ball balls'>
+         <tr class='head'><th colspan=5>選擇拖号</th></tr>
+         <tr class='m'><td>01</td><td>11</td><td>21</td><td>31</td><td>41</td></tr>
+         <tr class='m'><td>02</td><td>12</td><td>22</td><td>32</td><td>42</td></tr>
+         <tr class='m'><td>03</td><td>13</td><td>23</td><td>33</td><td>43</td></tr>
+         <tr class='m'><td>04</td><td>14</td><td>24</td><td>34</td><td>44</td></tr>
+         <tr class='m'><td>05</td><td>15</td><td>25</td><td>35</td><td>45</td></tr>
+         <tr class='m'><td>06</td><td>16</td><td>26</td><td>36</td><td>46</td></tr>
+         <tr class='m'><td>07</td><td>17</td><td>27</td><td>37</td><td>47</td></tr>
+         <tr class='m'><td>08</td><td>18</td><td>28</td><td>38</td><td>48</td></tr>
+         <tr class='m'><td>09</td><td>19</td><td>29</td><td>39</td><td>49</td></tr>
+         <tr class='m'><td>10</td><td>20</td><td>30</td><td>40</td></tr>         
+      </TABLE>
+    </td></tr>
+    <tr class='sxtr1 duotr'><td class='wd100'>
+      <TABLE cellpadding='0' cellspacing='0' class='wd100'>
+         <tr class='head'><th colspan=6>選擇生肖<label class='tuohao hide'>(拖)</label></th></tr>
+         <tr class='m'><td>鼠</td><td>牛</td><td>虎</td><td>兔</td><td>龍</td><td>蛇</td></tr>
+         <tr class='m'><td>馬</td><td>羊</td><td>猴</td><td>雞</td><td>狗</td><td>豬</td></tr>
+      </TABLE>
+    </td></tr>
+    <tr class='sxtr2 duotr'><td class='wd100'>
+      <TABLE cellpadding='0' cellspacing='0' class='wd100'>
+      <tr class='head'><th colspan=6>選擇對碰生肖</th></tr>
+         <tr class='m'><td>鼠</td><td>牛</td><td>虎</td><td>兔</td><td>龍</td><td>蛇</td></tr>
+         <tr class='m'><td>馬</td><td>羊</td><td>猴</td><td>雞</td><td>狗</td><td>豬</td></tr>
+      </TABLE>
+    </td></tr>
+    <tr class='wstr1 duotr'><td class='wd100'>
+      <TABLE cellpadding='0' cellspacing='0' class='wd100'>
+      <tr class='head'><th colspan=6>選擇尾數<label class='tuohao hide'>(拖)</label></th></tr>
+         <tr class='m'><td>0尾</td><td>1尾</td><td>2尾</td><td>3尾</td><td>4尾</td></tr>
+         <tr class='m'><td>5尾</td><td>6尾</td><td>7尾</td><td>8尾</td><td>9尾</td></tr>
+      </TABLE>
+    </td></tr>
+    <tr class='wstr2 duotr'><td class='wd100'>
+      <TABLE cellpadding='0' cellspacing='0' class='wd100'>
+      <tr class='head'><th colspan=6>選擇對碰尾數</th></tr>
+         <tr class='m'><td>0尾</td><td>1尾</td><td>2尾</td><td>3尾</td><td>4尾</td></tr>
+         <tr class='m'><td>5尾</td><td>6尾</td><td>7尾</td><td>8尾</td><td>9尾</td></tr>
+      </TABLE>
+    </td></tr>
+ </table>" /> 
+{+else+}
+<div class="split_panel table_ball make"></div>
+
+ <table class="duoexetb table_ball" style="display:none;">
+    <tr>
+     <th style="text-align:left;">
+      <ul class="tab">
+          <li class="tab_title02"  style="background:none;">
+                <a href="javascript:void(0)"  class="mode" mode=1>普通模式</a>
+                <a href="javascript:void(0)"  class="mode" mode=2>拖头模式</a>                
+            </li>
+ </ul>
+      </th>
+     <td style="text-align:right" class="control">
+	 <label id="quickAmount" class="quickAmount"><span class="color_lv bold">金额</span> <input class="duoje jes" /></label>
+      <input type="button" class="exe button" value="确定" />
+      <input type="button" class="button cancel" value="重置" /></td>
+    </tr>
+ </table>
+{+/if+}
+
+  <table class="jj01 table_ball kuaijue" style="margin-top: 15px">
+        <thead>
+            <tr>
+                <th nowrap="nowrap" style="width:80px">快捷投注</th>
+                <td nowrap="nowrap" width="*"><textarea size="8" id="txtQuikBetBox" multiple="true" style="width: 99%;height: 17px; border: medium none;" class="quikamount textnr" placeholder="按号码=金额的格式，多个用空格分隔。如1=10 12=20"></textarea></td>
+			</tr>
+        </thead>
+    </table>
+
+<div class="control bcontrol">
+<div class="lefts" style="display:none">已经选中 <span id="betcount"></span> 注</div>
+<div class="buttons">
+<input type="button" class="button2" value="快选金额" onclick="parent.showsetting()">
+<label class="checkdefault"><input type="checkbox" class="checkbox"/><span class="color_lv bold">预设</span></label>&nbsp;&nbsp;<label id="quickAmount" class="quickAmount"><span class="color_lv bold">金额</span> <input class="zje" /></label>
+<div class="money_btns chip-amount"></div>
+<input type="button" class="exe button" value="确定"  />
+<input type="button" class="button cancel" value="重置"  />
+</div>
+</div>
+
+
+<style type="text/css">
+  .ftlutb td.bai{color: #fff}
+  .ftlutb td.red{color:red;}
+  .ftlutb td.hei{color:#000;}
+</style>
+<table class="ftlutb lists table_ball" style="position: absolute;width: 500px;background: #fff;display: none;border: 2px;">
+<thead>
+  <tr><th colspan="10">番露</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<div id="resultPanel" class='tu' ><table class="tabTitle"><tbody><tr></tr></tbody></table><table class="ballTable"><tbody><tr class="head"></tr></tbody></table><table class="tabTitle"><tbody><tr></tr></tbody></table><table class="tabContents"><tbody><tr></tr></tbody></table></div> 
+
+
+</div><!--bet_panel-->
+
+</div>
+</div><!--main-->
+
+<table id="changlong" class="longr" ></table>
+
+<script type="text/javascript">
+sdate=new Array();
+{+foreach item=i from=$sdate key=key+}
+sdate[{+$key+}]="{+$i+}";
+{+/foreach+}
+var style = '{+$class+}';
+var ngid= {+$gid+};
+var fenlei= {+$fenlei+};
+sma =new Array();
+{+if ($fenlei==101)+}
+
+sma["单"] = new Array(1,3,5,7,9);
+sma["双"] = new Array(0,2,4,6,8);
+sma["大"] = new Array(5,6,7,8,9);
+sma["小"] = new Array(0,1,2,3,4);
+sma["质"] = new Array(1,2,3,5,7);
+sma["合"] = new Array(0,2,4,6,7);
+{+elseif ($gid==103)+}
+
+sma["单"] = new Array(1,3,5,7,9,11,13,15,17,19);
+sma["双"] = new Array(2,4,6,8,10,12,14,16,18,20);
+sma["大"] = new Array(11,12,13,14,15,16,17,18,19,20);
+sma["小"] = new Array(1,2,3,4,5,6,7,8,9,10);
+sma["合单"] = new Array(1,3,5,7,9,10,12,14,16,18);
+sma["合双"] = new Array(2,4,6,8,11,13,15,17,19,20);
+sma["尾大"] = new Array(5,6,7,8,9,15,16,17,18,19);
+sma["尾小"] = new Array(1,2,3,4,10,11,12,13,14,20);
+
+sma["春"] = new Array(1,2,3,4,5);
+sma["夏"] = new Array(6,7,8,9,10);
+sma["秋"] = new Array(11,12,13,14,15);
+sma["冬"] = new Array(16,17,18,19,20);
+sma["金"] = new Array(1,6,11,16);
+sma["木"] = new Array(2,7,12,17);
+sma["水"] = new Array(3,8,13,18);
+sma["火"] = new Array(4,9,14,19);
+sma["土"] = new Array(5,10,15,20);
+sma["东"] = new Array(1,5,9,13,17);
+sma["南"] = new Array(2,6,10,14,18);
+sma["西"] = new Array(3,7,11,15,19);
+sma["北"] = new Array(4,8,12,16,20);
+sma["中"] = new Array(1,2,3,4,5,6,7);
+sma["发"] = new Array(8,9,10,11,12,13,14);
+sma["白"] = new Array(15,16,17,18,19,20);
+{+elseif ($fenlei==121)+}
+
+sma["单"] = new Array(1,3,5,7,9);
+sma["双"] = new Array(2,4,6,8,10);
+sma["大"] = new Array(6,7,8,9,10);
+sma["小"] = new Array(1,2,3,4,5);
+{+elseif ($fenlei==107)+}
+
+sma["单"] = new Array(1,3,5,7,9);
+sma["双"] = new Array(2,4,6,8,10);
+sma["大"] = new Array(6,7,8,9,10);
+sma["小"] = new Array(1,2,3,4,5);
+sma["质"] = new Array(1,2,3,5,7);
+sma["合"] = new Array(4,6,8,9,10);
+{+elseif ($fenlei==100)+}
+{+foreach from=$ma item=i key=key+}
+ {+foreach from=$i item=ii key=k+}
+    sma['{+$k+}'] = new Array({+$ii+}); 
+ {+/foreach+} 
+{+/foreach+}
+{+/if+}
+var fastinput={+$fastinput+};
+var globalpath = '{+$globalpath+}';
+var fast={+$fast+};
+var fudong={+$fudong+};
+var kjurl='{+$kfurl+}';
+var pk10num = '{+$pk10num+}';
+var pk10ts = '{+$pk10ts+}';
+var menu= "{+$menu+}";
+</script>
+<div id=test></div>
+<iframe name=sfrm id=sfrm style="display:none;"  ></iframe>
+</body>
+</html>

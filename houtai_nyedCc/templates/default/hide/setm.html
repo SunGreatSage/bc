@@ -1,0 +1,36 @@
+{+include file='header.html'+}
+<style>
+.tinfo td{text-align:left;padding-left:10px;}
+</style>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='setm';</script>
+<div class="xbody1">
+
+ <table class="tinfo wd100">
+ <tr><td >
+   <input type="hidden" id='saveuserid' value="{+$suid+}" />
+   <input type="hidden" id='topid' value="{+$uid+}" />
+   
+<select class='user' layer=1 >
+<option value="">选择公司</option>
+{+section name=i loop=$topuser+}
+<option value="{+$topuser[i].userid+}">{+$topuser[i].username+}</option>
+{+/section+}
+</select>
+
+ </td></tr>
+ <tr><td >选中会员:<label>{+$susername+}</label></td></tr>
+  <tr><td >期数:
+  {+section name=i loop=$qishu+}
+     <input type="checkbox" value="{+$qishu[i].q+}" {+if $qishu[i].s==1+}checked{+/if+} />{+$qishu[i].q+}
+  {+/section+}
+  
+  </td></tr>
+  <tr><td >金额:<input type="text" id="je" name="je" value="{+$je+}" /></td></tr>
+   <tr><td ><input type="button" id="set" name="set" value="设置" /></td></tr>
+  </table>
+</div>
+<div id='test'></div>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<table class="tinfo messagetb wd100" >
+<tr>
+<th style="width:120px;">时间</th><th>系统消息</th>
+</tr>
+{+section name=i loop=$news+}
+<tr><td>{+$news[i].time+}</td><td>{+$news[i].content+}</td></tr>
+{+/section+}
+
+</table>
+

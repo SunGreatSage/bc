@@ -1,0 +1,223 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>资金管理</title>
+		<link rel="stylesheet" href="../css/default/jquery-ui.css">
+        <link rel="stylesheet" href="../css/default/master.css">
+        <link rel="stylesheet" href="../css/default/style.css">
+        <link rel="stylesheet" href="../css/default/daviddeposit.css">
+        <link rel="stylesheet" href="../css/default/davidwithdraw.css">
+        <link rel="stylesheet" href="../css/default/margin.css">
+        <script language="javascript" src="/js/jquery-1.8.3.min.js"></script>
+    </head>
+<body>
+<script type="text/javascript" id="myjs">var mulu='{+$mulu+}';
+var js=1;
+var sss="mem_zxtk";
+</script>	<div class="content" style="height:750px">
+<div class="memberheader">
+	<div class="useravatar floatleft">
+		<img src="../css/default/img/userlogo.jpg" width="84" height="83" alt="" />
+	</div>
+	<div class="memberinfo floatleft">
+		<h1 class="floatleft">
+			<script language="javaScript">
+				now = new Date(), hour = now.getHours()
+				if (hour < 6) {
+					document.write("凌晨好")
+				} else if (hour < 9) {
+					document.write("早上好")
+				} else if (hour < 12) {
+					document.write("上午好")
+				} else if (hour < 14) {
+					document.write("中午好")
+				} else if (hour < 17) {
+					document.write("下午好")
+				} else if (hour < 19) {
+					document.write("傍晚好")
+				} else if (hour < 22) {
+					document.write("晚上好")
+				} else {
+					document.write("夜里好")
+				}
+			</script>
+		 <span class="blue">{+$xing+}  </span>
+
+		</h1>
+		<div class="balance floatleft">
+			<div class="balancevalue floatleft">
+				中心钱包 : <span class="blue"><span class="balanceCount">{+$money+}</span></span>
+			</div>
+			<div class="floatright margintop7 marginright10 marginleft5 pointer">
+				<a onclick="location.reload()" href="javascript:;"><img src="../css/default/img/btnrefresh.jpg"
+					width="16" height="17" alt="" /> </a>
+			</div>
+
+		</div>
+		<div class="gap5"></div>
+		<p></p>
+		<p>最后登录：{+$lastlogintime+}</p>
+	</div>
+</div>
+             	<div class="membersubnavi">
+                      		<div class="subnavi blue">
+                            	<a href="member.php?xtype=zxcz">充值</a>
+                            </div>
+                            <div class="subnavi blue">
+                            	提款
+                            	<div class="subnaviarrow"></div>
+                            </div> 
+                            <div class="subnavi blue">
+                            	<a href="member.php?xtype=jyjl">交易历史</a>
+                            </div>
+               	</div>
+                <div class="stepswithdraw">
+                	<div class="substeps">
+                    	<div class="substepitmgray1 substepitmblue1">
+                        	<b>01</b>  提交
+                        </div>
+                        <div class="substepitmgray2">
+                        	<b>02</b>  审核
+                        </div>
+                        <div class="substepitmgray2">
+                        	<b>03</b>  出款
+                        </div>
+                        <div class="substepitmgray2">
+                        	<b>04</b>  到账
+                        </div>
+                    </div>
+                    <div class="line2"></div>
+                </div>
+             	
+                <div class="subcontent2" style="padding-top:20px;">
+                	<div class="addbankcard">
+                    {+if $havebank==1+}
+               	<div class="formpanel margintop20" id="card_t" >
+                        <div class="wd-row">
+                            <div class="wd-col1">
+                            	提款金额：
+                            </div>
+                            <div class="wd-col2">
+                            	<input type="text" class="textfield1 money" value="" onkeypress='return event.charCode >= 48 && event.charCode <= 57' style='width:80px;' > *可提金额:<span class="blue"><span class="balanceCount">{+$money+}</span></span>
+<BR />
+                     注:提现金额须至少100元（壹佰元）
+                            </div>
+                        </div>
+                  
+                        <div class="wd-row">
+                            <div class="wd-col1">
+                            	提款密码：
+                            </div>
+                            <div class="wd-col2">
+                            	<input type="password" class="textfield1 bankpass" style='width:80px;'  maxlength="4"> *忘记请联系客服
+                            </div>
+                        </div>
+  
+                
+                        
+                        <div class="wd-row">
+                            <div class="wd-col1">
+                            	银行卡号：
+                            </div>
+                            <div class="wd-col2" >
+                            	<div class="radio-bank-2" >
+									<div class="radio">
+										<input type="radio" name="bank" value="{+$cardid+}" checked="checked">
+									</div>
+									<div class="radio-label">
+										<span class="logo-{+$en+}-3"></span> <span class="name">{+$bankname+}</span>  <span class="tail">尾号：{+$lastcard4+}</span>
+									</div>
+								</div>&nbsp;&nbsp;<a href="javascript:void(0)" class="changecard">更换银行卡</a>
+                            </div>
+
+                        </div>
+                             <div class="wd-row">
+                            <div class="wd-col2 wd-btn">
+                            	<input type="submit" class="submitbtn2" id="tk" value="提交">
+                            </div>
+                        </div>
+                        </div>
+                    {+else+}
+                	<div id="card_h">
+                	<div class="logo-th-2"></div>
+                	<p class="bigtxt aligncenter gray">添加一张银行卡/支付帐号开始提款吧</p>
+                    <div class="margintop40 aligncenter"><img src="../css/default/img/addbankcard.jpg" width="214" height="112" class="addcard" alt=""/></div>
+                	</div>
+                    {+/if+}
+                	<div class="formpanel margintop20" id="card_s" style="display: none;">
+                    	<div class="wd-row">
+                        	<div class="wd-col1">
+                            	银行/支付方式：
+                            </div>
+                            <div class="wd-col2">
+<select id="bank" class="selectbox gray">
+        {+section name=i loop=$bank+}
+          {+if ($bank[i].en=='WXZF' | $bank[i].en=='ZFB')+}
+          <option value="{+$bank[i].bankid+}">{+$bank[i].bankname+}</option>
+          {+/if+}
+        {+/section+}
+</select>
+                            </div>
+                        </div>
+                        <div class="wd-row">
+                            <div class="wd-col1">
+                            	账户名：
+                            </div>
+                            <div class="wd-col2">
+                            	<input type="text" class="textfield1" id="names" value="" >
+                            </div>
+                        </div>
+                        <div class="wd-row">
+                            <div class="wd-col1">
+                            	卡号/支付账号：
+                            </div>
+                            <div class="wd-col2">
+                            	<input type="text"  id="cardId" class="textfield1">
+                            </div>
+                        </div>
+                        <div class="wd-row">
+                            <div class="wd-col1">
+                            	开户网点：
+                            </div>
+                            <div class="wd-col2">
+                            	<input type="text" id="bankaddress" class="textfield1">
+                            </div>
+                        </div>
+                        <div class="wd-row">
+                            <div class="wd-col1">
+                            	提款密码：
+                            </div>
+                            <div class="wd-col2">
+                            	<input type="password" id="bankpass" class="textfield1" maxlength="4"> <BR />*不可更改，忘记请联系客服
+                            </div>
+                        </div>
+                        <div class="wd-row">
+                            <div class="wd-col1">
+                            	重复提款密码：
+                            </div>
+                            <div class="wd-col2">
+                            	<input type="password" id="bankpass2" class="textfield1" maxlength="4">
+                            </div>
+                        </div>
+                        <div class="wd-row">
+                            <div class="wd-col2 wd-btn">
+                            	<input type="submit" class="submitbtn2" id="btnCard" value="提交">
+                            </div>
+                        </div>
+                    </div>
+                	
+                	
+ 
+                             
+                                
+
+                    </div>
+                	      	
+                        
+                    </div>
+                </div>
+		  </div>
+</body>
+</html>

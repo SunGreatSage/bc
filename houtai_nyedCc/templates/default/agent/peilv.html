@@ -1,0 +1,57 @@
+{+include file='header.html'+}
+<style>
+td, th {
+	height:30px;
+	line-height:30px;
+}
+select {
+	width:80px;
+}
+tr:hover {
+	background:#DEEFD8
+}
+.wd120{width:120px;}
+a.red{color:#D50000}
+</style>
+</head><body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='record';
+</script>
+<div class="xbody1">
+ <table class="tinfo wd100">
+  <Tr>
+
+   <TD colspan="9">{+$page+}</TD>
+  </Tr>
+ 
+  <TR>
+   <th>
+   <select class="game wd120">
+ {+section name=i loop=$game+}
+  
+     <option value="{+$game[i].gid+}" {+if $game[i].gid==$gid+}selected{+/if+}>{+$game[i].gname+}</option>
+     
+  {+/section+}
+   </select>
+   </th>
+    <th>类别</th>
+     <th>赔率值</th>
+   <th>备注</th>
+   <th>时间</th>
+   <th>用户</th>
+  </TR>
+  {+section name=i loop=$p+}
+  <tr>
+   <td>{+$p[i].gname+}</td>
+   <td>{+$p[i].pid+}</td>
+   <td>{+$p[i].peilv+}</td>
+   <td>{+$p[i].auto+}</td>
+   <td>{+$p[i].time+}</td>
+   <td>{+$p[i].sonuser+}</td>
+  </tr>
+  {+/section+}
+ </table>
+</div>
+<div id='test'></div>
+</body>
+</html>

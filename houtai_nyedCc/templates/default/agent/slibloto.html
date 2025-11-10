@@ -1,0 +1,89 @@
+{+include file='header.html'+}
+<style>
+.zd th{}
+input.vsmall{width:20px;padding:0px}
+.points{width:30px}
+.kpoints{width:30px}
+input.bred{background:red}
+a.red{color:#D50000}
+.nowtb tr:hover td{ text-decoration:underline;cursor:pointer;color:#D50000}
+.nowtb{table-layout:inherit;word-wrap:break-word;word-break:break-all;font-size:12px}
+.con{width:150px}
+.lastxx{position:absolute;width:680px;background:#fff;display:none}
+.lastxx td{padding-left:3px;text-align:left;}
+.lastxx  .f{width:80px;}
+.lastxx  .s{width:40px;}
+.lastxx  td.t{width:320px;word-break: break-all; word-wrap:break-word;}
+.lastxx  .t2{width:100px;}
+.lastxx a{margin-right:10px;}
+.lastxx tr:hover{color:#F00}
+.last15 td{text-align:left;padding-left:15px;}
+</style>
+</head><body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='slibloto';
+</script>
+<div class="xbody1">
+ <table class="tinfo wd100 s_head" style="width:100%">
+  <TR>
+   <Th style="text-align:left;" colspan="2"> <select id=qishu>
+     
+        {+foreach item=i from=$qishu+}
+     <option value="{+$i+}">{+$i+}期</option>
+     {+/foreach+}
+      
+    </select>
+    <input class="btn1 btnf" type="button" value="刷新" id=reload style="margin:0px;" />
+    <!--<input class="btn1 btnf winprint" type="button" value="打印"  style="margin:1px;" />-->
+    <input class="btn1 btnf download" type="button" value="下载数据[请于关盘后下载]"   />
+    <input type="hidden" value="{+$uid+}" id='saveuserid' />
+    <input type="hidden" id=page value="1" />
+    <input type="hidden" id='topid' value="{+$uid+}" layer="{+$layer+}" />
+    <select name="select" class='user' layer={+$layer+1+}  >
+     <option value=""></option>
+
+{+section name=i loop=$topuser+}
+
+     <option value="{+$topuser[i].userid+}" ifagent='{+$topuser[i].ifagent+}' wid='{+$topuser[i].wid+}'>{+$topuser[i].username+}</option>
+
+{+/section+}
+
+   
+    </select>
+   </Th>
+  </TR>
+ </table>
+ <table class="einfo nowtb" style='width:100%;margin-top:10px;background:#fff'>
+  <tr class="bt">
+   <th>序号</th>
+   <th>会员</th>
+   <th>注数</th>
+   <th>金额</th>
+   <th>最新投注时间</th>
+  </tr>
+ </table>
+ <table class="lastxx tinfo">
+<tr><td><input type="button" class="btnf"  value="关闭" /><input type="hidden" class="pages" uid='0'  value="1" /></td><td colspan="3"></td></tr>
+ <tr><th class="f">会员</th><th class="s">编号</th><th class="t">内容</th><th class="t2">时间</th></tr>
+</table>
+ <iframe style="width:100px;height:100px;" frameborder="0" id=downfrm></iframe>
+</div>
+<div id='test'></div>
+<script language="javascript">
+layername= new Array();
+{+foreach item=i from=$layername key=key+}
+layername[{+$key+}]="{+$i+}";
+{+/foreach+}
+var layer ={+$layer+} ;
+sdate=new Array();
+{+foreach item=i from=$sdate key=key+}
+sdate[{+$key+}]="{+$i+}";
+{+/foreach+}
+maxlayer = {+$maxlayer+};
+var page=1;
+var psize = 100;
+var pages=1;
+var psizes = 20;
+</script>
+</body>
+</html>

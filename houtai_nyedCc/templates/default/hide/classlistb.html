@@ -1,0 +1,28 @@
+{+include file='header.html'+}
+<style>
+.addtb{width:200px;display:none;position:absolute;background:#fff}
+.addtb td{text-align:left;}
+.s_tb tr:hover{background:#FCF}
+</style>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='bclass';</script>
+</head>
+<body>
+<div class="xbody1">
+
+ <table class="tinfo wd100 s_tb">
+ <tr><th colspan="3">大分类</th><th colspan="4"><input type="text" id='name' /><input type="button" class="btn3 btnf" id='add'  value="添加大分类" />&nbsp;<input type="button" class="btn3 btnf" id='yiwotongbu'  value="以我同步其他彩" /></th></tr>
+ <TR>
+ <th><input type="checkbox" id='clickall' />全选</th><th>编号</th><th>名称</th><th>可用</th><th>排序</th><th><input type="button" class="btn3 btnf" id='delall'  value="删除选中" /></th>
+ </TR>
+ {+section name=i loop=$b+}
+   <TR><td><input type="checkbox" value='{+$b[i].bid+}' /></td>
+       <td>{+$b[i].bid+}</td><td><input type="text" value='{+$b[i].name+}' class=name /></td>
+       <td><input type="checkbox" class=ifok {+if $b[i].ifok==1+}checked{+/if+} /></td>
+       <td><input type="text" value='{+$b[i].xsort+}' class=xsort /></td>
+       <td><input type="button" class="edit btn1 btnf" value='修改' /><input type="button" class="delone btn1 btnf" value='删除' /></td></TR>
+ {+/section+}
+  </table>
+</div>
+<div id='test'></div>
+</body>
+</html>

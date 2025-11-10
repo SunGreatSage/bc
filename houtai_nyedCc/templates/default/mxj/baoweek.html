@@ -1,0 +1,95 @@
+
+
+<div class="scrollable backgroundcolorlightpink ng-scope others baoweek">
+<div class="scrollable-content overthrow">
+
+<div class="container-fluid cn textcenter"> <!--container-->
+	<div id="history_lastweek" style="display: none;">
+		<div class="row darkredbg">
+	    	<div class="padding10 clearfix">
+	    		<div class="pull-left white margintop10">账户历史 (上周）</div>
+	            <div class="pull-right">
+	            	<div class="thisweek mobilegraymenubtn buttonredradius3 cn inlineblock">本周</div>
+	                <div class="lastweek  mobilemenubtn buttonredradius2 cn inlineblock">上周</div>
+	            </div>
+	        </div>
+		</div>
+	    <div class="row graybg ">
+	    	<div class="padding10 clearfix">
+	    		<div class="col-xs-3">日期</div>
+	            <div class="col-xs-2" style="display: none;">注数</div>
+	            <div class="col-xs-3">下注金额</div>
+	            <div class="col-xs-2">佣金</div>
+	            <div class="col-xs-3">盈亏</div>
+	        </div>
+		</div>
+
+{+section name=i loop=$upbao+}        
+		    <div class="row graylightbg borderbtmred">
+		    	<div class="padding10 clearfix" date='{+$upbao[i].dates+}'>
+		    		<div class="col-xs-3"><a href="javascript:void(0)">{+$upbao[i].date+}<br><span class="darkred">星期{+$upbao[i].week+}</span></a></div>
+		            <div class="col-xs-2 valign" style="display: none;">{+$upbao[i].zs+}</div>
+		            <div class="col-xs-3 valign">{+$upbao[i].zje+}</div>
+		            <div class="col-xs-2 valign">{+$upbao[i].points+}</div>
+		            <div class="col-xs-3 cnbig fontbold valign "><a href="javascript:void(0)" class="sy">{+$upbao[i].rs+}</a></div>
+		        </div>
+			</div>
+{+/section+}
+	    
+	    <div class="row backgroundcolorpink">
+	    	<div class="padding10 clearfix">
+	    		<div class="col-xs-3">总计</div>
+	            <div class="col-xs-2 valign" style="display: none;">{+$t.uzs+}</div>
+	            <div class="col-xs-3 valign">{+$t.uzje+}</div>
+	            <div class="col-xs-2 valign">{+$t.upoints+}</div>
+	            <div class="col-xs-3 cnbig fontbold valign sy">{+$t.urs+}</div>
+	        </div>
+		</div>
+	</div>
+
+	<div id="history_thisweek">
+		<div class="row darkredbg">
+	    	<div class="padding10 clearfix">
+	    		<div class="pull-left white margintop10">账户历史 (本周）</div>
+	            <div class="pull-right">
+	            	<div class="thisweek mobilemenubtn buttonredradius2 cn inlineblock">本周</div>
+	                <div class="lastweek mobilegraymenubtn buttonredradius3 cn inlineblock">上周</div>
+	            </div>
+	        </div>
+		</div>
+	    <div class="row graybg ">
+	    	<div class="padding10 clearfix">
+	    		<div class="col-xs-3">日期</div>
+	            <div class="col-xs-2"  style="display: none;">注数</div>
+	            <div class="col-xs-3">下注金额</div>
+	            <div class="col-xs-2">佣金</div>
+	            <div class="col-xs-3">盈亏</div>
+	        </div>
+		</div>
+
+{+section name=i loop=$bao+}        
+		    <div class="row graylightbg borderbtmred">
+		    	<div class="padding10 clearfix"  date='{+$bao[i].dates+}'>
+		    		<div class="col-xs-3"><a href="javascript:void(0)">{+$bao[i].date+}<br><span class="darkred">星期{+$bao[i].week+}</span></a></div>
+		            <div class="col-xs-2 valign" style="display: none;">{+$bao[i].zs+}</div>
+		            <div class="col-xs-3 valign">{+$bao[i].zje+}</div>
+		            <div class="col-xs-2 valign">{+$bao[i].points+}</div>
+		            <div class="col-xs-3 cnbig fontbold valign "><a href="javascript:void(0)" class="sy">{+$bao[i].rs+}</a></div>
+		        </div>
+			</div>
+{+/section+}
+
+	    <div class="row backgroundcolorpink">
+	    	<div class="padding10 clearfix">
+	    		<div class="col-xs-3">总计</div>
+	            <div class="col-xs-2 valign"  style="display: none;">{+$t.zs+}</div>
+	            <div class="col-xs-3 valign">{+$t.zje+}</div>
+	            <div class="col-xs-2 valign">{+$t.points+}</div>
+	            <div class="col-xs-3 cnbig fontbold valign sy">{+$t.rs+}</div>
+	        </div>
+		</div>
+	</div>
+</div><!--container-->
+ <div class="gap100" style="height:200px;"></div> 
+    </div>
+</div>

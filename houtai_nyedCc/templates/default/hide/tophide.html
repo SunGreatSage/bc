@@ -1,0 +1,164 @@
+{+include file='header.html'+}
+<base target="bottom">
+<style>
+*{overflow:hidden}
+body {font-size:12px; overflow:hidden;background:url(../imgn/mbg.jpg);}
+.top {float:left;margin:0px;width:1260px;height:79px;}
+.topleft {width:200px;height:100%;line-height:100%;text-align:center;}
+.topleft h1 {height:100%;line-height:79px;width:100%}
+span {font-weight:bold}
+h1 {font: bold 330%/100% "黑体";position: relative;padding:0px;margin:0px;overflow:hidden;font-weight:bolder;color:#D50000;font-size:48px;}
+h1 span {width: 100%;}
+h1 span {background:none;filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='{+$globalpath+}imgs/fine.png', sizingMethod='scale');}
+.top {}
+INPUT.btn3 btnf {background:#FF7D1D;WIDTH:75PX;
+}
+.topbanner {width:1060px;height:24px;text-align:left;font-size:12px;overflow:hidden;}
+.panstatus{}
+.toprightb{text-align:left;width:1060px;height:46px;padding:0px;}
+.topmenu {width:804px;text-align:left;height:100%;padding:0px;color:#fff;border-collapse:collapse;margin:0px;}
+.topmenu li {margin:0px;float:left;width:60px;height:22px;line-height:22px;text-align:center;cursor:pointer;font-size:12px;border:1px solid #960;border-top:1px solid #960;margin-top:1px;overflow:hidden}
+.topmenu li:hover {background:#9F9;font-weight:bold;}
+
+#gid {width:99%;height:21px;float:left;line-height:21px;clear:both;margin:0px;padding-left:10px;}.time label {color:#000}#gid a {width:100px;font-size:16px;font-weight:bold;margin-right:10px;}
+#gid a.click {background:#6FF;}
+
+.hide{display:none}
+
+.game3 {float:left;margin:0px;}
+.game3 label{display:block;float:left;border:1px solid  #CFF;text-align:left;padding-left:1px;margin:1px;cursor:pointer;overflow:hidden;font-size:13px;color:#366;}
+.game3 label.s{background:#F00;font-weight:bold;color:#FFF;font-size:13px;}
+
+label.c100{background:#8cd7f2}
+label.c101{background:#e8d15f}
+label.c108{background:#ffb194}
+label.c109{background:#b7f562}
+label.c110{background:#b0d1ff}
+label.c111{background:#ecb5f3}
+label.c112{background:#71f0c3}
+label.c113{background:#ffb86c}
+label.c115{background:#dfe347}
+label.c107{background:#70baf4}
+label.c161{background:#c2bffd}
+label.c162{background:#ffbac5}
+label.c103{background:#e2cd98}
+label.c133{background:#8cd7f2}
+label.c135{background:#e8d15f}
+label.c131{background:#ffb194}
+label.c132{background:#b7f562}
+label.c136{background:#b0d1ff}
+label.c121{background:#ecb5f3}
+label.c123{background:#71f0c3}
+label.c125{background:#ffb86c}
+label.c127{background:#dfe347}
+label.c129{background:#70baf4}
+label.c151{background:#c2bffd}
+label.c153{background:#ffbac5}
+label.c155{background:#e2cd98}
+label.c152{background:#8cd7f2}
+label.c157{background:#e8d15f}
+label.c163{background:#ffb194}
+label.c117{background:#b7f562}
+label.c118{background:#b0d1ff}
+label.c119{background:#ecb5f3}
+label.c116{background:#71f0c3}
+
+
+.upkj{float:left;font-weight:bold;color:#000;}
+.upkj div{margin-left:1px;float:left;font-size:12px;}
+
+.qiua{margin:auto;float:none;width:26px;height:26px;background:url(../imgn/ball_blue1.png);line-height:26px;text-align:center}
+.qiub{margin:auto;float:none;width:26px;height:26px;background:url(../imgn/ball_red1.png);line-height:26px;text-align:center}
+.qiua1{margin:auto;float:none;width:20px;height:20px;background:url(../imgn/ball_blue2.png);line-height:20px;text-align:center}
+.qiub1{margin:auto;float:none;width:20px;height:20px;background:url(../imgn/ball_red2.png);line-height:20px;text-align:center}
+
+.qiu{margin-left:0px;float:left;}
+.qiured{font-weight:bold; color:White;  float:none;  margin:0px auto;width:21px; height:21px; line-height:21px; font-size:13px; text-align:center; background:#FB0200 url(../img/bgbm.gif) no-repeat left top;background-color:#FB0200;}
+.qiublue{font-weight:bold; color:White;  float:none;  margin:0px auto; width:21px; height:21px; line-height:21px; font-size:13px; text-align:center; background:#FB0200 url(../img/bgbm.gif) no-repeat left top;background-color:#0000FE; background-position:-42px top;}
+.qiugreen{font-weight:bold; color:White;  float:none;  margin:0px auto; width:21px; height:21px; line-height:21px; font-size:13px; text-align:center; background:#FB0200 url(../img/bgbm.gif) no-repeat left top;background-color:#007F04; background-position:-21px top;}
+.upqishu{margin-left:10px;}
+</style>
+</head><body>
+
+<TABLE cellpadding="0" cellspacing="0" class="top" border="0">
+<tr><td rowspan="2" class="topleft"><H1><span>{+$webname+}</span></H1>
+</td>
+  <td class="topbanner"> <select class="game hide">
+  {+section name=i loop=$gamecs+}
+     <option value="{+$gamecs[i].gid+}" {+if $gamecs[i].gid==$gid+}selected{+/if+}>{+$gamecs[i].gname+}</option>
+     {+/section+}
+    </select> <div class="game3{+if $gamecs|@count==1+} hide{+/if+}" >
+    {+section name=i loop=$gamecs+}
+    <label gid={+$gamecs[i].gid+} class='{+$gamecs[i].class+}{+if $gid==$gamecs[i].gid+} s{+/if+}' >{+if $gid==$gamecs[i].gid+}{+$gamecs[i].gname+}{+else+}{+$gamecs[i].sgname+}{+/if+}</label>
+     {+/section+}</div> <span style="margin-left:5px;"><label class=qishu>{+$qishu+}</label>期</span>  <span class="panstatus" s='{+$panstatus+}' style="margin-left:5px;"><span>{+if $panstatus==1+}距关盘:{+else+}距开盘:{+/if+}</span><label class="time0">{+$pantime+}</label></span>{+if $gid==100+}<span s='{+$otherstatus+}' class="otherstatus hide" style="margin-left:5px;"><span>{+if $otherstatus==1+}距正码关盘:{+else+}距正码开盘:{+/if+}</span><label class="time1">{+$othertime+}</label></span>{+/if+}&nbsp;<input type="button" value="关盘" class="btnf qzclose"  /></td>
+</tr>
+
+<tr><td class="toprightb">
+  <ul class="topmenu"  style="text-align:left;paddding-left:0px;">
+   {+if ($kj==1 &  $caopan==1) +}
+   <li><a href='javascript:void(0);' X="kj">开奖管理</a></li>
+   {+/if+}
+   {+if $user==1+}
+   <li><a href='javascript:void(0);' X="suser">帐号管理</a></li>
+   {+/if+}
+   {+if $lib==1+}
+   <li><a href='javascript:void(0);' X="slib">即时注单</a></li>
+   {+/if+}
+   {+if $xxtz==1+}
+   <li><a href='javascript:void(0);' X="xxtz">注单明细</a></li>
+   {+/if+}
+   {+if $now==1+}
+   <li ><a href='javascript:void(0);' X="now">注单管理</a></li>
+   {+/if+}
+   {+if $libset==1+}
+   <li><a href='javascript:void(0);' X="libset">注单设置</a></li>
+   {+/if+}
+   {+if $err==1+}
+   <li><a href='javascript:void(0);' X="err">异常注单</a></li>
+   {+/if+}
+   {+if $baox==1+}
+   <li><a href='javascript:void(0);' X="baox">报表</a></li>
+   {+/if+}
+   {+if $online==1+}
+   <li><a href='javascript:void(0);' X="online">在线用户</a></li>
+   {+/if+}
+   {+if $pset==1+}
+<!--      <li><a href='javascript:void(0);' X='zshui'>默认退水</a></li>
+      <li><a href='javascript:void(0);' X='setatt'>赔率参数</a></li>-->
+   {+/if+}
+   {+if $news==1+}
+      <li><a href='javascript:void(0);' X='news'>消息发布</a></li>
+   {+/if+}
+   <li><a href='javascript:void(0);' X="long">开奖记录</a></li>
+   <li><a href='javascript:void(0);' X="new">系统消息</a></li>
+   {+if $hide!=1+}
+   <li><a href='javascript:void(0);' X="changepass2">更改密码</a></li>   
+   {+/if+}
+   <li><a href='javascript:void(0);'  x="top">退出登陆</a></li> 
+   {+if ($hide==1 | $caopan==1)+}
+    <li><a href='javascript:void(0);' X="sys">系统</a></li>
+    {+/if+} 
+    
+  
+<li style="width:500px;border:none"><Div style="float:left;">
+<label class='upqishu chu blue' m='{+$upkj+}'>{+$upqishu+}</label><span class="hei">期开奖:</span></Div><div class="upkj"></div></li>
+   
+   
+
+   
+  </ul>
+</td>
+</tr>
+</TABLE>
+
+<script language="javascript" id='zhishu'>
+var ngid={+$gid+};
+ma = [];
+     ma['紅'] = new Array(01,02,07,08,12,13,18,19,23,24,29,30,34,35,40,45,46); 
+     ma['藍'] = new Array(03,04,09,10,14,15,20,25,26,31,36,37,41,42,47,48); 
+     ma['綠'] = new Array(05,06,11,16,17,21,22,27,28,32,33,38,39,43,44,49); 
+
+</script>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='tophide';</script>
+</body>
+</html>

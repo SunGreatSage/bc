@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+        <meta name="apple-mobile-web-app-capable" content="yes"  />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="format-detection" content="email=no; telephone=no" />
+        <title>{+$title+}</title><link rel="apple-touch-icon-precomposed" href="../imgn/mobi/iphone.png">
+<link href="/imgn/mobi/mobi.css" type="text/css" rel="stylesheet"/>
+<script language="javascript" src="/js/jquery-1.8.3.min.js"></script>
+<script language="javascript">
+var globalpath = "{+$globalpath+}";
+</script>
+<SCRIPT language="javascript" id='myjs'>
+top.document.title = document.title;
+function qiu6h(ns) {
+	
+if(isNaN(ns)) return ns;
+
+			if (in_array(ns,sma['紅'])) {
+				return "<span class='qiured'>" + ns + "</span>"
+			} else if(in_array(ns,sma['藍'] )) {
+				return "<span class='qiublue'>" + ns + "</span>"
+			}else if(in_array(ns,sma['綠'])) {
+				return "<span class='qiugreen'>" + ns + "</span>"
+			}
+	
+
+}
+function qiu(n,bname) {
+	if (isNaN(n)) {
+		return n
+	} else {
+		if (ngid == 151 | ngid == 152 | ngid==153 | ngid==155  | ngid==157) {
+			if (n > 100) {
+				n = "<img src='../imgn/sz" + (n % 10) + ".png' /><img src='../imgn/sz" + (n % 10) + ".png' /><img src='../imgn/sz" + (n % 10) + ".png' />"
+			} else if (n > 10) {
+				n = "<img src='../imgn/sz" + n.substr(0, 1) + ".png' /><img src='../imgn/sz" + (n % 10) + ".png' />"
+			} else {
+				n = "<img src='../imgn/sz" + n + ".png' />"
+			}
+			return n
+		} else if(ngid == 161 | ngid == 162){
+		   if (Number(n) > 40) {
+				return "<span class='qiub1'>" + n + "</span>"
+			} else {
+				return "<span class='qiua1'>" + n + "</span>"
+			}
+		}else if (ngid == 107) {
+			n = Number(n);
+			if (n == 0) {
+				n = "<img src='../img/pk.png' class='imgsmall' />"
+			} else {
+				n = "<img src='../img/pk" + n + ".png'  class='imgsmall' />"
+			}
+			return n
+		} else {
+			if ((ngid == 103 | ngid == 133 | ngid == 135 | ngid == 131 | ngid == 132 | ngid == 136) & n >= 19) {
+				return "<span class='qiub'>" + n + "</span>"
+			} else if ((ngid == 121 | ngid == 123 | ngid == 125 | ngid == 127 | ngid == 129 ) & n == 11) {
+				return "<span class='qiub'>" + n + "</span>"
+			} else if (Number(n) > 40) {
+				return "<span class='qiub'>" + n + "</span>"
+			} else if ((ngid==163 | ngid==116 | ngid==117 | ngid==118 | ngid==119) & bname>2) {
+				return "<span class='qiub'>" + n + "</span>"
+			} else {
+				return "<span class='qiua'>" + n + "</span>"
+			}
+		}
+	}
+}
+function getResult(num, n) {
+	return Math.round(num * Math.pow(10, n)) / Math.pow(10, n)
+}
+function getresult(num, n) {
+	return num.toString().replace(new RegExp("^(\\-?\\d*\\.?\\d{0," + n + "})(\\d*)$"), "$1") + 0
+}
+
+function in_array(va, aaa) {
+	for (keyaaa in aaa) {
+		if (aaa[keyaaa] == va) return true
+	}
+	return false
+}
+
+</SCRIPT>
+<STYLE type="text/css">
+.imgsmall{width:20px;height:20px;border:none}
+</STYLE>

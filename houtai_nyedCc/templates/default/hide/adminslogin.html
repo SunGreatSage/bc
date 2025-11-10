@@ -1,0 +1,30 @@
+{+include file='header2.html'+}
+<script language="javascript" src="/js/md5.js"></script>
+<link href="/css/admins.css" type="text/css" rel="stylesheet" />
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='adminslogin';</script>
+<div class="main">
+	<div class="top_info">
+		<span class="title">管理员登陆</span><span class="right"></span>
+	</div>
+   <table class="data_table data_list">
+    <TR>
+      <Th><a href='admins.php?xtype=list'>管理员</a></Th>
+      <Th><a href='admins.php?xtype=login'>登录记录</a></Th>
+    </TR>
+   </table>
+   <BR>
+ <table class="data_table data_list list login_tb">
+ <tr><th colspan="3">管理记录</th><th colspan="5">{+$page+}</th></tr>
+ <TR>
+ <th><input type="checkbox" id='clickall' />全选</th><th>编号</th><th>登陆名</th><th>登陆时间</th><th>登陆IP</th><th>来源</th><th>服务器</th><th><input type="button" class="btn3 btnf" id='delall'  value="删除选中" /></th>
+ </TR>
+ {+section name=i loop=$l+}
+<TR><td><input type="checkbox" value='{+$l[i].id+}' /></td><td>{+$l[i].id+}</td><td>{+$l[i].adminname+}</td><td>{+$l[i].time+}</td><td>{+$l[i].ip+}</td><td>{+$l[i].addr+}</td><td>{+$l[i].server+}</td><td><input type="button" class="delone btn4 btnf" value='删除' /></td></TR>
+ {+/section+}
+  </table>
+</div>
+<div id='test'></div>
+</body>
+</html>

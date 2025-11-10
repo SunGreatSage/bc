@@ -1,0 +1,126 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>提交订单</title>
+<link rel="stylesheet" href="../css/default/xj/jquery-ui.css">
+<link rel="stylesheet" href="../css/default/xj/master.css">
+<link rel="stylesheet" href="../css/default/xj/style.css">
+<link rel="stylesheet" href="../css/default/xj/popup.css">
+<script type="text/javascript" src="../js/jquery-1.8.3.min.js"></script>
+
+
+</head>
+<body>
+<script type="text/javascript" id="myjs">var mulu='{+$mulu+}';
+var js=1;
+var sss="mem_zxczatm";
+</script>
+	<div class="popup">
+		<div class="popupinternal order-submit2">
+			<div class="col-left">
+				<p>请转账至下列账户中：</p>
+                {+if ($en=='WXZF' | $en=='ZFB')+}
+                <div>
+				<table class="table">
+					<tbody>
+						<tr class="trs">
+							<td colspan="3"><img src="../css/default/xj/{+$en+}_s.jpg"></td>
+						</tr>
+						<tr class="trs">
+							<td class="green" style="width:80px;">附言：</td>
+							<td>无<input type="text" id="copy_chkcode" value="{+$pass+}" class="green" readonly  style="display:none;" /></td>
+							<td></td>
+						</tr>
+						<tr class="trs">
+							<td>姓名：</td>
+							<td>无<input type="text" id="copy_username" value="{+$name+}" readonly  style="display:none;" /></td>
+							<td></td>
+						</tr>
+						<tr class="trs">
+							<td>帐号：</td>
+							<td>无<input type="text" id="copy_cardid" value="{+$num+}" readonly style="display:none;" /></td>
+							<td></td>
+						</tr>
+						<tr class="trs">
+							<td>开户行：</td>
+							<td colspan="2">无</td>
+						</tr>
+					</tbody>
+				</table>
+                </div>
+                {+else+}
+				<table class="table">
+					<tbody>
+						<tr class="trs">
+							<td colspan="3"><img src="../css/default/xj/{+$en+}_s.jpg"></td>
+						</tr>
+						<tr class="trs">
+							<td class="green" style="width:80px;">附言：</td>
+							<td><input type="text" id="copy_chkcode" value="{+$pass+}" class="green" readonly></input></td>
+							<td><span class="copy">复制</span></td>
+						</tr>
+						<tr class="trs">
+							<td>姓名：</td>
+							<td><input type="text" id="copy_username" value="{+$name+}" readonly></input></td>
+							<td><span class="copy">复制</span></td>
+						</tr>
+						<tr class="trs">
+							<td>帐号：</td>
+							<td><input type="text" id="copy_cardid" value="{+$num+}" readonly></input></td>
+							<td><span class="copy">复制</span></td>
+						</tr>
+						<tr class="trs">
+							<td>开户行：</td>
+							<td colspan="2">{+$kaihuhang+}</td>
+						</tr>
+					</tbody>
+				</table>
+                 {+/if+}
+				<div class="three-second">
+					<h4>存款信息</h4>
+					<p>
+						存款金额：<input type="text" id="amount" placeholder="实际入款金额"></input>*
+					</p>
+					<div class="post-info">
+						<p>
+							用户姓名：<input type="text" id="userName"  placeholder="用户姓名,微信可不写"></input>*
+						</p>
+						<p>
+							用户卡号：<input type="text" id="cardId"  placeholder="用户卡号,微信可不写"></input>*
+						</p>
+						<p>
+							存款时间：<input type="text" id="depostitTime"  placeholder="填写实际入款时间"></input>*
+						</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-right">
+				<div class="jc-info">
+					<h4>复制提示</h4>
+					<p>浏览器不支持复制,点击“复制”后请使用Ctrl+C或者鼠标右键菜单</p>
+				</div>
+				<div class="bank-info1">
+                    {+if ($en=='WXZF' | $en=='ZFB')+}
+					<h4>扫一扫支付</h4>
+					<img src="../xj/{+$en+}.png"/>
+                    {+else+}
+					<h4>充值教程</h4>
+					<img src="../css/default/xj/dsn3.png"/>
+                    {+/if+}
+				</div>
+
+			</div>
+
+			<div class="fullwidth">
+				<div class="container">
+					<input type="button" class="btn-blue button  order" id="btnSubmit1" value="提交订单">
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+</body>
+</html>

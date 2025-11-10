@@ -1,0 +1,104 @@
+{+include file='header2.html'+}
+<link href="/default/css/control.css" rel="stylesheet" />
+<link href="/default/css/Site.css" rel="stylesheet" />
+<link href="/default/css/jquery.loadmask.css" rel="stylesheet" />
+<script src="/js/sitetool.js?v=004"></script>
+<script src="/js/jquery.loadmask.js?v=004"></script>
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';var js=1;var sss='ptype';</script>
+<div class="jt-container">
+	<div class="top_info">
+		<span class="title" style="color:#000000">默认赔率</span>
+		<div class="center"  style="margin-left: 100px;" ><div id="cmcontrol">
+		<input type="button" data-ignore="1" value="保存"  class="button btn1 send" />
+		<input type="button" data-ignore="1" value="重置"  class="button btn1" />
+		<input type="button" gid="{+$gid+}" class="button btn7 yiwotongbu" value="以我同步其他彩" >
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<span style="color: #000000;">如需设置其他盘口赔率,请移步赔率各盘差分、参数</span>
+		</div>
+        </div>
+		
+		<span class="right">&nbsp;&nbsp;<a class="back" onclick="javascript:history.back(-1);" href="javascript:void(0);">返回</a></span>
+	</div>
+	
+	<div class="s_main">	
+		<div id="p_para" class="contents param_panel input_panel tab_panel">
+
+                        <table class="layout" templatecode="HK6">
+                            <tbody><tr>
+							{+if $config.slowtype==1+}
+                                <td height="30" colspan="2" align="left">
+								{+section name=i loop=$game+}
+                                        {+if $game[i].fast==0+}<span loto="MCHK6" group="HK6" class="g{+$game[i].gid+} group_tap" gid='{+$game[i].gid+}'>{+$game[i].gname+}</span>{+/if+}
+								 {+/section+}
+                                    
+                                </td>
+								{+/if+}
+                            </tr>
+							</tbody>
+							</table>
+							 </div>
+			
+	<div id="con_six" class="hover param_panel">
+    <table class="layout">
+        <tr>
+            <td class="panel">
+                <table class="list table_ball">
+  <thead>
+<tr>
+  <th style="display: none;">序 号</th><th>种类</th><th><font class="font_r">默认赔率(A盘)</font></th>
+</tr></thead>
+<tbody class="tablelist">
+{+section name=i loop=$ptype step=1 +}
+ {+if $smarty.section.i.index<=$nums+}
+   <TR>
+   <th style="display: none;">{+$ptype[i].id+}</th><th class="para_pjName">{+$ptype[i].c+}<input style="display: none;" type="text" class="txt c" value="{+$ptype[i].c+}" /></th><td><input type="text" class="txt p" value="{+$ptype[i].p+}" /></td></tr>
+   {+/if+}
+   {+/section+}
+ </tbody>
+</table>
+
+
+	  </td>
+	  <td class="panel">
+                <table class="list table_ball">
+  <thead>
+<tr>
+  <th style="display: none;">序 号</th><th>种类</th><th><font class="font_r">默认赔率(A盘)</font></th>
+</tr></thead>
+<tbody class="tablelist">
+{+section name=i loop=$ptype step=1 +}
+ {+if $smarty.section.i.index>$nums+}
+   <TR>
+   <th style="display: none;">{+$ptype[i].id+}</th><th class="para_pjName">{+$ptype[i].c+}<input style="display: none;" type="text" class="txt c" value="{+$ptype[i].c+}" /></th><td><input type="text" class="txt p" value="{+$ptype[i].p+}" /></td></tr>
+   {+/if+}
+   {+/section+}
+ </tbody>
+</table>
+
+
+	  </td>
+
+        </tr>
+        <tr>
+ 
+
+	 <td height="30" colspan="2" align="center">
+		<div class=" data_footer control">
+			<input type="button" value="保存" class="button send bnt_1">
+			<input type="button" value="重置" class="button cancel bnt_2">
+		</div>
+		  </td>
+        </tr>
+		</table>
+		</div>
+	</div>
+		</div>
+</div>
+<script language="javascript">
+var gid={+$gid+};
+</script>
+<div id='test'></div>
+</body>
+</html>

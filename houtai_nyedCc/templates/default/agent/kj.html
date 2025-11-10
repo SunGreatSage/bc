@@ -1,0 +1,67 @@
+{+include file='header.html'+}
+</head>
+<body>
+<script id=myjs language="javascript">var mulu='{+$mulu+}';
+var js=1;var sss='kj';
+</script>
+<div class="xbody1">
+<div id="kj_jr" style="margin:0px;width:100%;float:left;margin-top:10px;">
+	   <table   border="1" style="BORDER-COLLAPSE: collapse;width:100%" borderColor=#111111>
+       <tr bgColor=#ebf5fe>
+       <td align=center>年份</td>
+ 	   <td align=center>开奖日(星期)</td>
+	   <td align=center>年柱</td>
+	   <td align=center>期数</td>
+       <td align=center>号码落球序</td>
+       <td align=center>特|号</td>
+       <td align=center>特肖</td>
+       <td align=center>单双</td>
+       <td align=center>大小</td>
+       <td align=center>五行</td>
+       <td align=center colspan="3">总分</td>
+	   <td align=center>家/兽</td>
+       <td align=center colspan=2>特尾</td>
+       <td align=center>合大小</td>
+       <td align=center>合单双</td>
+   </tr>
+   {+section name=xk loop=$kj+}
+     {+if $kj[xk].qishu%10==0+}
+     <tr><TD colspan=20 style="height:1px;background:#06F"></TD></tr>
+     {+/if+}
+    <tr>
+          <td align=center>{+$kj[xk].year+}</td>
+       <td align=center>{+$kj[xk].date+}(<font color=blue>{+$kj[xk].week+}</font>)</td>
+       <td align=center>{+$kj[xk].bml+}</td>
+       <td align=center>{+$kj[xk].qishu+}</td>
+       <td align=center>
+              <img class='hand' id='img{+$kj[xk].year+}{+$kj[xk].qishu+}{+$kj[xk].p1+}' src="{+$globalpath+}imgs/{+$kj[xk].p1+}.gif" border=0  />
+              <img class='hand' id='img{+$kj[xk].year+}{+$kj[xk].qishu+}{+$kj[xk].p2+}' src="{+$globalpath+}imgs/{+$kj[xk].p2+}.gif" border=0  />
+		      <img class='hand' id='img{+$kj[xk].year+}{+$kj[xk].qishu+}{+$kj[xk].p3+}' src="{+$globalpath+}imgs/{+$kj[xk].p3+}.gif" border=0  />
+		      <img class='hand' id='img{+$kj[xk].year+}{+$kj[xk].qishu+}{+$kj[xk].p4+}' src="{+$globalpath+}imgs/{+$kj[xk].p4+}.gif" border=0  />
+		      <img class='hand' id='img{+$kj[xk].year+}{+$kj[xk].qishu+}{+$kj[xk].p5+}' src="{+$globalpath+}imgs/{+$kj[xk].p5+}.gif" border=0  />
+		      <img class='hand' id='img{+$kj[xk].year+}{+$kj[xk].qishu+}{+$kj[xk].p6+}' src="{+$globalpath+}imgs/{+$kj[xk].p6+}.gif" border=0  /></td>
+	   <td align=center> <img class='hand' id='img{+$kj[xk].year+}{+$kj[xk].qishu+}{+$kj[xk].tm+}' src="{+$globalpath+}imgs/{+$kj[xk].tm+}.gif" border=0 /></td>
+	   <td align=center>{+$kj[xk].tmsx+}</td>
+	   <td align=center><font color=blue> {+$kj[xk].danshuang+}</font></td>
+	   <td align=center><font color=blue> {+$kj[xk].daxiao+}</font></td>
+       <td align=center>{+$kj[xk].wuhang+}</td>
+       <td align=center> {+$kj[xk].zongfen+}</td>
+       <td align=center> {+$kj[xk].zfdx+}</td>
+       <td align=center> {+$kj[xk].zfds+}</td>
+       <td align=center><font color=red>{+$kj[xk].jiashou+}</font></td>
+       <td align=center>{+$kj[xk].weishudaxiao+}</td>
+       <td align=center> {+$kj[xk].weishu+}</td>
+       <td align=center> {+$kj[xk].heshudaxiao+}</td>
+       <td align=center><font color=blue>{+$kj[xk].heshudanshuang+}</font></td>    
+   </tr>
+   {+/section+}
+</table>
+     </TD>
+	 </tr>
+</table>
+	
+	</div>
+</div>  
+<div id='test'></div>
+</body>
+</html>
