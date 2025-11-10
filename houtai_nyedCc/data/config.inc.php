@@ -1,13 +1,19 @@
 <?php
 error_reporting(0);
 date_default_timezone_set("Asia/Shanghai");
-$dbPort = '55667';
+$dbPort = '3306';
 $dbHost="127.0.0.1";
 $dbName="lhc_oa";
 $dbUser="lhc_oa";
 $dbPass="JH4ctk4mJBNxmhw5";
-$globalpath = "/"; 
+$globalpath = "/";
 $SESS_LIFE = 14400;
+
+// Redis 配置
+$redisHost = "127.0.0.1";    // Redis 主机地址
+$redisPort = 6379;           // Redis 端口
+$redisPass = "";             // Redis 密码（如果没有密码留空）
+$redisDb   = 0;              // Redis 数据库编号（0-15）
 $jkarr = array(22116244,22116241,22116243,22115863,22115867,22115868);
 $poarr = array(0);
 $qsarr = array(0);

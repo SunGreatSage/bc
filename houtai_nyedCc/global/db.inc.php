@@ -305,22 +305,37 @@ class lib_mysqli {
 } 
 
 class RedisConnection {
-    private static $instance = null; // 移除了 ? 类型声明
-
+    private static $instance = null;
     private $redis;
 
     // 私有构造函数
-    private function __construct($host, $port) {
+    private function __construct($host, $port, $password = '', $db = 0) {
         $this->redis = new Redis();
-        if (!$this->redis->connect($host, $port)) {
-            throw new Exception('Failed to connect to Redis');
+
+        // 连接 Redis
+        if (!$this->redis->connect($host, $port, 2)) {  // 2秒超时
+            throw new Exception('Failed to connect to Redis at ' . $host . ':' . $port);
+        }
+
+        // 如果设置了密码，进行身份验证
+        if ($password !== '' && $password !== null) {
+            if (!$this->redis->auth($password)) {
+                throw new Exception('Redis authentication failed');
+            }
+        }
+
+        // 选择数据库
+        if ($db > 0) {
+            if (!$this->redis->select($db)) {
+                throw new Exception('Failed to select Redis database: ' . $db);
+            }
         }
     }
 
     // 获取 RedisConnection 单例
-    public static function getInstance($host = '127.0.0.1', $port = 6379) {
+    public static function getInstance($host = '127.0.0.1', $port = 6379, $password = '', $db = 0) {
         if (self::$instance === null) {
-            self::$instance = new self($host, $port);
+            self::$instance = new self($host, $port, $password, $db);
         }
         return self::$instance;
     }
@@ -336,5 +351,7 @@ $msql        = new lib_mysqli($dbHost,$dbUser,$dbPass,$dbName,$dbPort);
 $fsql        = new lib_mysqli($dbHost,$dbUser,$dbPass,$dbName,$dbPort);
 $tsql        = new lib_mysqli($dbHost,$dbUser,$dbPass,$dbName,$dbPort);
 $psql        = new lib_mysqli($dbHost,$dbUser,$dbPass,$dbName,$dbPort);
-$redisConnection = RedisConnection::getInstance();
+
+// 初始化 Redis 连接（使用配置文件中的参数）
+$redisConnection = RedisConnection::getInstance($redisHost, $redisPort, $redisPass, $redisDb);
 $redis = $redisConnection->getRedis();
