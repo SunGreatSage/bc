@@ -70,33 +70,41 @@ for ($k = 0; $k < $cg; $k++) {
             }
 
             $ma = json_decode($ma, true);
-            if(!isset($ma['result']['data']['preDrawCode'])){
+            if(!isset($ma['result']['data']['drawIssue'])){
                 echo "[香港六合彩] API 返回数据格式错误<BR/>";
                 error_log("[autokjs_ss.php] 香港六合彩 API 返回数据无效: " . json_encode($ma));
                 continue;
             }
 
-            $m = explode(',', $ma['result']['data']['preDrawCode']);
-            
-        
-            if($m[0]<10){$m[0]="0".$m[0];}
-            if($m[1]<10){$m[1]="0".$m[1];}
-            if($m[2]<10){$m[2]="0".$m[2];}
-            if($m[3]<10){$m[3]="0".$m[3];}
-            if($m[4]<10){$m[4]="0".$m[4];}
-            if($m[5]<10){$m[5]="0".$m[5];}
-            if($m[6]<10){$m[6]="0".$m[6];}
-            
-           
-            $qishu=$ma['result']['data']['preDrawIssue'];
+            // 获取上一期开奖号码（用于更新已开奖记录）
+            $preDrawCode = isset($ma['result']['data']['preDrawCode']) ? $ma['result']['data']['preDrawCode'] : '';
+            if($preDrawCode){
+                $m = explode(',', $preDrawCode);
+                if($m[0]<10){$m[0]="0".$m[0];}
+                if($m[1]<10){$m[1]="0".$m[1];}
+                if($m[2]<10){$m[2]="0".$m[2];}
+                if($m[3]<10){$m[3]="0".$m[3];}
+                if($m[4]<10){$m[4]="0".$m[4];}
+                if($m[5]<10){$m[5]="0".$m[5];}
+                if($m[6]<10){$m[6]="0".$m[6];}
+
+                // 更新上一期的开奖号码（API返回7位期次号，如2025119）
+                $preDrawIssue = $ma['result']['data']['preDrawIssue'];
+                $preQishu = $preDrawIssue;  // 直接使用，不需要date('Y').substr()处理
+                $sql_update_pre = "update `{$tb_kj}` set m1='{$m[0]}',m2='{$m[1]}',m3='{$m[2]}',m4='{$m[3]}',m5='{$m[4]}',m6='{$m[5]}',m7='{$m[6]}',m8='{$m[7]}',m9='{$m[8]}',m10='{$m[9]}' where gid='{$gid}' and qishu='{$preQishu}' ";
+                $tsql->query($sql_update_pre);
+            }
+
+            // 使用 drawIssue（当前未开奖期次）- API返回7位完整期次号
+            $qishu=$ma['result']['data']['drawIssue'];
 			$drawTime=$ma['result']['data']['drawTime'];
 			$closetime=$ma['result']['data']['drawTime'];
 			$opentime1=$ma['result']['data']['preDrawTime'];
 
 			$dateTime = new DateTime($drawTime);
             $dateOnly = $dateTime->format('Y-m-d');
-            $qishu = date('Y').substr($qishu,4,4);
-            $nqi =  $qishu+1;
+            // API返回7位期次号（如2025120），直接使用，不需要处理
+            $nqi = $qishu;  // 直接使用当前期次
             $fsql1 = "select qishu from `{$tb_kj}` where gid=100 and qishu='{$nqi}'";
             $tsql->query("select * from `$tb_kj` where gid=100 and  qishu='{$nqi}' limit 1");
             $tsql->next_record();
@@ -123,15 +131,11 @@ for ($k = 0; $k < $cg; $k++) {
                     }
                 }
 		   }
-            $sql = "update `{$tb_kj}` set m1='{$m[0]}',m2='{$m[1]}',m3='{$m[2]}',m4='{$m[3]}',m5='{$m[4]}',m6='{$m[5]}',m7='{$m[6]}',m8='{$m[7]}',m9='{$m[8]}',m10='{$m[9]}'";
-            $sql .= " where  gid='{$gid}' and qishu='{$qishu}' ";
-           $result = $tsql->query($sql);
-           if(!$result){
-               echo "[香港六合彩] 数据库更新失败<BR/>";
-               error_log("[autokjs_ss.php] 香港六合彩更新开奖号码失败: gid={$gid}, qishu={$qishu}");
-               continue;
-           }
-		   echo "[香港六合彩] 开奖期号：".$nqi." 开盘时间：".$opentime1." 开奖时间：".$closetime.'<BR/>'; 
+
+           // 当前期($nqi)是未开奖期次，不需要更新开奖号码
+           // 上一期的开奖号码已在前面的代码中更新完成
+
+		   echo "[香港六合彩] 当前未开奖期号：".$nqi." 预计开奖时间：".$closetime.'<BR/>'; 
         }
         
        if ($gid == 300) { //澳门六合彩
@@ -160,9 +164,10 @@ for ($k = 0; $k < $cg; $k++) {
             if($m[4]<10){$m[4]="0".$m[4];}
             if($m[5]<10){$m[5]="0".$m[5];}
             if($m[6]<10){$m[6]="0".$m[6];}
-			$qishu = $ma['data'][0]['issue'];
-            $qishu = date('Y').substr($qishu,4,4);
-            $nqi =  $qishu+1;
+			// 澳门六合彩API返回的是已开奖期次（7位），需要+1来创建下一期
+			$qishu = $ma['data'][0]['issue'];  // API返回7位期次号，如2025313
+            // 直接使用API返回值，不需要date('Y').substr()处理
+            $nqi = $qishu + 1;  // 下一期（未开奖），如2025314
             //var_dump($qishu);
             $fsql1 = "select qishu from `{$tb_kj}` where gid=300 and qishu='{$nqi}'";
             $tsql->query("select * from `$tb_kj` where gid=300 and  qishu='{$nqi}' limit 1");
@@ -226,10 +231,11 @@ for ($k = 0; $k < $cg; $k++) {
             if($m[4]<10){$m[4]="0".$m[4];}
             if($m[5]<10){$m[5]="0".$m[5];}
             if($m[6]<10){$m[6]="0".$m[6];}
-			$qishu = $ma['data'][0]['issue'];
-            $qishu = date('Y').substr($qishu,4,4);
-            //var_dump($qishu); 
-            $nqi =  $qishu+1;
+			// 新澳门六合彩API返回的是已开奖期次（7位），需要+1来创建下一期
+			$qishu = $ma['data'][0]['issue'];  // API返回7位期次号，如2025313
+            // 直接使用API返回值，不需要date('Y').substr()处理
+            //var_dump($qishu);
+            $nqi = $qishu + 1;  // 下一期（未开奖），如2025314
             $fsql1 = "select qishu from `{$tb_kj}` where gid=200 and qishu='{$nqi}'";
             $tsql->query("select * from `$tb_kj` where gid=200 and  qishu='{$nqi}' limit 1");
             $tsql->next_record();
