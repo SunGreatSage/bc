@@ -169,7 +169,7 @@ function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
             $tmpcid = $lib[$j]['cid'];
         }
         $tsql->query("update `{$tb_kj}` set js=1 where {$whi}");
-        //jiaozhengedu();
+        jiaozhengedu(); // 恢复派奖函数调用，确保手动开奖和系统开奖都会派奖
     }
     $us = $tsql->arr("select * from `$tb_shui` where isok=1 and shui>0",1);
     foreach($us as $k => $v){

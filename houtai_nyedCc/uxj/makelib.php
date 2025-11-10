@@ -199,7 +199,11 @@ switch ($_REQUEST['xtype']) {
         } else {
             $dates = sqldate(time());
         }
-        
+
+        // 开启事务保护：确保订单写入和余额扣除的原子性
+        $msql->query("START TRANSACTION");
+        $transaction_success = true;
+
         for ($i = 0; $i < $cp; $i++) {
             if ($play[$i]['je'] <= 0 | $play[$i]['je'] % 1 != 0)
                 continue;
@@ -629,18 +633,46 @@ switch ($_REQUEST['xtype']) {
                 $jex += $play[$i]['je'];
                 $play[$i]['goon'] = 0;
             } else {
+                // 订单写入失败，标记事务失败
                 $play[$i]['cg']   = 0;
                 $play[$i]['goon'] = 0;
+                $transaction_success = false;
             }
 			$play[$i]['time'] = date("H:i:s");
         }
-        if ($cp > 3) {
-            $msql->query("insert into `$tb_lib` select NULL,tid,userid,dates,qishu,gid,bid,sid,cid,pid,abcd,ab,peilv1,peilv2,points,content,je,time,xtype,z,prize,znum,zc0,zc1,zc2,zc3,zc4,zc5,zc6,zc7,zc8,points1,points2,points3,points4,points5,points6,points7,points8,peilv11,peilv12,peilv13,peilv14,peilv15,peilv16,peilv17,peilv18,peilv21,peilv22,peilv23,peilv24,peilv25,peilv26,peilv27,peilv28,uid1,uid2,uid3,uid4,uid5,uid6,uid7,uid8,flytype,sv,bz,bs,ip,code,kk from `$tb_libu` where userid='$userid' order by id");
-            $msql->query("delete from x_libu where userid='$userid'");
+
+        // 批量操作：从临时表复制到正式表
+        if ($cp > 3 && $transaction_success) {
+            if (!$msql->query("insert into `$tb_lib` select NULL,tid,userid,dates,qishu,gid,bid,sid,cid,pid,abcd,ab,peilv1,peilv2,points,content,je,time,xtype,z,prize,znum,zc0,zc1,zc2,zc3,zc4,zc5,zc6,zc7,zc8,points1,points2,points3,points4,points5,points6,points7,points8,peilv11,peilv12,peilv13,peilv14,peilv15,peilv16,peilv17,peilv18,peilv21,peilv22,peilv23,peilv24,peilv25,peilv26,peilv27,peilv28,uid1,uid2,uid3,uid4,uid5,uid6,uid7,uid8,flytype,sv,bz,bs,ip,code,kk from `$tb_libu` where userid='$userid' order by id")) {
+                $transaction_success = false;
+            } elseif (!$msql->query("delete from x_libu where userid='$userid'")) {
+                $transaction_success = false;
+            }
         }
-        //if ($fudong == 1 | $config['fast'] == 1) {
-            $msql->query("update `$tb_user` set kmoney=kmoney-$jex where userid='$userid'");
-            usermoneylog($userid, 0 - $jex, $moneys - $jex, '投注',1,$ip);
+
+        // 扣除余额和记录流水（事务保护）
+        if ($transaction_success && $jex > 0) {
+            //if ($fudong == 1 | $config['fast'] == 1) {
+            if (!$msql->query("update `$tb_user` set kmoney=kmoney-$jex where userid='$userid'")) {
+                $transaction_success = false;
+            } else {
+                usermoneylog($userid, 0 - $jex, $moneys - $jex, '投注',1,$ip);
+            }
+        }
+
+        // 提交或回滚事务
+        if ($transaction_success) {
+            $msql->query("COMMIT");
+        } else {
+            $msql->query("ROLLBACK");
+            // 回滚后，所有订单都标记为失败
+            for ($i = 0; $i < $cp; $i++) {
+                if ($play[$i]['cg'] == 1) {
+                    $play[$i]['cg'] = 0;
+                    $play[$i]['err'] = "事务回滚";
+                }
+            }
+        }
         /*
         } else {
             $msql->query("update `$tb_user` set money=money-$jex where userid='$userid'");
