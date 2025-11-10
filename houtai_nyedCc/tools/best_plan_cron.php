@@ -58,8 +58,8 @@ try {
 
     log_message("系统配置检查通过，开始分析...");
 
-    // 获取所有未开奖的期次
-    $sql = "SELECT qishu, dates, endtime FROM `x_kj` WHERE gid=300 AND js=0 ORDER BY qishu ASC";
+    // 获取所有未开奖的期次（从最新到最旧）
+    $sql = "SELECT qishu, dates, closetime FROM `x_kj` WHERE gid=300 AND js=0 ORDER BY qishu DESC";
     $list = $msql->arr($sql, 1);
 
     if (empty($list)) {

@@ -52,12 +52,38 @@ class BestPlanCalculator {
      */
     private function loadConfig() {
         $sql = "SELECT * FROM `{$this->tb_best_plan_config}` WHERE id=1 LIMIT 1";
-        $this->msql->query($sql);
-        if ($this->msql->next_record()) {
+        $result = $this->msql->query($sql);
+
+        if ($result && $this->msql->next_record()) {
             $this->enabled = $this->msql->f('enabled') == 1;
             $this->analyze_time_before = intval($this->msql->f('analyze_time_before'));
             $this->analyze_depth = $this->msql->f('analyze_depth');
+        } else {
+            // 配置不存在，创建默认配置
+            $this->initConfig();
         }
+    }
+
+    /**
+     * 初始化默认配置
+     */
+    private function initConfig() {
+        $sql = "INSERT INTO `{$this->tb_best_plan_config}` SET
+                id=1,
+                enabled=1,
+                analyze_time_before=5,
+                analyze_depth='full',
+                auto_analyze=1,
+                created_at=NOW(),
+                updated_at=NOW()
+                ON DUPLICATE KEY UPDATE updated_at=NOW()";
+
+        $this->msql->query($sql);
+
+        // 重新加载配置
+        $this->enabled = true;
+        $this->analyze_time_before = 5;
+        $this->analyze_depth = 'full';
     }
 
     /**
@@ -160,10 +186,10 @@ class BestPlanCalculator {
     }
 
     /**
-     * 获取当前未开奖的期次
+     * 获取当前未开奖的期次（最新的未开奖期次）
      */
     private function getCurrentQishu() {
-        $sql = "SELECT qishu FROM `{$this->tb_kj}` WHERE gid={$this->gid} AND js=0 ORDER BY qishu ASC LIMIT 1";
+        $sql = "SELECT qishu FROM `{$this->tb_kj}` WHERE gid={$this->gid} AND js=0 ORDER BY qishu DESC LIMIT 1";
         $this->msql->query($sql);
         if ($this->msql->next_record()) {
             return $this->msql->f('qishu');
@@ -187,14 +213,14 @@ class BestPlanCalculator {
      * 检查是否到达分析时间（开奖前N分钟）
      */
     private function isTimeToAnalyze($qishu) {
-        $sql = "SELECT dates, endtime FROM `{$this->tb_kj}` WHERE gid={$this->gid} AND qishu='$qishu' LIMIT 1";
+        $sql = "SELECT dates, closetime FROM `{$this->tb_kj}` WHERE gid={$this->gid} AND qishu='$qishu' LIMIT 1";
         $this->msql->query($sql);
         if ($this->msql->next_record()) {
             $dates = $this->msql->f('dates');
-            $endtime = $this->msql->f('endtime');
+            $closetime = $this->msql->f('closetime');
 
-            // 开奖时间 = dates + endtime
-            $open_timestamp = strtotime($dates . ' ' . $endtime);
+            // 开奖时间 = closetime（封盘时间）
+            $open_timestamp = strtotime($closetime);
             $now_timestamp = time();
 
             // 距离开奖还有多少秒
@@ -213,12 +239,12 @@ class BestPlanCalculator {
      * 获取距离分析时间还有多少分钟
      */
     private function getTimeLeft($qishu) {
-        $sql = "SELECT dates, endtime FROM `{$this->tb_kj}` WHERE gid={$this->gid} AND qishu='$qishu' LIMIT 1";
+        $sql = "SELECT dates, closetime FROM `{$this->tb_kj}` WHERE gid={$this->gid} AND qishu='$qishu' LIMIT 1";
         $this->msql->query($sql);
         if ($this->msql->next_record()) {
             $dates = $this->msql->f('dates');
-            $endtime = $this->msql->f('endtime');
-            $open_timestamp = strtotime($dates . ' ' . $endtime);
+            $closetime = $this->msql->f('closetime');
+            $open_timestamp = strtotime($closetime);
             $analyze_timestamp = $open_timestamp - ($this->analyze_time_before * 60);
             $time_left_seconds = $analyze_timestamp - time();
             return max(0, ceil($time_left_seconds / 60));

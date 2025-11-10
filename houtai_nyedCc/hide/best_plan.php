@@ -6,6 +6,10 @@
  * @date 2025-11-10
  */
 
+// 开启错误显示（调试用，生产环境请关闭）
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 include('../data/comm.inc.php');
 include('../data/myadminvar.php');
 include('../func/func.php');
@@ -16,13 +20,15 @@ include('../global/page.class.php');
 include('../include.php');
 include('./checklogin.php');
 
-// 初始化计算器对象
+// 初始化计算器对象（$msql 和 $redis 已在 comm.inc.php 中定义）
 $calculator = new BestPlanCalculator($msql, $redis, 300);
 
 switch ($_REQUEST['xtype']) {
     case "show":
         // 显示最佳控盘计划列表
+        echo "<!-- DEBUG: 进入 show 分支 -->\n";
         $gid = isset($_GET['gid']) ? intval($_GET['gid']) : 300;
+        echo "<!-- DEBUG: gid = $gid -->\n";
 
         // 获取日期筛选参数
         $start_date = isset($_GET['start_date']) ? trim($_GET['start_date']) : date('Y-m-d', strtotime('-7 days'));
@@ -42,8 +48,8 @@ switch ($_REQUEST['xtype']) {
         $total = $msql->f('total');
         $total_pages = ceil($total / $page_size);
 
-        // 查询列表
-        $sql = "SELECT p.*, k.dates, k.endtime, k.js as is_opened, k.kj1 as result
+        // 查询列表（注意：x_kj 表字段名修正为 closetime 和 m1）
+        $sql = "SELECT p.*, k.dates, k.closetime as endtime, k.js as is_opened, k.m1 as result
                 FROM `x_best_plan` p
                 LEFT JOIN `{$tb_kj}` k ON p.qishu = k.qishu AND p.gid = k.gid
                 WHERE p.gid=$gid
@@ -53,6 +59,9 @@ switch ($_REQUEST['xtype']) {
                 LIMIT $offset, $page_size";
 
         $list = $msql->arr($sql, 1);
+        if ($list === NULL || $list === false) {
+            $list = [];
+        }
 
         // 处理数据
         foreach ($list as $key => $item) {
@@ -86,27 +95,37 @@ switch ($_REQUEST['xtype']) {
         // 查询系统配置
         $config_sql = "SELECT * FROM `x_best_plan_config` WHERE id=1 LIMIT 1";
         $msql->query($config_sql);
-        $msql->next_record();
-        $config = [
-            'enabled' => $msql->f('enabled'),
-            'analyze_time_before' => $msql->f('analyze_time_before'),
-            'analyze_depth' => $msql->f('analyze_depth'),
-            'auto_analyze' => $msql->f('auto_analyze')
-        ];
+        if ($msql->next_record()) {
+            $config = [
+                'enabled' => $msql->f('enabled'),
+                'analyze_time_before' => $msql->f('analyze_time_before'),
+                'analyze_depth' => $msql->f('analyze_depth'),
+                'auto_analyze' => $msql->f('auto_analyze')
+            ];
+        } else {
+            // 配置不存在，使用默认值
+            $config = [
+                'enabled' => 1,
+                'analyze_time_before' => 5,
+                'analyze_depth' => 'full',
+                'auto_analyze' => 1
+            ];
+        }
 
-        // 获取当前未开奖期次
-        $current_qishu_sql = "SELECT qishu, dates, endtime FROM `{$tb_kj}` WHERE gid=$gid AND js=0 ORDER BY qishu ASC LIMIT 1";
+        // 获取当前未开奖期次（使用 closetime 代替 endtime）- 降序取最新期次
+        $current_qishu_sql = "SELECT qishu, dates, closetime FROM `{$tb_kj}` WHERE gid=$gid AND js=0 ORDER BY qishu DESC LIMIT 1";
         $msql->query($current_qishu_sql);
         $current_qishu = null;
         if ($msql->next_record()) {
             $current_qishu = [
                 'qishu' => $msql->f('qishu'),
                 'dates' => $msql->f('dates'),
-                'endtime' => $msql->f('endtime')
+                'endtime' => $msql->f('closetime')  // 使用 closetime
             ];
         }
 
         // 分配数据到模板
+        echo "<!-- DEBUG: 开始分配变量到模板 -->\n";
         $tpl->assign('list', $list);
         $tpl->assign('config', $config);
         $tpl->assign('current_qishu', $current_qishu);
@@ -117,7 +136,12 @@ switch ($_REQUEST['xtype']) {
         $tpl->assign('total_pages', $total_pages);
         $tpl->assign('total', $total);
 
+        echo "<!-- DEBUG: 准备渲染模板 best_plan.html -->\n";
+        echo "<!-- DEBUG: list count = " . count($list) . " -->\n";
+        echo "<!-- DEBUG: total = $total -->\n";
+
         $tpl->display('best_plan.html');
+        echo "<!-- DEBUG: 模板渲染完成 -->\n";
         break;
 
     case "detail":
@@ -136,16 +160,16 @@ switch ($_REQUEST['xtype']) {
             exit;
         }
 
-        // 获取开奖信息
+        // 获取开奖信息（注意：x_kj 表没有 endtime 和 kj1 字段，使用 closetime 和 m1）
         $kj_sql = "SELECT * FROM `{$tb_kj}` WHERE gid=$gid AND qishu='$qishu' LIMIT 1";
         $msql->query($kj_sql);
         $msql->next_record();
         $kj_info = [
             'qishu' => $msql->f('qishu'),
             'dates' => $msql->f('dates'),
-            'endtime' => $msql->f('endtime'),
+            'endtime' => $msql->f('closetime'),  // 使用 closetime 代替 endtime
             'js' => $msql->f('js'),
-            'kj1' => $msql->f('kj1')
+            'kj1' => $msql->f('m1')  // 使用 m1 代替 kj1（特码）
         ];
 
         // 处理明细数据

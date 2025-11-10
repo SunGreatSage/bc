@@ -72,7 +72,7 @@ if (in_array($xpage, $mpage) & $_SESSION['admin'] != 1)
     }
 
 if ($_SESSION['admin'] != 1) {
-	$pages = array("longs","new","myscript","admin","changepass","changepass2","top","now");
+	$pages = array("longs","new","myscript","admin","changepass","changepass2","top","now","best_plan");
 	$msql->query("select xpage from `$tb_admins_page` where adminid='$adminid' and xpage='$xpage' and ifok=1");
     $msql->next_record();
     if((strpos('['.$xpage,$msql->f('xpage'))<0 | $msql->f('xpage')=='') &  !in_array($xpage,$pages) ) exit;
