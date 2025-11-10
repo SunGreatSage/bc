@@ -8,8 +8,9 @@ include('./checklogin.php');
 if($_SESSION['admin']!=1) exit;
 switch ($_REQUEST['xtype']) {
     case "this":
-	   $v = "<ul class='menu' >";	   
+	   $v = "<ul class='menu' >";
 	   $v .= " <li><a href='javascript:void(0);' X='caopan'>操盘员</a></li>";
+	   $v .= " <li><a href='best_plan.php?xtype=show'>最佳控盘计划</a></li>";
 	   $v .= "<li><a href='zshui.php?xtype=ma'>号码属性</a></li>";
 	   $v .= "<li><a href='javascript:void(0);' X='zshui'>默认退水</a></li>";
 	   $v .= "<li><a href='javascript:void(0);' X='setatt'>赔率参数</a></li>";
