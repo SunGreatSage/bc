@@ -562,10 +562,10 @@ var js=1;var sss='other';
 
 <script type="text/javascript">
 var style = '{+$class+}';//alert(style);
-var ngid= {+$gid+};//alert(ngid);
+var ngid= {+$gid|default:0+};//alert(ngid);
 var globalpath = '{+$globalpath+}';//alert(globalpath);
 var kjurl='{+$kjurl+}';//alert(kjurl);
-var fenlei='{+$fenlei+}';//alert(fenlei);
+var fenlei='{+$fenlei|default:0+}';//alert(fenlei);
 var type = '{+$type+}';//alert(type);
 var app='{+$app+}';//alert(app);
 sma=[];

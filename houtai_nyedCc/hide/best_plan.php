@@ -30,6 +30,31 @@ switch ($_REQUEST['xtype']) {
         $gid = isset($_GET['gid']) ? intval($_GET['gid']) : 300;
         echo "<!-- DEBUG: gid = $gid -->\n";
 
+        // 查询所有可用的游戏类型（安全版本）
+        $game_list = array();
+        if (isset($tb_game) && $tb_game != '') {
+            // 修正：使用 ifopen 字段代替 status
+            $game_sql = "SELECT gid, gname FROM `{$tb_game}` WHERE ifopen=1 ORDER BY gid ASC";
+            $game_result = $msql->query($game_sql);
+            if ($game_result) {
+                while ($msql->next_record()) {
+                    $game_list[] = array(
+                        'gid' => $msql->f('gid'),
+                        'gname' => $msql->f('gname')
+                    );
+                }
+            }
+        }
+
+        // 如果没有游戏数据，添加默认选项
+        if (empty($game_list)) {
+            $game_list = array(
+                array('gid' => 100, 'gname' => '香港六合彩'),
+                array('gid' => 200, 'gname' => '澳门六合彩'),
+                array('gid' => 300, 'gname' => '新澳门六合彩')
+            );
+        }
+
         // 获取日期筛选参数
         $start_date = isset($_GET['start_date']) ? trim($_GET['start_date']) : date('Y-m-d', strtotime('-7 days'));
         $end_date = isset($_GET['end_date']) ? trim($_GET['end_date']) : date('Y-m-d');
@@ -112,15 +137,17 @@ switch ($_REQUEST['xtype']) {
             ];
         }
 
-        // 获取当前未开奖期次（使用 closetime 代替 endtime）- 降序取最新期次
-        $current_qishu_sql = "SELECT qishu, dates, closetime FROM `{$tb_kj}` WHERE gid=$gid AND js=0 ORDER BY qishu DESC LIMIT 1";
+        // 获取当前未开奖期次（使用 kjtime 开奖时间）- 降序取最新期次
+        $current_qishu_sql = "SELECT qishu, dates, closetime, kjtime FROM `{$tb_kj}` WHERE gid=$gid AND js=0 ORDER BY qishu DESC LIMIT 1";
         $msql->query($current_qishu_sql);
         $current_qishu = null;
         if ($msql->next_record()) {
             $current_qishu = [
                 'qishu' => $msql->f('qishu'),
                 'dates' => $msql->f('dates'),
-                'endtime' => $msql->f('closetime')  // 使用 closetime
+                'closetime' => $msql->f('closetime'),  // 封盘时间
+                'kjtime' => $msql->f('kjtime'),        // 开奖时间
+                'endtime' => $msql->f('kjtime')        // 显示开奖时间（向后兼容）
             ];
         }
 
@@ -130,6 +157,7 @@ switch ($_REQUEST['xtype']) {
         $tpl->assign('config', $config);
         $tpl->assign('current_qishu', $current_qishu);
         $tpl->assign('gid', $gid);
+        $tpl->assign('game_list', $game_list);
         $tpl->assign('start_date', $start_date);
         $tpl->assign('end_date', $end_date);
         $tpl->assign('page_num', $page_num);

@@ -571,19 +571,21 @@ function libs(stype) {
             $(".SecGame").val(ab);			
         },
 		success: function(m) {
-            for (i = 0; i < m.length; i++) {
-                // console.log(m[i]);
-                if (fenlei == 107) {
-                    wanfaarr[m[i]['bname'] + m[i]['name'] ] = m[i];
-                }else{
-                    wanfaarr[m[i]['sname'] + m[i]['name'] ] = m[i];
+            if (m && m.length) {
+                for (i = 0; i < m.length; i++) {
+                    // console.log(m[i]);
+                    if (fenlei == 107) {
+                        wanfaarr[m[i]['bname'] + m[i]['name'] ] = m[i];
+                    }else{
+                        wanfaarr[m[i]['sname'] + m[i]['name'] ] = m[i];
+                    }
+
                 }
-                
             }
 
             //console.log(wanfaarr);
 
-            var ml = m.length;
+            var ml = m ? m.length : 0;
             var str = '',
                 str1 = '',
                 str2 = '',
@@ -1898,13 +1900,15 @@ function updatel() {
         success: function(m) {
             getusermoney();
             //console.log(m);
-            if (m[0] != 'A') {
+            if (m && m[0] != 'A') {
                 if(m[10]!=""){
                  alert("\r\n\r\n\r\n\r\n"+m[10]+"\r\n\r\n\r\n\r\n");
                }
-                $(".upqishu").attr("q",m[5]);
-                $(".upqishu").html(m[5].substr(-8));
-                var ml = m[4].length;
+                if(m[5]) {
+                    $(".upqishu").attr("q",m[5]);
+                    $(".upqishu").html(m[5].substr(-8));
+                }
+                var ml = m[4] ? m[4].length : 0;
                 var str = "";
                 var sum = 0;
                 if(ngid==101){

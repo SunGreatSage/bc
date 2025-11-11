@@ -213,14 +213,15 @@ class BestPlanCalculator {
      * 检查是否到达分析时间（开奖前N分钟）
      */
     private function isTimeToAnalyze($qishu) {
-        $sql = "SELECT dates, closetime FROM `{$this->tb_kj}` WHERE gid={$this->gid} AND qishu='$qishu' LIMIT 1";
+        $sql = "SELECT dates, closetime, kjtime FROM `{$this->tb_kj}` WHERE gid={$this->gid} AND qishu='$qishu' LIMIT 1";
         $this->msql->query($sql);
         if ($this->msql->next_record()) {
             $dates = $this->msql->f('dates');
             $closetime = $this->msql->f('closetime');
+            $kjtime = $this->msql->f('kjtime');
 
-            // 开奖时间 = closetime（封盘时间）
-            $open_timestamp = strtotime($closetime);
+            // 开奖时间 = kjtime（实际开奖时间）
+            $open_timestamp = strtotime($kjtime);
             $now_timestamp = time();
 
             // 距离开奖还有多少秒
@@ -239,12 +240,13 @@ class BestPlanCalculator {
      * 获取距离分析时间还有多少分钟
      */
     private function getTimeLeft($qishu) {
-        $sql = "SELECT dates, closetime FROM `{$this->tb_kj}` WHERE gid={$this->gid} AND qishu='$qishu' LIMIT 1";
+        $sql = "SELECT dates, closetime, kjtime FROM `{$this->tb_kj}` WHERE gid={$this->gid} AND qishu='$qishu' LIMIT 1";
         $this->msql->query($sql);
         if ($this->msql->next_record()) {
             $dates = $this->msql->f('dates');
             $closetime = $this->msql->f('closetime');
-            $open_timestamp = strtotime($closetime);
+            $kjtime = $this->msql->f('kjtime');
+            $open_timestamp = strtotime($kjtime);
             $analyze_timestamp = $open_timestamp - ($this->analyze_time_before * 60);
             $time_left_seconds = $analyze_timestamp - time();
             return max(0, ceil($time_left_seconds / 60));

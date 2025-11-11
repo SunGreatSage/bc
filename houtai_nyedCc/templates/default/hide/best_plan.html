@@ -255,12 +255,20 @@ body {
 
     <!-- 筛选条件 -->
     <div class="filter-panel">
-        <form method="get" action="best_plan.php">
+        <form method="get" action="best_plan.php" id="filterForm">
             <input type="hidden" name="xtype" value="show">
-            <input type="hidden" name="gid" value="{+$gid+}">
 
             <div class="filter-row">
-                <label>开始日期：</label>
+                <label>彩票种类：</label>
+                <select name="gid" id="gidSelect" onchange="document.getElementById('filterForm').submit()" style="padding: 5px 10px; min-width: 150px;">
+                    {+foreach from=$game_list item=game+}
+                        <option value="{+$game.gid+}" {+if $game.gid == $gid+}selected{+/if+}>
+                            {+$game.gname+} (GID: {+$game.gid+})
+                        </option>
+                    {+/foreach+}
+                </select>
+
+                <label style="margin-left: 20px;">开始日期：</label>
                 <input type="date" name="start_date" value="{+$start_date+}">
 
                 <label style="margin-left: 20px;">结束日期：</label>

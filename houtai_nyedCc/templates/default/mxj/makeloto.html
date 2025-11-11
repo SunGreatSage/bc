@@ -441,8 +441,8 @@ sdate=new Array();
 sdate[{+$key+}]="{+$i+}";
 {+/foreach+}
 var style = '{+$class+}';
-var ngid= {+$gid+};
-var minje = {+$minje+};
+var ngid= {+$gid|default:0+};
+var minje = {+$minje|default:1+};
 var ma=new Array();
 ma[0] = new Array();
 ma[0]['name'] = '单';

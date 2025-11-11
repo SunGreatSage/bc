@@ -88,9 +88,18 @@ switch ($_REQUEST['xtype']) {
         break;
     case "editgame":
         $sql = '';
+        $closetimekj_updated = false;
+        $new_closetimekj = '';
+
         foreach ($_POST as $key => $val) {
             if ($key != 'action' & $key != 'gid' & $key != 'patt1' & $key != 'patt2' & $key != 'pan' & $key != 'ftype' & $key != 'cs' & $key != 'ztype' & $key != 'mtype' & $key != 'xtype') {
                 $sql .= ',' . $key . "='" . $val . "'";
+
+                // 检测是否修改了封盘时间配置
+                if ($key == 'closetimekj') {
+                    $closetimekj_updated = true;
+                    $new_closetimekj = $val;
+                }
             }
             if ($key == 'pan' | $key == 'ftype' | $key == 'cs' | $key == 'ztype' | $key == 'mtype'  | $key == 'dftype') {
                 $tmp = str_replace('\\', '', $val);
@@ -101,6 +110,25 @@ switch ($_REQUEST['xtype']) {
         $sql = substr($sql, 1);
         $sql = "update `$tb_game` set $sql where gid='$gid'";
         $msql->query($sql);
+
+        // 同步更新 x_kj 表中未开奖期次的时间（如果修改了封盘时间配置）
+        if ($closetimekj_updated && !empty($new_closetimekj)) {
+            // 解析时间配置（格式如：21:30:00 或其他格式）
+            $time_arr = explode(',', $new_closetimekj);
+            if (!empty($time_arr[0])) {
+                $close_time_part = trim($time_arr[0]);
+
+                // 更新所有未开奖期次的封盘时间和开奖时间
+                // closetime = 当天日期 + 封盘时间
+                // kjtime = closetime + 5分钟（可根据实际情况调整）
+                $update_kj_sql = "UPDATE `$tb_kj` SET
+                                  closetime = CONCAT(dates, ' ', '$close_time_part'),
+                                  kjtime = DATE_ADD(CONCAT(dates, ' ', '$close_time_part'), INTERVAL 5 MINUTE)
+                                  WHERE gid='$gid' AND js=0";
+                $msql->query($update_kj_sql);
+            }
+        }
+
         echo 1;
         break;
 }

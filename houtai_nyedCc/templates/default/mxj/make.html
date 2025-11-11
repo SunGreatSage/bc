@@ -158,7 +158,7 @@ var js=0;
         {+/if+}
         <script type="text/javascript">
        var style = '{+$class+}';
-var ngid= {+$gid+};
+var ngid= {+$gid|default:0+};
 {+if ($gid==100)+}
 sma=[];
 {+foreach from=$ma item=i key=key+}
