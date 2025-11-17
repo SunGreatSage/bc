@@ -175,7 +175,7 @@ function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
     foreach($us as $k => $v){
         $val = $v["shui"];
         if($v['stype']==1){
-            $tsql->query("update `$tb_lib` set peilv1=peilv1-$val,peilv11=peilv11-$val,peilv12=if(peilv12-$val<0,0,peilv12-$val),peilv13=if(peilv13-$val<0,0,peilv13-$val),peilv14=if(peilv14-$val<0,0,peilv14-$val),peilv15=if(peilv15-$val<0,0,peilv15-$val),peilv16=if(peilv16-$val<0,0,peilv16-$val),peilv17=if(peilv17-$val<0,0,peilv17-$val),peilv18=if(peilv18-$val<0,0,peilv18-$val),prize=0,kk=1 where {$whi} and userid='{$v['userid']}' and z=1 and zc0>0");
+            $tsql->query("update `$tb_lib` set peilv1=peilv1-$val,peilv11=peilv11-$val,peilv12=if(peilv12-$val<0,0,peilv12-$val),peilv13=if(peilv13-$val<0,0,peilv13-$val),peilv14=if(peilv14-$val<0,0,peilv14-$val),peilv15=if(peilv15-$val<0,0,peilv15-$val),peilv16=if(peilv16-$val<0,0,peilv16-$val),peilv17=if(peilv17-$val<0,0,peilv17-$val),peilv18=if(peilv18-$val<0,0,peilv18-$val),prize=je*(peilv1-$val),kk=1 where {$whi} and userid='{$v['userid']}' and z=1 and zc0>0");
         }else{
             $zuix = $v['zuix'];
             $zuid = $v['zuid'];
