@@ -188,6 +188,16 @@ function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
 
     }
 
+    // P2 兜底验证：修正 prize=0 的异常中奖订单
+    // 避免因前面逻辑遗漏导致用户收不到奖金
+    $tsql->query("UPDATE `{$tb_lib}` SET prize = CASE
+        WHEN z='1' THEN je * peilv1
+        WHEN z='3' THEN je * peilv2
+        WHEN z='2' THEN je
+        ELSE 0
+    END
+    WHERE {$whi} AND z IN ('1','2','3') AND (prize=0 OR prize IS NULL)");
+
     // 在 prize 字段计算完成后调用派奖函数，确保获取到正确的实际派奖金额
     jiaozhengedu();
 
