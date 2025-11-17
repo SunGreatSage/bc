@@ -457,9 +457,11 @@ function jiaozhengeduedit($uids) {
         $rs = $tsql->arr("select sum(je),sum(je*points/100) from `$tb_lib` where $wh and z!=9 and z!=2 and z!=7", 0);
         $yjs = pr0($rs[0][0]);
         $points = pr0($rs[0][1]);
-        $rs = $tsql->arr("select sum(je*peilv1),sum(prize) from `$tb_lib` where $wh and z=1 ", 0);
-        $yizhong = pr0($rs[0][0]-$rs[0][1]);
-        $rs = $tsql->arr("select sum(je*peilv2) from `$tb_lib` where $wh and z=3 ", 0);
+        // 修复：直接使用实际派奖金额 prize，而不是 sum(je*peilv1)-sum(prize)
+        $rs = $tsql->arr("select sum(prize) from `$tb_lib` where $wh and z=1 ", 0);
+        $yizhong = pr0($rs[0][0]);
+        // 修复：z=3 也使用实际派奖金额 prize，与 jiaozhengedu() 保持一致
+        $rs = $tsql->arr("select sum(prize) from `$tb_lib` where $wh and z=3 ", 0);
         $yizhong+= pr0($rs[0][0]);
         $rs = $tsql->arr("select sum(je) from `$tb_lib` where $wh and z=9 ", 0);
         $wjs = pr0($rs[0][0]);
@@ -481,9 +483,11 @@ function jiaozhengeduedit($uids) {
         $rs = $tsql->arr("select sum(je),sum(je*points/100) from `$tb_lib` where $wh and z!=9 and z!=2 and z!=7", 0);
         $yjs = pr0($rs[0][0]);
         $points = pr0($rs[0][1]);
-        $rs = $tsql->arr("select sum(je*peilv1),sum(prize) from `$tb_lib` where $wh and z=1 ", 0);
-        $yizhong = pr0($rs[0][0]-$rs[0][1]);
-        $rs = $tsql->arr("select sum(je*peilv2) from `$tb_lib` where $wh and z=3 ", 0);
+        // 修复：直接使用实际派奖金额 prize，而不是 sum(je*peilv1)-sum(prize)
+        $rs = $tsql->arr("select sum(prize) from `$tb_lib` where $wh and z=1 ", 0);
+        $yizhong = pr0($rs[0][0]);
+        // 修复：z=3 也使用实际派奖金额 prize，与 jiaozhengedu() 保持一致
+        $rs = $tsql->arr("select sum(prize) from `$tb_lib` where $wh and z=3 ", 0);
         $yizhong+= pr0($rs[0][0]);
         $rs = $tsql->arr("select sum(je) from `$tb_lib` where $wh and z=9 ", 0);
         $wjs = pr0($rs[0][0]);
@@ -519,9 +523,11 @@ function jiaozhengedusss($qz=false) {
         $rs = $tsql->arr("select sum(je),sum(je*points/100) from `$tb_lib` where $wh and z!=9 and z!=2 and z!=7", 0);
         $yjs = pr0($rs[0][0]);
         $points = pr0($rs[0][1]);
-        $rs = $tsql->arr("select sum(je*peilv1),sum(prize) from `$tb_lib` where $wh and z=1 ", 0);
-        $yizhong = pr0($rs[0][0]-$rs[0][1]);
-        $rs = $tsql->arr("select sum(je*peilv2) from `$tb_lib` where $wh and z=3 ", 0);
+        // 修复：直接使用实际派奖金额 prize，而不是 sum(je*peilv1)-sum(prize)
+        $rs = $tsql->arr("select sum(prize) from `$tb_lib` where $wh and z=1 ", 0);
+        $yizhong = pr0($rs[0][0]);
+        // 修复：z=3 也使用实际派奖金额 prize，与 jiaozhengedu() 保持一致
+        $rs = $tsql->arr("select sum(prize) from `$tb_lib` where $wh and z=3 ", 0);
         $yizhong+= pr0($rs[0][0]);
         $rs = $tsql->arr("select sum(je) from `$tb_lib` where $wh and z=9 ", 0);
         $wjs = pr0($rs[0][0]);
@@ -546,9 +552,11 @@ function jiaozhengedusss($qz=false) {
         $rs = $tsql->arr("select sum(je),sum(je*points/100) from `$tb_lib` where $wh and z!=9 and z!=2 and z!=7", 0);
         $yjs = pr0($rs[0][0]);
         $points = pr0($rs[0][1]);
-        $rs = $tsql->arr("select sum(je*peilv1),sum(prize) from `$tb_lib` where $wh and z=1 ", 0);
-        $yizhong = pr0($rs[0][0]-$rs[0][1]);
-        $rs = $tsql->arr("select sum(je*peilv2) from `$tb_lib` where $wh and z=3 ", 0);
+        // 修复：直接使用实际派奖金额 prize，而不是 sum(je*peilv1)-sum(prize)
+        $rs = $tsql->arr("select sum(prize) from `$tb_lib` where $wh and z=1 ", 0);
+        $yizhong = pr0($rs[0][0]);
+        // 修复：z=3 也使用实际派奖金额 prize，与 jiaozhengedu() 保持一致
+        $rs = $tsql->arr("select sum(prize) from `$tb_lib` where $wh and z=3 ", 0);
         $yizhong+= pr0($rs[0][0]);
         $rs = $tsql->arr("select sum(je) from `$tb_lib` where $wh and z=9 ", 0);
         $wjs = pr0($rs[0][0]);
