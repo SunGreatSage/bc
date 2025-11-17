@@ -5,15 +5,20 @@ function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
 {
     global $fsql, $tsql, $psql, $tb_bclass, $tb_sclass, $tb_class, $tb_play, $tb_lib, $tb_user, $tb_kj, $tb_z, $tb_config,$tb_shui;
     $whi = " gid='{$gid}' and qishu='{$qishu}' ";
-    $tsql->query("select * from `{$tb_kj}` where {$whi}");
-    $tsql->next_record();
-    if ($tsql->f('m1') == '') {
-        return "未开奖";
-    }
-    
-    if ($tsql->f('js') == 1 && !$qz) {
-        return "该期数已经结算过";
-    }
+
+    // 开启事务保护：确保开奖流程的原子性，防止服务器故障导致数据不一致
+    $tsql->query("START TRANSACTION");
+
+    try {
+        $tsql->query("select * from `{$tb_kj}` where {$whi}");
+        $tsql->next_record();
+        if ($tsql->f('m1') == '') {
+            throw new Exception("未开奖");
+        }
+
+        if ($tsql->f('js') == 1 && !$qz) {
+            throw new Exception("该期数已经结算过");
+        }
     $tb_lib = "x_lib";
     if(time()-strtotime($tsql->f('kjtime'))>86400){
         $tb_lib = $tb_lib."_".str_replace('-', '', $tsql->f('dates'));
@@ -198,10 +203,19 @@ function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
     END
     WHERE {$whi} AND z IN ('1','2','3') AND (prize=0 OR prize IS NULL)");
 
-    // 在 prize 字段计算完成后调用派奖函数，确保获取到正确的实际派奖金额
-    jiaozhengedu();
+        // 在 prize 字段计算完成后调用派奖函数，确保获取到正确的实际派奖金额
+        jiaozhengedu();
 
-    return 1;
+        // 提交事务：所有开奖操作成功完成
+        $tsql->query("COMMIT");
+        return 1;
+
+    } catch (Exception $e) {
+        // 回滚事务：开奖过程中发生错误，撤销所有操作
+        $tsql->query("ROLLBACK");
+        error_log("开奖失败 (gid={$gid}, qishu={$qishu}): " . $e->getMessage());
+        return $e->getMessage();
+    }
 }
 function calcmoni($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype)
 {
