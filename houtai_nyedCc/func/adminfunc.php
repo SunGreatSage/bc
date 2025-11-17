@@ -474,7 +474,19 @@ function jiaozhengeduedit($uids) {
         $sy = $yizhong + $points - $yjs;
         //if ($jetotals != $us[$i]['jetotal']) {
             // 使用乐观锁更新余额：WHERE条件包含kmoney=旧值，防止并发时覆盖其他管理员的修改
-            $tsql->query("update `$tb_user` set kmoney='$mon',sy='$sy',jetotal='$jetotals' where userid='$uid' and kmoney=" . $us[$i]['kmoney']);
+            $result = $tsql->query("update `$tb_user` set kmoney='$mon',sy='$sy',jetotal='$jetotals' where userid='$uid' and kmoney=" . $us[$i]['kmoney']);
+
+            // 检查更新是否成功（数据库错误检测）
+            if (!$result) {
+                throw new Exception("用户 $uid 余额更新失败（数据库错误）");
+            }
+
+            // 检查是否有行被更新（乐观锁冲突检测）
+            // 如果kmoney已被其他管理员修改，WHERE条件不满足，affected_rows=0
+            if ($tsql->affected_rows() == 0) {
+                throw new Exception("用户 $uid 余额更新失败（并发冲突或用户不存在）");
+            }
+
             //usermoneylog($uid, pr0($mon - $us[$i]['kmoney']) , $mon, '结算后较正','127.0.0.1');
         //}
     }
@@ -501,7 +513,19 @@ function jiaozhengeduedit($uids) {
         $sy = $yizhong + $points - $yjs;
         //if ($jetotals != $us[$i]['jetotal']) {
             // 使用乐观锁更新余额：WHERE条件包含kmoney=旧值，防止并发时覆盖其他管理员的修改
-            $tsql->query("update `$tb_user` set kmoney='$mon',sy='$sy',jetotal='$jetotals' where userid='$uid' and kmoney=" . $us[$i]['kmoney']);
+            $result = $tsql->query("update `$tb_user` set kmoney='$mon',sy='$sy',jetotal='$jetotals' where userid='$uid' and kmoney=" . $us[$i]['kmoney']);
+
+            // 检查更新是否成功（数据库错误检测）
+            if (!$result) {
+                throw new Exception("用户 $uid 余额更新失败（数据库错误）");
+            }
+
+            // 检查是否有行被更新（乐观锁冲突检测）
+            // 如果kmoney已被其他管理员修改，WHERE条件不满足，affected_rows=0
+            if ($tsql->affected_rows() == 0) {
+                throw new Exception("用户 $uid 余额更新失败（并发冲突或用户不存在）");
+            }
+
             //usermoneylog($uid, pr0($mon - $us[$i]['kmoney']) , $mon, '结算后较正','127.0.0.1');
         //}
     }
