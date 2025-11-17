@@ -125,7 +125,7 @@ function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
                         if ($tsql->f(0) > $marr['pc']) {
                             $tsql->query("update `{$tb_lib}` set kk=1,z='5',prize='{$marr['pc']}' where {$whi} and pid='{$lib[$j]['pid']}' and content='{$lib[$j]['content']}' and z!=7 ");
                         } else {
-                            $tsql->query("update `{$tb_lib}` set kk=1,z='1' where {$whi} and pid='{$lib[$j]['pid']}' and content='{$lib[$j]['content']}' and z!=7 ");
+                            $tsql->query("update `{$tb_lib}` set kk=1,z='1',prize=je*peilv1 where {$whi} and pid='{$lib[$j]['pid']}' and content='{$lib[$j]['content']}' and z!=7 ");
                         }
                     }
                 } else {
@@ -156,10 +156,10 @@ function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
                              }
                             
                         }else{
-                            $tsql->query("update `{$tb_lib}` set kk=1,z='{$flag[0]}' where {$whi} and pid='{$lib[$j]['pid']}' and content='{$lib[$j]['content']}' and z!=7 ");
+                            $tsql->query("update `{$tb_lib}` set kk=1,z='{$flag[0]}',prize=CASE WHEN '{$flag[0]}'='1' THEN je*peilv1 WHEN '{$flag[0]}'='3' THEN je*peilv2 WHEN '{$flag[0]}'='2' THEN je ELSE 0 END where {$whi} and pid='{$lib[$j]['pid']}' and content='{$lib[$j]['content']}' and z!=7 ");
                         }                        
                     } else {
-                        $tsql->query("update `{$tb_lib}` set kk=1,z='{$flag[0]}' where {$whi} and pid='{$lib[$j]['pid']}' and z!=7 ");
+                        $tsql->query("update `{$tb_lib}` set kk=1,z='{$flag[0]}',prize=CASE WHEN '{$flag[0]}'='1' THEN je*peilv1 WHEN '{$flag[0]}'='3' THEN je*peilv2 WHEN '{$flag[0]}'='2' THEN je ELSE 0 END where {$whi} and pid='{$lib[$j]['pid']}' and z!=7 ");
                         if($flag[0]==1){
                             $tsql->query("insert into `{$tb_z}` set gid='{$gid}',pid='{$lib[$j]['pid']}',qishu='{$qishu}'");
                         }                        
