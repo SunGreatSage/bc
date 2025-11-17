@@ -349,8 +349,10 @@ function jiaozhengedu($qz=false) {
             }
 
             // 检查是否有行被更新（乐观锁条件不满足时 affected_rows = 0）
-            // 注意：部分 MySQL 驱动可能需要使用 $tsql->affected_rows() 方法
-            // 这里假设更新失败会返回 false，如果需要检测 affected_rows 需要额外实现
+            // 如果 kmoney 已被其他线程修改，WHERE 条件不满足，affected_rows = 0
+            if ($tsql->affected_rows() == 0) {
+                throw new Exception("用户 $uid 余额更新失败（并发冲突，乐观锁失败）");
+            }
 
             usermoneylog($uid, pr4($mon - $us[$i]['kmoney']) , $mon, '结算后较正',1,'127.0.0.1');
         }
@@ -395,9 +397,21 @@ function jiaozhengedu($qz=false) {
                 throw new Exception("用户 $uid 余额更新失败（数据库错误）");
             }
 
+            // 检查是否有行被更新（乐观锁条件不满足时 affected_rows = 0）
+            // 如果 kmoney 已被其他线程修改，WHERE 条件不满足，affected_rows = 0
+            if ($tsql->affected_rows() == 0) {
+                throw new Exception("用户 $uid 余额更新失败（并发冲突，乐观锁失败）");
+            }
+
             usermoneylog($uid, pr4($mon - $us[$i]['kmoney']) , $mon, '结算后较正',1,'127.0.0.1');
         }
     }
+
+    // ✅ 新增：结算完成后更新 ftime 为当前时间
+    // 这样可以避免 fudong=1 的用户因为超过 24 小时而被禁止投注
+    // 如果您的业务逻辑是结算后应该重置为 fudong=0，可以改为：
+    // $tsql->query("UPDATE `$tb_user` SET fudong=0, ftime=NULL WHERE fudong=1");
+    $tsql->query("UPDATE `$tb_user` SET ftime=NOW() WHERE fudong=1");
 
         // 提交事务
         $tsql->query("COMMIT");
