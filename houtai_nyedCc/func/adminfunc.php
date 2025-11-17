@@ -473,7 +473,8 @@ function jiaozhengeduedit($uids) {
         $mon = $us[$i]['kmaxmoney'] - $yjs - $wjs + $yizhong + $points - $us[$i]['jzkmoney'];
         $sy = $yizhong + $points - $yjs;
         //if ($jetotals != $us[$i]['jetotal']) {
-            $tsql->query("update `$tb_user` set kmoney='$mon',sy='$sy',jetotal='$jetotals' where userid='$uid'");
+            // 使用乐观锁更新余额：WHERE条件包含kmoney=旧值，防止并发时覆盖其他管理员的修改
+            $tsql->query("update `$tb_user` set kmoney='$mon',sy='$sy',jetotal='$jetotals' where userid='$uid' and kmoney=" . $us[$i]['kmoney']);
             //usermoneylog($uid, pr0($mon - $us[$i]['kmoney']) , $mon, '结算后较正','127.0.0.1');
         //}
     }
@@ -499,7 +500,8 @@ function jiaozhengeduedit($uids) {
         $mon = $us[$i]['kmaxmoney'] - $yjs - $wjs + $yizhong + $points - $us[$i]['jzkmoney'];
         $sy = $yizhong + $points - $yjs;
         //if ($jetotals != $us[$i]['jetotal']) {
-            $tsql->query("update `$tb_user` set kmoney='$mon',sy='$sy',jetotal='$jetotals' where userid='$uid'");
+            // 使用乐观锁更新余额：WHERE条件包含kmoney=旧值，防止并发时覆盖其他管理员的修改
+            $tsql->query("update `$tb_user` set kmoney='$mon',sy='$sy',jetotal='$jetotals' where userid='$uid' and kmoney=" . $us[$i]['kmoney']);
             //usermoneylog($uid, pr0($mon - $us[$i]['kmoney']) , $mon, '结算后较正','127.0.0.1');
         //}
     }
