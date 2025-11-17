@@ -487,7 +487,8 @@ function jiaozhengeduedit($uids) {
                 throw new Exception("用户 $uid 余额更新失败（并发冲突或用户不存在）");
             }
 
-            //usermoneylog($uid, pr0($mon - $us[$i]['kmoney']) , $mon, '结算后较正','127.0.0.1');
+            // 记录资金流水：管理员手动结算操作需要记录，便于审计和追溯
+            usermoneylog($uid, pr0($mon - $us[$i]['kmoney']), $mon, '管理员手动结算', 1, '127.0.0.1');
         //}
     }
     $us = $tsql->arr("select userid,kmaxmoney,kmoney,ftime,wid,jetotal,jzkmoney from `$tb_user` where userid='$uids' and fudong=1", 1);
@@ -526,7 +527,8 @@ function jiaozhengeduedit($uids) {
                 throw new Exception("用户 $uid 余额更新失败（并发冲突或用户不存在）");
             }
 
-            //usermoneylog($uid, pr0($mon - $us[$i]['kmoney']) , $mon, '结算后较正','127.0.0.1');
+            // 记录资金流水：管理员手动结算操作需要记录，便于审计和追溯
+            usermoneylog($uid, pr0($mon - $us[$i]['kmoney']), $mon, '管理员手动结算', 1, '127.0.0.1');
         //}
     }
 
