@@ -429,8 +429,13 @@ function jiaozhengedu($qz=false) {
 
 function jiaozhengeduedit($uids) {
     global $tsql, $psql, $tb_user, $tb_lib, $tb_config, $tb_game;
-    $rs = $tsql->query("select editstart,reseted,editend from `$tb_config`");
-    $tsql->next_record();
+
+    // 开启事务保护：确保手动结算的原子性，防止执行到一半失败导致数据不一致
+    $tsql->query("START TRANSACTION");
+
+    try {
+        $rs = $tsql->query("select editstart,reseted,editend from `$tb_config`");
+        $tsql->next_record();
     $sdate = week();
     if ($tsql->f('reseted') == 'week') {
         $start = $sdate[5] . ' ' . $tsql->f('editend');
@@ -498,7 +503,17 @@ function jiaozhengeduedit($uids) {
             //usermoneylog($uid, pr0($mon - $us[$i]['kmoney']) , $mon, '结算后较正','127.0.0.1');
         //}
     }
-    return 1;
+
+        // 提交事务：所有手动结算操作成功完成
+        $tsql->query("COMMIT");
+        return 1;
+
+    } catch (Exception $e) {
+        // 回滚事务：手动结算过程中发生错误，撤销所有操作
+        $tsql->query("ROLLBACK");
+        error_log("jiaozhengeduedit 失败 (userid={$uids}): " . $e->getMessage());
+        return 0;
+    }
 }
 
 function jiaozhengedusss($qz=false) {
