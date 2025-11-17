@@ -430,6 +430,13 @@ function jiaozhengedu($qz=false) {
 function jiaozhengeduedit($uids) {
     global $tsql, $psql, $tb_user, $tb_lib, $tb_config, $tb_game;
 
+    // 参数验证：防止SQL注入和无效参数
+    $uids = intval($uids);
+    if ($uids <= 0) {
+        error_log("jiaozhengeduedit 参数错误: userid={$uids}");
+        return 0;
+    }
+
     // 开启事务保护：确保手动结算的原子性，防止执行到一半失败导致数据不一致
     $tsql->query("START TRANSACTION");
 
