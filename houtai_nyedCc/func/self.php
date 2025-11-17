@@ -134,8 +134,8 @@ function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
                              $tlm = $tsql->arr("select * from `$tb_lib` where {$whi} and pid='{$lib[$j]['pid']}' and content='{$lib[$j]['content']}' and z!=7",1);
                              foreach($tlm as $ka => $va){
                                  $sql = '';
-                                 $pei = json_decode($va['bz'],true);                                 
-                                 if($flag[0]==1){                                     
+                                 $pei = json_decode($va['bz'],true);
+                                 if($flag[0]==1){
                                      foreach ($pei as $kb => $vb) {
                                         if($kb==0){
                                             $sql .= "peilv1='{$pei[0][0]}',";
@@ -143,6 +143,7 @@ function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
                                             $sql .= "peilv1{$kb}='".$pei[$kb][0]."',";
                                         }
                                      }
+                                     $sql .= "prize=je*{$pei[0][0]},";
                                  }else{
                                      foreach ($pei as $kb => $vb) {
                                         if($kb==0){
@@ -150,7 +151,8 @@ function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
                                         }else{
                                             $sql .= "peilv1{$kb}='".$pei[$kb][1]."',";
                                         }
-                                     } 
+                                     }
+                                     $sql .= "prize=je*{$pei[0][1]},";
                                  }
                                  $tsql->query("update `{$tb_lib}` set $sql"."z=1,kk=1 where id='{$va['id']}'");
                              }
