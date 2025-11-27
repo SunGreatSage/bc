@@ -10,6 +10,7 @@ namespace app\api\logic;
 
 use think\facade\Db;
 use think\Exception;
+use app\common\service\BetLimitService;
 
 /**
  * 彩票投注逻辑
@@ -104,6 +105,13 @@ class LotteryBetLogic
             return false;
         }
 
+        // ========== 新增: 投注限额验证 ==========
+        $limitCheck = BetLimitService::validateBetAmount($betAmount);
+        if (!$limitCheck['valid']) {
+            self::setError($limitCheck['error']);
+            return false;
+        }
+
         try {
             // ========== 阶段1: 验证用户状态与余额 ==========
             // 参考makelib.php:112-175
@@ -165,9 +173,10 @@ class LotteryBetLogic
                 return false;
             }
 
-            // 检查是否已封盘
-            if (self::isSealed($gid, $qishu)) {
-                self::setError('当前期号已封盘');
+            // ========== 新增: 完整的开盘/封盘/开奖检查 ==========
+            $periodCheck = self::checkPeriodStatus($gid, $qishu);
+            if (!$periodCheck['can_bet']) {
+                self::setError($periodCheck['message']);
                 return false;
             }
 
@@ -178,6 +187,27 @@ class LotteryBetLogic
             Db::startTrans();
 
             try {
+                // ========== 新增: 风控预警检查 ==========
+                // 查询用户本期已投注总额
+                $periodTotalBet = Db::table('x_lib')
+                    ->where('userid', $legacyUserId)
+                    ->where('qishu', $qishu)
+                    ->where('bs', 1)  // 有效投注
+                    ->sum('je');
+
+                $riskAlert = BetLimitService::checkRiskAlert($betAmount, $periodTotalBet);
+                if ($riskAlert['alert']) {
+                    // 记录风控日志(不阻止投注,仅记录)
+                    \think\facade\Log::warning('投注风控预警', [
+                        'userid' => $legacyUserId,
+                        'qishu' => $qishu,
+                        'bet_amount' => $betAmount,
+                        'period_total' => $periodTotalBet,
+                        'alert_type' => $riskAlert['type'],
+                        'message' => $riskAlert['message'],
+                    ]);
+                }
+
                 // ========== 阶段4: 生成订单号 ==========
                 // 格式: YmdHis + 3位随机数
                 $tid = date('YmdHis') . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
@@ -189,7 +219,7 @@ class LotteryBetLogic
                 $insertData = [
                     'tid' => $tid,
                     'userid' => $legacyUserId,
-                    'dates' => date('Y-m-d'),
+                    'dates' => date('Y-m-d'),  // 日期字段(判奖时从这里提取年份)
                     'qishu' => $qishu,
                     'gid' => $gid,
                     'bid' => $play['bid'],
@@ -300,33 +330,97 @@ class LotteryBetLogic
 
 
     /**
-     * @notes 检查是否已封盘
+     * @notes 检查期号状态(开盘/封盘/开奖)
      * @param int $gid 游戏ID
      * @param string $qishu 期号
-     * @return bool
+     * @return array{can_bet: bool, message: string, countdown: int, period_info: array}
      * @author Claude
      * @date 2025/11/27
+     *
+     * 返回:
+     * {
+     *   "can_bet": 是否可以投注,
+     *   "message": 提示信息,
+     *   "countdown": 倒计时(秒),
+     *   "period_info": 期号详细信息
+     * }
      */
-    private static function isSealed(int $gid, string $qishu): bool
+    private static function checkPeriodStatus(int $gid, string $qishu): array
     {
-        // 查询x_game表的封盘时间
-        $game = Db::table('x_game')
+        // 查询期号信息(参考makelib.php:182-184, 731-742)
+        $period = Db::table('x_kj')
             ->where('gid', $gid)
-            ->field('fp_time,thisqishu')
+            ->where('qishu', $qishu)
+            ->field('opentime, closetime, kjtime, m1, m2, m3, m4, m5, m6, m7, m8')
             ->find();
 
-        if (!$game) {
-            return true;  // 游戏不存在,视为已封盘
+        if (!$period) {
+            return [
+                'can_bet' => false,
+                'message' => '期号不存在',
+                'countdown' => 0,
+                'period_info' => [],
+            ];
         }
 
-        // 如果期号不是当前期号,视为已封盘
-        if ($game['thisqishu'] != $qishu) {
-            return true;
+        $now = time();
+        $opentime = strtotime($period['opentime']);
+        $closetime = strtotime($period['closetime']);
+        $kjtime = strtotime($period['kjtime']);
+
+        // 检查1: 是否已开奖
+        // m1不为空表示已开奖
+        if (!empty($period['m1'])) {
+            return [
+                'can_bet' => false,
+                'message' => '该期已开奖',
+                'countdown' => 0,
+                'period_info' => $period,
+            ];
         }
 
-        // TODO: 根据fp_time判断是否封盘
-        // 这里简化处理,假设未封盘
-        return false;
+        // 检查2: 是否到开盘时间
+        if ($now < $opentime) {
+            return [
+                'can_bet' => false,
+                'message' => '未到开盘时间',
+                'countdown' => $opentime - $now,
+                'period_info' => $period,
+            ];
+        }
+
+        // 检查3: 是否已封盘
+        // 参考makelib.php:734-736, 提前封盘时间(默认5分钟=300秒)
+        $advanceCloseSeconds = 300;  // 可以从配置读取
+
+        $actualClosetime = $closetime - $advanceCloseSeconds;
+
+        if ($now >= $actualClosetime) {
+            return [
+                'can_bet' => false,
+                'message' => '已封盘',
+                'countdown' => 0,
+                'period_info' => $period,
+            ];
+        }
+
+        // 检查4: 是否已过开奖时间(理论上不应该出现)
+        if ($now >= $kjtime) {
+            return [
+                'can_bet' => false,
+                'message' => '已过开奖时间',
+                'countdown' => 0,
+                'period_info' => $period,
+            ];
+        }
+
+        // 可以投注
+        return [
+            'can_bet' => true,
+            'message' => '可以投注',
+            'countdown' => $actualClosetime - $now,
+            'period_info' => $period,
+        ];
     }
 
 
