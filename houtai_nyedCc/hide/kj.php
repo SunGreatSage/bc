@@ -602,6 +602,33 @@ switch ($_REQUEST['xtype']) {
         if ($msql->query($sql)) {
             include("../func/search.php");
             searchqishu($gid, 60, 1);
+
+            // ✅ 新增：手动开奖后自动触发结算
+            // 检查开奖号码是否填写完整（第一个号码不为空）
+            if ($m[0] != '') {
+                // 检查该期是否已经结算过
+                $psql->query("select js from `$tb_kj` where gid='$gid' and qishu='$qishu'");
+                $psql->next_record();
+
+                // 如果未结算（js != 1），则自动触发结算
+                if ($psql->f('js') != 1) {
+                    set_time_limit(0);  // 结算可能耗时较长，取消时间限制
+                    include_once("../func/self.php");
+
+                    // 获取游戏配置（用于结算计算）
+                    $fsql->query("select fenlei,cs,mtype,ztype,mnum from `$tb_game` where gid='$gid'");
+                    $fsql->next_record();
+                    $fenlei_js = $fsql->f("fenlei");
+                    $mnum_js = $fsql->f('mnum');
+                    $cs_js = json_decode($fsql->f("cs"),true);
+                    $ztype_js = json_decode($fsql->f("ztype"),true);
+                    $mtype_js = json_decode($fsql->f("mtype"),true);
+
+                    // 调用结算函数（自动计算中奖、派奖、更新用户余额）
+                    calc($fenlei_js,$gid,$cs_js,$qishu,$mnum_js,$ztype_js,$mtype_js,true);
+                }
+            }
+
             echo 1;
         }
         break;

@@ -20,8 +20,9 @@ include('../global/page.class.php');
 include('../include.php');
 include('./checklogin.php');
 
-// 初始化计算器对象（$msql 和 $redis 已在 comm.inc.php 中定义）
-$calculator = new BestPlanCalculator($msql, $redis, 300);
+// ✅ 修改：不在此处初始化 calculator，改为在各个 case 中根据实际 gid 动态创建
+// 原因：不同游戏的 gid 不同（如 gid=200 澳门六合彩、gid=300 新澳门六合彩）
+// 修改前：$calculator = new BestPlanCalculator($msql, $redis, 300);
 
 switch ($_REQUEST['xtype']) {
     case "show":
@@ -177,6 +178,9 @@ switch ($_REQUEST['xtype']) {
         $qishu = trim($_GET['qishu']);
         $gid = isset($_GET['gid']) ? intval($_GET['gid']) : 300;
 
+        // ✅ 修改：根据实际 gid 创建 calculator 对象
+        $calculator = new BestPlanCalculator($msql, $redis, $gid);
+
         // 获取分析结果
         $result = $calculator->getAnalyzeResult($qishu);
 
@@ -245,13 +249,31 @@ switch ($_REQUEST['xtype']) {
 
     case "analyze_now":
         // 手动触发分析
-        $qishu = trim($_POST['qishu']);
-        $gid = isset($_POST['gid']) ? intval($_POST['gid']) : 300;
+        try {
+            $qishu = trim($_POST['qishu']);
+            $gid = isset($_POST['gid']) ? intval($_POST['gid']) : 300;
 
-        // 执行分析
-        $result = $calculator->analyze($qishu);
+            // 调试信息
+            error_log("analyze_now: qishu=$qishu, gid=$gid");
 
-        echo json_encode($result);
+            // ✅ 修改：根据实际 gid 创建 calculator 对象
+            // 注意：$redis 可能未定义，设为 null
+            $redis_obj = isset($redis) ? $redis : null;
+            $calculator = new BestPlanCalculator($msql, $redis_obj, $gid);
+
+            // 执行分析
+            $result = $calculator->analyze($qishu);
+
+            echo json_encode($result);
+        } catch (Exception $e) {
+            // 捕获异常并返回详细错误
+            echo json_encode([
+                'success' => false,
+                'message' => '分析出错：' . $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+        }
         break;
 
     case "find_by_rate":
@@ -260,6 +282,9 @@ switch ($_REQUEST['xtype']) {
         $min_rate = floatval($_POST['min_rate']);
         $max_rate = floatval($_POST['max_rate']);
         $gid = isset($_POST['gid']) ? intval($_POST['gid']) : 300;
+
+        // ✅ 修改：根据实际 gid 创建 calculator 对象
+        $calculator = new BestPlanCalculator($msql, $redis, $gid);
 
         $matched = $calculator->findNumbersByRate($qishu, $min_rate, $max_rate);
 

@@ -239,8 +239,9 @@ body {
             <span class="status-disabled">已禁用</span>
         {+/if+}
         &nbsp;&nbsp;|&nbsp;&nbsp;
-        分析时间：开奖前 <strong>{+$config.analyze_time_before+}</strong> 分钟
-        &nbsp;&nbsp;|&nbsp;&nbsp;
+        {+* ✅ 隐藏分析时间显示，因为已去掉时间限制 *+}
+        {+* 分析时间：开奖前 <strong>{+$config.analyze_time_before+}</strong> 分钟 *+}
+        {+* &nbsp;&nbsp;|&nbsp;&nbsp; *+}
         分析深度：<strong>{+$config.analyze_depth+}</strong>
         &nbsp;&nbsp;|&nbsp;&nbsp;
         自动分析：
@@ -387,10 +388,11 @@ body {
             <option value="0">禁用</option>
         </select>
     </div>
-    <div style="margin-bottom:15px;">
+    {+* ✅ 隐藏分析时间配置，因为已去掉时间限制 *+}
+    {+* <div style="margin-bottom:15px;">
         <label style="display:inline-block; width:120px;">分析时间（分钟）：</label>
         <input type="number" id="config_analyze_time_before" style="padding:5px; width:100px;" min="1" max="60">
-    </div>
+    </div> *+}
     <div style="margin-bottom:15px;">
         <label style="display:inline-block; width:120px;">分析深度：</label>
         <select id="config_analyze_depth" style="padding:5px;">
@@ -476,7 +478,8 @@ function deletePlan(id) {
 // 显示配置弹窗
 function showConfigModal() {
     $('#config_enabled').val('{+$config.enabled+}');
-    $('#config_analyze_time_before').val('{+$config.analyze_time_before+}');
+    // ✅ 去掉分析时间配置，因为已移除时间限制
+    // $('#config_analyze_time_before').val('{+$config.analyze_time_before+}');
     $('#config_analyze_depth').val('{+$config.analyze_depth+}');
     $('#config_auto_analyze').val('{+$config.auto_analyze+}');
 
@@ -497,7 +500,8 @@ function saveConfig() {
         type: 'POST',
         data: {
             enabled: $('#config_enabled').val(),
-            analyze_time_before: $('#config_analyze_time_before').val(),
+            // ✅ 去掉分析时间配置，设置为固定值 9999（表示无限制）
+            analyze_time_before: 9999,  // 后台保留此字段但不再使用
             analyze_depth: $('#config_analyze_depth').val(),
             auto_analyze: $('#config_auto_analyze').val()
         },

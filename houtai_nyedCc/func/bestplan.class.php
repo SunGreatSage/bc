@@ -110,11 +110,13 @@ class BestPlanCalculator {
             return ['success' => false, 'message' => '期次 ' . $qishu . ' 已开奖，无需分析'];
         }
 
-        // 检查是否到达分析时间
-        if (!$this->isTimeToAnalyze($qishu)) {
-            $time_left = $this->getTimeLeft($qishu);
-            return ['success' => false, 'message' => '未到分析时间，距离分析还有 ' . $time_left . ' 分钟'];
-        }
+        // ✅ 修改：去掉分析时间限制，只要未开奖就可以分析
+        // 原来的逻辑：必须在开奖前N分钟内才能分析
+        // 新的逻辑：只要未开奖，任何时候都可以分析
+        // if (!$this->isTimeToAnalyze($qishu)) {
+        //     $time_left = $this->getTimeLeft($qishu);
+        //     return ['success' => false, 'message' => '未到分析时间，距离分析还有 ' . $time_left . ' 分钟'];
+        // }
 
         try {
             // 开始事务
@@ -210,28 +212,21 @@ class BestPlanCalculator {
     }
 
     /**
-     * 检查是否到达分析时间（开奖前N分钟）
+     * 检查是否可以进行分析
+     * ✅ 修改：去掉时间限制，只要未开奖就可以分析
+     * 原逻辑：必须在开奖前N分钟内才能分析
+     * 新逻辑：只要未开奖（kjtime > 当前时间），就可以分析
      */
     private function isTimeToAnalyze($qishu) {
-        $sql = "SELECT dates, closetime, kjtime FROM `{$this->tb_kj}` WHERE gid={$this->gid} AND qishu='$qishu' LIMIT 1";
+        $sql = "SELECT kjtime FROM `{$this->tb_kj}` WHERE gid={$this->gid} AND qishu='$qishu' LIMIT 1";
         $this->msql->query($sql);
         if ($this->msql->next_record()) {
-            $dates = $this->msql->f('dates');
-            $closetime = $this->msql->f('closetime');
             $kjtime = $this->msql->f('kjtime');
-
-            // 开奖时间 = kjtime（实际开奖时间）
             $open_timestamp = strtotime($kjtime);
             $now_timestamp = time();
 
-            // 距离开奖还有多少秒
-            $time_left_seconds = $open_timestamp - $now_timestamp;
-
-            // 转换为分钟
-            $time_left_minutes = ceil($time_left_seconds / 60);
-
-            // 如果距离开奖小于等于配置的时间，则可以分析
-            return $time_left_minutes <= $this->analyze_time_before;
+            // 只要当前时间小于开奖时间（未开奖），就可以分析
+            return $now_timestamp < $open_timestamp;
         }
         return false;
     }
@@ -256,9 +251,12 @@ class BestPlanCalculator {
 
     /**
      * 获取指定期次的所有投注数据
+     * ✅ 修改：去掉 z 字段限制，因为在 analyze() 函数开头已经检查了是否开奖
+     * 原因：可能存在数据不一致的情况（开奖表未开奖但投注表 z=9）
+     * z 字段含义：0=未开奖, 1=中奖, 9=未中奖
      */
     private function getAllBets($qishu) {
-        $sql = "SELECT * FROM `{$this->tb_lib}` WHERE gid={$this->gid} AND qishu='$qishu' AND z=1";
+        $sql = "SELECT * FROM `{$this->tb_lib}` WHERE gid={$this->gid} AND qishu='$qishu'";
         return $this->msql->arr($sql, 1);
     }
 
@@ -307,39 +305,57 @@ class BestPlanCalculator {
 
     /**
      * 判断指定号码是否会让该注单中奖
+     * ✅ 修改：基于 pid 差值计算号码（规律：号码 = pid - 基准pid）
      * @param int $number 开奖号码
      * @param array $bet 注单数据
      * @return bool
      */
     private function checkIfWin($number, $bet) {
-        $content = $bet['content'];  // 投注内容，如 "01,05,12" 或 "大" 或 "红波"
-        $pid = $bet['pid'];          // 玩法ID
-        $bid = $bet['bid'];          // 大盘分类ID
+        $pid = intval($bet['pid']);
+        $bid = intval($bet['bid']);
 
-        // 根据玩法ID判断
-        // 这里需要根据实际的玩法规则来判断
-        // 常见玩法：特码、正码、连码、波色、生肖、单双、大小等
+        // 获取该游戏的基准 pid（通过 bid 查询最小的 pid）
+        $base_pid = $this->getBasePid($bid);
 
-        // 特码类玩法（bid=1）
-        if ($bid == 1) {
-            return $this->checkTeWin($number, $content, $pid);
+        if ($base_pid > 0) {
+            // 计算号码：号码 = pid - 基准pid + 1
+            // 例如：基准pid=23378685, pid=23378686 → 号码1
+            //       基准pid=23378685, pid=23378689 → 号码4
+            $play_number = $pid - $base_pid;
+
+            // 如果计算出的号码在 1-49 范围内，则判断是否中奖
+            if ($play_number >= 1 && $play_number <= 49) {
+                return $play_number == $number;
+            }
         }
-        // 正码类玩法（bid=2）
-        elseif ($bid == 2) {
-            return $this->checkZhengWin($number, $content, $pid);
+
+        return false;
+    }
+
+    /**
+     * 获取指定 bid 的基准 pid
+     * @param int $bid 大盘分类ID
+     * @return int 基准 pid
+     */
+    private function getBasePid($bid) {
+        static $cache = [];
+
+        if (isset($cache[$bid])) {
+            return $cache[$bid];
         }
-        // 波色类玩法（bid=3）
-        elseif ($bid == 3) {
-            return $this->checkBoSeWin($number, $content, $pid);
+
+        // 查询该 bid 下最小的 pid 作为基准
+        $sql = "SELECT MIN(pid) as min_pid FROM `{$this->tb_play}` WHERE bid=$bid AND gid={$this->gid}";
+        $this->msql->query($sql);
+
+        if ($this->msql->next_record()) {
+            $min_pid = intval($this->msql->f('min_pid'));
+            $cache[$bid] = $min_pid;
+            return $min_pid;
         }
-        // 生肖类玩法（bid=4）
-        elseif ($bid == 4) {
-            return $this->checkShengXiaoWin($number, $content, $pid);
-        }
-        // 其他玩法
-        else {
-            return false;
-        }
+
+        $cache[$bid] = 0;
+        return 0;
     }
 
     /**
