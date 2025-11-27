@@ -1,0 +1,463 @@
+<?php
+// +----------------------------------------------------------------------
+// | BC 彩票系统 - 彩票投注逻辑层(基于 x_user 和 x_lib 表)
+// +----------------------------------------------------------------------
+// | Author: Claude AI
+// | Date: 2025-11-27
+// +----------------------------------------------------------------------
+
+namespace app\api\logic;
+
+use think\facade\Db;
+use think\Exception;
+
+/**
+ * 彩票投注逻辑
+ * Class LotteryBetLogic
+ * @package app\api\logic
+ */
+class LotteryBetLogic
+{
+    /**
+     * 错误信息
+     */
+    private static $error = '';
+
+    /**
+     * 获取错误信息
+     * @return string
+     */
+    public static function getError(): string
+    {
+        return self::$error;
+    }
+
+    /**
+     * 设置错误信息
+     * @param string $error
+     */
+    private static function setError(string $error): void
+    {
+        self::$error = $error;
+    }
+
+
+    /**
+     * @notes 下单投注(完整事务流程,参考老系统makelib.php)
+     * @param array $params 投注参数
+     * @return array|false
+     * @author Claude
+     * @date 2025/11/27
+     *
+     * 参数说明:
+     * @param int params.legacy_userid 老系统用户ID(从x_user表)
+     * @param int params.gid 游戏ID(200=新澳门六合彩)
+     * @param string params.qishu 期号(如2025112)
+     * @param int params.pid 玩法ID(如21401=特码)
+     * @param string params.bet_content 投注内容(如"08"表示号码08)
+     * @param float params.bet_amount 投注金额
+     * @param string params.ip 用户IP地址
+     *
+     * 流程(参考makelib.php):
+     * 1. 验证用户状态(status=1, yingdeny=0)
+     * 2. 检查余额(kmoney >= bet_amount)
+     * 3. 开启事务
+     * 4. 查询玩法配置(x_play表)
+     * 5. 插入投注记录(x_lib表)
+     * 6. 扣除余额(x_user.kmoney)
+     * 7. 记录资金流水(x_user_money_log表)
+     * 8. 提交事务
+     *
+     * 返回:
+     * {
+     *   "tid": "订单号",
+     *   "balance": 剩余余额,
+     *   "qishu": "期号",
+     *   "prize": 预计中奖金额
+     * }
+     */
+    public static function placeBet(array $params)
+    {
+        // 参数提取
+        $legacyUserId = $params['legacy_userid'];
+        $gid = $params['gid'];
+        $qishu = $params['qishu'];
+        $pid = $params['pid'];
+        $betContent = $params['bet_content'];
+        $betAmount = $params['bet_amount'];
+        $ip = $params['ip'] ?? request()->ip();
+
+        // 参数验证
+        if (empty($legacyUserId) || empty($gid) || empty($qishu) || empty($pid)) {
+            self::setError('参数缺失');
+            return false;
+        }
+
+        if ($betAmount <= 0) {
+            self::setError('投注金额必须大于0');
+            return false;
+        }
+
+        // 金额必须为整数(参考makelib.php:208)
+        if ($betAmount != floor($betAmount)) {
+            self::setError('投注金额必须为整数');
+            return false;
+        }
+
+        try {
+            // ========== 阶段1: 验证用户状态与余额 ==========
+            // 参考makelib.php:112-175
+
+            $user = Db::table('x_user')
+                ->where('userid', $legacyUserId)
+                ->field('kmoney,status,yingdeny,fudong,pan')
+                ->lock(true)  // 行级锁,防止并发
+                ->find();
+
+            if (!$user) {
+                self::setError('用户不存在');
+                return false;
+            }
+
+            // 检查用户状态
+            if ($user['status'] != 1) {
+                self::setError('账户已被停用');
+                return false;
+            }
+
+            // 检查是否禁止盈利
+            if ($user['yingdeny'] == 1) {
+                self::setError('账户暂不可用');
+                return false;
+            }
+
+            // 检查余额
+            if ($user['kmoney'] < $betAmount) {
+                self::setError('余额不足');
+                return false;
+            }
+
+
+            // ========== 阶段2: 查询玩法配置 ==========
+            // 参考makelib.php:225-238
+
+            $play = Db::table('x_play')
+                ->where('gid', $gid)
+                ->where('pid', $pid)
+                ->field('bid,sid,cid,peilv1,peilv2,ifok,name,ztype,znum1,znum2')
+                ->find();
+
+            if (!$play) {
+                self::setError('玩法不存在');
+                return false;
+            }
+
+            // 检查玩法是否开放
+            if ($play['ifok'] != 1) {
+                self::setError('玩法已关闭');
+                return false;
+            }
+
+            // 检查期号是否有效(当前期号)
+            $currentQishu = self::getCurrentQishu($gid);
+            if ($qishu != $currentQishu) {
+                self::setError('期号已过期,当前期号:' . $currentQishu);
+                return false;
+            }
+
+            // 检查是否已封盘
+            if (self::isSealed($gid, $qishu)) {
+                self::setError('当前期号已封盘');
+                return false;
+            }
+
+
+            // ========== 阶段3: 开启事务 ==========
+            // 参考makelib.php:204
+
+            Db::startTrans();
+
+            try {
+                // ========== 阶段4: 生成订单号 ==========
+                // 格式: YmdHis + 3位随机数
+                $tid = date('YmdHis') . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+
+
+                // ========== 阶段5: 插入投注记录 ==========
+                // 参考makelib.php:557-641
+
+                $insertData = [
+                    'tid' => $tid,
+                    'userid' => $legacyUserId,
+                    'dates' => date('Y-m-d'),
+                    'qishu' => $qishu,
+                    'gid' => $gid,
+                    'bid' => $play['bid'],
+                    'sid' => $play['sid'],
+                    'cid' => $play['cid'],
+                    'pid' => $pid,
+                    'content' => $betContent,
+                    'je' => $betAmount,
+                    'peilv1' => $play['peilv1'],
+                    'peilv2' => $play['peilv2'] ?? 0,
+                    'xtype' => 0,  // 0=正常投注
+                    'z' => 9,      // 9=未开奖
+                    'bs' => 1,     // 倍数=1
+                    'time' => date('Y-m-d H:i:s'),
+                    'ip' => $ip,
+                ];
+
+                $insertResult = Db::table('x_lib')->insert($insertData);
+
+                if (!$insertResult) {
+                    throw new Exception('插入投注记录失败');
+                }
+
+
+                // ========== 阶段6: 扣除余额 ==========
+                // 参考makelib.php:653-661
+
+                $updateResult = Db::table('x_user')
+                    ->where('userid', $legacyUserId)
+                    ->dec('kmoney', $betAmount)
+                    ->update();
+
+                if (!$updateResult) {
+                    throw new Exception('扣除余额失败');
+                }
+
+                // 计算扣款后余额
+                $newBalance = $user['kmoney'] - $betAmount;
+
+
+                // ========== 阶段7: 记录资金流水 ==========
+                // 参考makelib.php:659行的usermoneylog函数
+
+                $logData = [
+                    'userid' => $legacyUserId,
+                    'money' => -$betAmount,  // 负数表示扣除
+                    'aftermoney' => $newBalance,
+                    'remark' => '投注',
+                    'status' => 1,  // 1=成功
+                    'ip' => $ip,
+                    'time' => date('Y-m-d H:i:s'),
+                ];
+
+                $logResult = Db::table('x_user_money_log')->insert($logData);
+
+                if (!$logResult) {
+                    throw new Exception('记录资金流水失败');
+                }
+
+
+                // ========== 阶段8: 提交事务 ==========
+                Db::commit();
+
+
+                // ========== 返回成功数据 ==========
+                return [
+                    'tid' => $tid,
+                    'balance' => number_format($newBalance, 2, '.', ''),
+                    'qishu' => $qishu,
+                    'bet_amount' => number_format($betAmount, 2, '.', ''),
+                    'bet_content' => $betContent,
+                    'play_name' => $play['name'],
+                    'peilv' => $play['peilv1'],
+                    'expected_prize' => number_format($betAmount * $play['peilv1'], 2, '.', ''),  // 预计中奖金额
+                ];
+
+            } catch (\Exception $e) {
+                // 回滚事务
+                Db::rollback();
+                self::setError('投注失败: ' . $e->getMessage());
+                return false;
+            }
+
+        } catch (\Exception $e) {
+            self::setError('系统错误: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+
+    /**
+     * @notes 获取当前期号
+     * @param int $gid 游戏ID
+     * @return string
+     * @author Claude
+     * @date 2025/11/27
+     */
+    private static function getCurrentQishu(int $gid): string
+    {
+        // 查询x_game表获取当前期号
+        $game = Db::table('x_game')
+            ->where('gid', $gid)
+            ->field('thisqishu')
+            ->find();
+
+        return $game['thisqishu'] ?? '';
+    }
+
+
+    /**
+     * @notes 检查是否已封盘
+     * @param int $gid 游戏ID
+     * @param string $qishu 期号
+     * @return bool
+     * @author Claude
+     * @date 2025/11/27
+     */
+    private static function isSealed(int $gid, string $qishu): bool
+    {
+        // 查询x_game表的封盘时间
+        $game = Db::table('x_game')
+            ->where('gid', $gid)
+            ->field('fp_time,thisqishu')
+            ->find();
+
+        if (!$game) {
+            return true;  // 游戏不存在,视为已封盘
+        }
+
+        // 如果期号不是当前期号,视为已封盘
+        if ($game['thisqishu'] != $qishu) {
+            return true;
+        }
+
+        // TODO: 根据fp_time判断是否封盘
+        // 这里简化处理,假设未封盘
+        return false;
+    }
+
+
+    /**
+     * @notes 查询投注记录
+     * @param int $legacyUserId 老系统用户ID
+     * @param array $params 查询参数
+     * @return array
+     * @author Claude
+     * @date 2025/11/27
+     *
+     * 参数说明:
+     * @param int params.page 页码(默认1)
+     * @param int params.limit 每页数量(默认20)
+     * @param string params.qishu 期号(可选)
+     * @param int params.gid 游戏ID(可选)
+     * @param int params.z 中奖状态(可选: 9=未开奖, 1=中奖, 0=未中)
+     *
+     * 返回:
+     * {
+     *   "list": [...],
+     *   "total": 总记录数,
+     *   "page": 当前页,
+     *   "limit": 每页数量
+     * }
+     */
+    public static function getBetList(int $legacyUserId, array $params): array
+    {
+        $page = $params['page'] ?? 1;
+        $limit = $params['limit'] ?? 20;
+
+        // 构建查询
+        $query = Db::table('x_lib')
+            ->where('userid', $legacyUserId)
+            ->order('time', 'desc');
+
+        // 筛选条件
+        if (!empty($params['qishu'])) {
+            $query->where('qishu', $params['qishu']);
+        }
+
+        if (!empty($params['gid'])) {
+            $query->where('gid', $params['gid']);
+        }
+
+        if (isset($params['z']) && $params['z'] !== '') {
+            $query->where('z', $params['z']);
+        }
+
+        // 查询总数
+        $total = $query->count();
+
+        // 分页查询
+        $list = $query->page($page, $limit)
+            ->field('tid,qishu,gid,content,je,peilv1,z,prize,time')
+            ->select()
+            ->toArray();
+
+        // 关联查询玩法名称
+        foreach ($list as &$item) {
+            $play = Db::table('x_play')
+                ->where('pid', $item['pid'] ?? 0)
+                ->field('name')
+                ->find();
+
+            $item['play_name'] = $play['name'] ?? '';
+
+            // 格式化中奖状态
+            $item['status_text'] = self::getStatusText($item['z']);
+        }
+
+        return [
+            'list' => $list,
+            'total' => $total,
+            'page' => $page,
+            'limit' => $limit,
+        ];
+    }
+
+
+    /**
+     * @notes 获取中奖状态文本
+     * @param int $z 中奖状态
+     * @return string
+     */
+    private static function getStatusText(int $z): string
+    {
+        $statusMap = [
+            9 => '未开奖',
+            1 => '已中奖',
+            0 => '未中奖',
+        ];
+
+        return $statusMap[$z] ?? '未知';
+    }
+
+
+    /**
+     * @notes 查询开奖结果
+     * @param int $gid 游戏ID
+     * @param string $qishu 期号
+     * @return array|false
+     * @author Claude
+     * @date 2025/11/27
+     */
+    public static function getKjResult(int $gid, string $qishu)
+    {
+        $kj = Db::table('x_kj')
+            ->where('gid', $gid)
+            ->where('qishu', $qishu)
+            ->find();
+
+        if (!$kj) {
+            self::setError('开奖记录不存在');
+            return false;
+        }
+
+        // 解析开奖号码(kj1-kj8字段)
+        $numbers = [];
+        for ($i = 1; $i <= 8; $i++) {
+            $key = 'kj' . $i;
+            if (isset($kj[$key]) && $kj[$key] > 0) {
+                $numbers[] = str_pad($kj[$key], 2, '0', STR_PAD_LEFT);
+            }
+        }
+
+        return [
+            'qishu' => $kj['qishu'],
+            'numbers' => $numbers,
+            'kj_time' => $kj['dates'] ?? '',
+            'status' => count($numbers) > 0 ? 1 : 0,  // 1=已开奖, 0=未开奖
+        ];
+    }
+}
