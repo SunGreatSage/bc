@@ -11,6 +11,7 @@ namespace app\api\logic;
 use think\facade\Db;
 use think\Exception;
 use app\common\service\BetLimitService;
+use app\common\service\ZodiacYearService;
 
 /**
  * 彩票投注逻辑
@@ -553,5 +554,138 @@ class LotteryBetLogic
             'kj_time' => $kj['dates'] ?? '',
             'status' => count($numbers) > 0 ? 1 : 0,  // 1=已开奖, 0=未开奖
         ];
+    }
+
+
+    /**
+     * @notes 获取可投注的号码序列(含赔率、生肖信息)
+     * @param int $year 年份
+     * @return array|false
+     * @author Claude
+     * @date 2025/11/27
+     *
+     * 返回数据结构:
+     * {
+     *   "year": 2025,
+     *   "year_zodiac": "蛇",
+     *   "numbers": [
+     *     {
+     *       "number": "01",
+     *       "zodiac": "蛇",
+     *       "is_current_year_zodiac": true,
+     *       "odds": {"special_number": "47", "normal_number": "8"}
+     *     },
+     *     ...
+     *   ],
+     *   "zodiacs": {
+     *     "鼠": {
+     *       "numbers": ["06", "18", "30", "42"],
+     *       "count": 4,
+     *       "odds": {
+     *         "special_zodiac": "12",
+     *         "three_zodiac": "7",
+     *         "four_zodiac": "5",
+     *         "five_zodiac": "4",
+     *         "six_zodiac": "3"
+     *       }
+     *     },
+     *     ...
+     *   },
+     *   "summary": {
+     *     "total_numbers": 49,
+     *     "total_zodiacs": 12,
+     *     "special_number_49_zodiac": "蛇"
+     *   }
+     * }
+     */
+    public static function getBetNumbers(int $year)
+    {
+        try {
+            // 1. 获取当年生肖
+            $yearZodiac = ZodiacYearService::getYearZodiac($year);
+
+            // 2. 获取当年的生肖对应表
+            $zodiacTable = ZodiacYearService::getZodiacTableByYear($year);
+            $numberMap = ZodiacYearService::getNumberMapByYear($year);
+
+            // 3. 查询赔率配置(从x_play表)
+            // TODO: 这里需要根据实际的pid来查询,暂时使用固定赔率
+            $odds = [
+                'special_number_normal' => 42,  // 普通号码特码赔率
+                'special_number_49' => 47,      // 49号特码赔率(客户确认)
+                'normal_number' => 8,           // 平码赔率
+                'special_zodiac' => 12,         // 特肖赔率
+                'three_zodiac' => 7,            // 三肖赔率
+                'four_zodiac' => 5,             // 四肖赔率
+                'five_zodiac' => 4,             // 五肖赔率
+                'six_zodiac' => 3,              // 六肖赔率
+            ];
+
+            // 4. 构建号码数据(01-49)
+            $numbers = [];
+            for ($i = 1; $i <= 49; $i++) {
+                $numberStr = str_pad($i, 2, '0', STR_PAD_LEFT);
+                $zodiac = $numberMap[$i] ?? '';
+                $isCurrentYearZodiac = ($zodiac === $yearZodiac);
+
+                // 特殊处理49号的赔率
+                $specialNumberOdds = ($i === 49) ? $odds['special_number_49'] : $odds['special_number_normal'];
+
+                $numbers[] = [
+                    'number' => $numberStr,
+                    'number_int' => $i,
+                    'zodiac' => $zodiac,
+                    'is_current_year_zodiac' => $isCurrentYearZodiac,
+                    'odds' => [
+                        'special_number' => (string)$specialNumberOdds,  // 特码赔率
+                        'normal_number' => (string)$odds['normal_number'],  // 平码赔率
+                    ],
+                ];
+            }
+
+            // 5. 构建生肖数据
+            $zodiacs = [];
+            foreach ($zodiacTable as $zodiac => $zodiacNumbers) {
+                $numbersFormatted = array_map(function($num) {
+                    return str_pad($num, 2, '0', STR_PAD_LEFT);
+                }, $zodiacNumbers);
+
+                $zodiacs[$zodiac] = [
+                    'name' => $zodiac,
+                    'numbers' => $numbersFormatted,
+                    'count' => count($zodiacNumbers),
+                    'is_current_year' => ($zodiac === $yearZodiac),
+                    'odds' => [
+                        'special_zodiac' => (string)$odds['special_zodiac'],   // 特肖赔率
+                        'three_zodiac' => (string)$odds['three_zodiac'],       // 三肖赔率
+                        'four_zodiac' => (string)$odds['four_zodiac'],         // 四肖赔率
+                        'five_zodiac' => (string)$odds['five_zodiac'],         // 五肖赔率
+                        'six_zodiac' => (string)$odds['six_zodiac'],           // 六肖赔率
+                    ],
+                ];
+            }
+
+            // 6. 返回完整数据
+            return [
+                'year' => $year,
+                'year_zodiac' => $yearZodiac,
+                'year_zodiac_numbers' => array_map(function($num) {
+                    return str_pad($num, 2, '0', STR_PAD_LEFT);
+                }, $zodiacTable[$yearZodiac] ?? []),
+                'numbers' => $numbers,
+                'zodiacs' => $zodiacs,
+                'summary' => [
+                    'total_numbers' => 49,
+                    'total_zodiacs' => 12,
+                    'special_number_49_zodiac' => $numberMap[49] ?? '',
+                    'special_number_49_odds' => (string)$odds['special_number_49'],
+                ],
+                'odds_config' => $odds,  // 返回完整赔率配置供前端参考
+            ];
+
+        } catch (\Exception $e) {
+            self::setError('获取号码数据失败: ' . $e->getMessage());
+            return false;
+        }
     }
 }

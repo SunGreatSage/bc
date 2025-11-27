@@ -22,7 +22,7 @@ class LotteryBetController extends BaseApiController
     /**
      * 不需要登录的接口
      */
-    public array $notNeedLogin = ['getKjResult'];
+    public array $notNeedLogin = ['getKjResult', 'getBetNumbers', 'getCurrentQishu', 'getPlayList'];
 
 
     /**
@@ -328,5 +328,68 @@ class LotteryBetController extends BaseApiController
         return $this->success('获取成功', [
             'list' => $list,
         ]);
+    }
+
+
+    /**
+     * @notes 获取可投注的号码序列(含赔率、生肖等信息)
+     * @return Json
+     * @author Claude
+     * @date 2025/11/27
+     *
+     * 请求参数:
+     * @param int year 年份(可选,默认当前年份)
+     *
+     * 响应示例:
+     * {
+     *   "code": 1,
+     *   "msg": "success",
+     *   "data": {
+     *     "year": 2025,
+     *     "year_zodiac": "蛇",
+     *     "numbers": [
+     *       {
+     *         "number": "01",
+     *         "zodiac": "蛇",
+     *         "is_current_year_zodiac": true,
+     *         "odds": {
+     *           "special_number": "47",
+     *           "normal_number": "8"
+     *         }
+     *       },
+     *       ...
+     *     ],
+     *     "zodiacs": {
+     *       "鼠": {
+     *         "numbers": ["06", "18", "30", "42"],
+     *         "odds": {
+     *           "special_zodiac": "12",
+     *           "three_zodiac": "7",
+     *           "four_zodiac": "5",
+     *           "five_zodiac": "4",
+     *           "six_zodiac": "3"
+     *         }
+     *       },
+     *       ...
+     *     }
+     *   }
+     * }
+     */
+    public function getBetNumbers()
+    {
+        // 获取年份参数
+        $year = $this->request->param('year/d', 0);
+        if (empty($year)) {
+            $year = (int)date('Y');
+        }
+
+        // 调用逻辑层获取数据
+        $result = LotteryBetLogic::getBetNumbers($year);
+
+        if ($result === false) {
+            return $this->fail(LotteryBetLogic::getError());
+        }
+
+        return $this->success('获取成功', $result);
     }
 }
