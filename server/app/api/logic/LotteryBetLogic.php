@@ -796,23 +796,12 @@ class LotteryBetLogic
         $zodiacTable = ZodiacYearService::getZodiacTableByYear($year);
         $yearZodiac = ZodiacYearService::getYearZodiac($year);
 
-        // 从x_play表查询该玩法的赔率
-        $oddsValue = Db::table('x_play')
-            ->where('gid', $gid)
-            ->where('name', $playName)
-            ->where('ifok', 1)
-            ->value('peilv1');
+        // 家禽/野兽分类定义(固定的生肖分类,来自老系统 malhc.php)
+        $domesticZodiacs = ['牛', '馬', '羊', '雞', '狗', '豬'];  // 家禽
+        $wildZodiacs = ['鼠', '虎', '兔', '龍', '蛇', '猴'];      // 野兽
 
-        // 默认赔率配置
-        $defaultOdds = [
-            '特肖' => 12.0,
-            '三肖' => 88.0,
-            '四肖' => 11.0,
-            '五肖' => 2.09,
-            '六肖' => 1.97,
-        ];
-
-        $odds = $oddsValue ?? $defaultOdds[$playName] ?? 1.0;
+        // 查询赔率(普通玩法和中/不中玩法)
+        $oddsData = self::getZodiacOddsFromDatabase($playName, $gid);
 
         // 构建12生肖选项
         $options = [];
@@ -821,15 +810,59 @@ class LotteryBetLogic
                 return str_pad($num, 2, '0', STR_PAD_LEFT);
             }, $numbers);
 
+            // 判断是家禽还是野兽
+            $category = in_array($zodiac, $domesticZodiacs) ? 'domestic' : 'wild';
+            $categoryLabel = in_array($zodiac, $domesticZodiacs) ? '家禽' : '野兽';
+
             $options[] = [
                 'value' => $zodiac,
                 'label' => $zodiac,
-                'odds' => number_format((float)$odds, 4, '.', ''),
+                'odds' => $oddsData['normal_odds'],
+                'odds_win' => $oddsData['win_odds'],      // "中"的赔率
+                'odds_not_win' => $oddsData['not_win_odds'],  // "不中"的赔率
                 'numbers' => $numbersFormatted,
                 'count' => count($numbers),
                 'is_current_year' => ($zodiac === $yearZodiac),
+                'category' => $category,           // domestic(家禽) 或 wild(野兽)
+                'category_label' => $categoryLabel, // "家禽" 或 "野兽"
             ];
         }
+
+        // 根据当年生肖表,动态计算家禽/野兽的号码
+        $domesticNumbers = [];
+        $wildNumbers = [];
+
+        foreach ($zodiacTable as $zodiac => $numbers) {
+            $numbersFormatted = array_map(function($num) {
+                return str_pad($num, 2, '0', STR_PAD_LEFT);
+            }, $numbers);
+
+            if (in_array($zodiac, $domesticZodiacs)) {
+                $domesticNumbers = array_merge($domesticNumbers, $numbersFormatted);
+            } else {
+                $wildNumbers = array_merge($wildNumbers, $numbersFormatted);
+            }
+        }
+
+        // 构建家禽/野兽分类汇总
+        $categoryGroups = [
+            [
+                'type' => 'domestic',
+                'label' => '家禽',
+                'zodiacs' => $domesticZodiacs,
+                'numbers' => $domesticNumbers,
+                'total_numbers' => count($domesticNumbers),
+                'description' => '牛、马、羊、鸡、狗、猪',
+            ],
+            [
+                'type' => 'wild',
+                'label' => '野兽',
+                'zodiacs' => $wildZodiacs,
+                'numbers' => $wildNumbers,
+                'total_numbers' => count($wildNumbers),
+                'description' => '鼠、虎、兔、龙、蛇、猴',
+            ],
+        ];
 
         return [
             'play_name' => $playName,
@@ -838,7 +871,139 @@ class LotteryBetLogic
             'year_zodiac' => $yearZodiac,
             'total_options' => 12,
             'options' => $options,
+            'category_groups' => $categoryGroups,  // 新增:家禽/野兽分类汇总
+            'odds_types' => [                       // 新增:可用的赔率类型
+                [
+                    'type' => 'normal',
+                    'label' => '普通',
+                    'odds' => $oddsData['normal_odds'],
+                ],
+                [
+                    'type' => 'win',
+                    'label' => '中',
+                    'odds' => $oddsData['win_odds'],
+                ],
+                [
+                    'type' => 'not_win',
+                    'label' => '不中',
+                    'odds' => $oddsData['not_win_odds'],
+                ],
+            ],
+            'special_rules' => [
+                'rule_49' => '开出49号视为和局,投注金额退还',
+            ],
         ];
+    }
+
+
+    /**
+     * @notes 从数据库查询生肖玩法的赔率(包括普通/中/不中)
+     * @param string $playName 玩法名称
+     * @param int $gid 游戏ID
+     * @return array
+     */
+    private static function getZodiacOddsFromDatabase(string $playName, int $gid): array
+    {
+        // 默认赔率配置
+        $defaultOdds = [
+            '特肖' => ['normal' => 12.0, 'win' => 0, 'not_win' => 0],
+            '三肖' => ['normal' => 88.0, 'win' => 88.488, 'not_win' => 78.948],
+            '四肖' => ['normal' => 11.0, 'win' => 11.088, 'not_win' => 10.428],
+            '五肖' => ['normal' => 2.09, 'win' => 2.088, 'not_win' => 2.028],
+            '六肖' => ['normal' => 1.97, 'win' => 0, 'not_win' => 1.968],
+        ];
+
+        // 查询普通玩法赔率
+        $normalOdds = Db::table('x_play')
+            ->where('gid', $gid)
+            ->where('name', $playName)
+            ->where('ifok', 1)
+            ->value('peilv1');
+
+        // 查询"中"玩法赔率(如"5肖連(中)")
+        $winPlayName = self::getPlayNameVariant($playName, 'win');
+        $winOdds = 0;
+        if ($winPlayName) {
+            $winOddsValue = Db::table('x_play')
+                ->where('gid', $gid)
+                ->where('name', $winPlayName)
+                ->where('ifok', 1)
+                ->value('peilv1');
+
+            // 如果peilv1为0,尝试从pl字段解析
+            if ($winOddsValue == 0) {
+                $plData = Db::table('x_play')
+                    ->where('gid', $gid)
+                    ->where('name', $winPlayName)
+                    ->where('ifok', 1)
+                    ->value('pl');
+                if ($plData) {
+                    $plArray = json_decode($plData, true);
+                    if (is_array($plArray) && isset($plArray[0][0])) {
+                        $winOdds = (float)$plArray[0][0];
+                    }
+                }
+            } else {
+                $winOdds = (float)$winOddsValue;
+            }
+        }
+
+        // 查询"不中"玩法赔率(如"6肖連(不中)")
+        $notWinPlayName = self::getPlayNameVariant($playName, 'not_win');
+        $notWinOdds = 0;
+        if ($notWinPlayName) {
+            $notWinOddsValue = Db::table('x_play')
+                ->where('gid', $gid)
+                ->where('name', $notWinPlayName)
+                ->where('ifok', 1)
+                ->value('peilv1');
+
+            // 如果peilv1为0,尝试从pl字段解析
+            if ($notWinOddsValue == 0) {
+                $plData = Db::table('x_play')
+                    ->where('gid', $gid)
+                    ->where('name', $notWinPlayName)
+                    ->where('ifok', 1)
+                    ->value('pl');
+                if ($plData) {
+                    $plArray = json_decode($plData, true);
+                    if (is_array($plArray) && isset($plArray[0][0])) {
+                        $notWinOdds = (float)$plArray[0][0];
+                    }
+                }
+            } else {
+                $notWinOdds = (float)$notWinOddsValue;
+            }
+        }
+
+        // 使用查询结果或默认值
+        $defaults = $defaultOdds[$playName] ?? ['normal' => 1.0, 'win' => 0, 'not_win' => 0];
+
+        return [
+            'normal_odds' => number_format($normalOdds ?: $defaults['normal'], 4, '.', ''),
+            'win_odds' => number_format($winOdds ?: $defaults['win'], 4, '.', ''),
+            'not_win_odds' => number_format($notWinOdds ?: $defaults['not_win'], 4, '.', ''),
+        ];
+    }
+
+
+    /**
+     * @notes 获取玩法名称的变种(中/不中)
+     * @param string $playName 原始玩法名称
+     * @param string $type win(中) 或 not_win(不中)
+     * @return string|null
+     */
+    private static function getPlayNameVariant(string $playName, string $type): ?string
+    {
+        // 玩法名称映射表
+        $mapping = [
+            '三肖' => ['win' => '3肖連(中)', 'not_win' => '3肖連(不中)'],
+            '四肖' => ['win' => '4肖連(中)', 'not_win' => '4肖連(不中)'],
+            '五肖' => ['win' => '5肖連(中)', 'not_win' => '5肖連(不中)'],
+            '六肖' => ['win' => '6肖連(中)', 'not_win' => '6肖連(不中)'],
+        ];
+
+        return $mapping[$playName][$type] ?? null;
     }
 
 

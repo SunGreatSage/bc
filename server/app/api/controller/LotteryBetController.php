@@ -396,34 +396,69 @@ class LotteryBetController extends BaseApiController
      *   "data": {
      *     "play_name": "特碼",
      *     "play_type": "number",
+     *     "year": 2025,
+     *     "total_options": 49,
      *     "options": [
      *       {
      *         "value": "01",
      *         "label": "01",
      *         "odds": "42.0000",
      *         "zodiac": "蛇"
-     *       },
-     *       ...
+     *       }
      *     ]
      *   }
      * }
      *
-     * 响应示例(特肖/三肖/四肖/五肖/六肖):
+     * 响应示例(生肖玩法 - 特肖/三肖/四肖/五肖/六肖):
      * {
      *   "code": 1,
      *   "msg": "获取成功",
      *   "data": {
-     *     "play_name": "三肖",
+     *     "play_name": "六肖",
      *     "play_type": "zodiac",
+     *     "year": 2025,
+     *     "year_zodiac": "蛇",
+     *     "total_options": 12,
      *     "options": [
      *       {
      *         "value": "鼠",
      *         "label": "鼠",
-     *         "odds": "88.0000",
-     *         "numbers": ["06", "18", "30", "42"]
+     *         "odds": "1.9700",
+     *         "odds_win": "0.0000",
+     *         "odds_not_win": "1.9680",
+     *         "numbers": ["06", "18", "30", "42"],
+     *         "count": 4,
+     *         "is_current_year": false,
+     *         "category": "wild",
+     *         "category_label": "野兽"
+     *       }
+     *     ],
+     *     "category_groups": [
+     *       {
+     *         "type": "domestic",
+     *         "label": "家禽",
+     *         "zodiacs": ["牛", "馬", "羊", "雞", "狗", "豬"],
+     *         "numbers": ["01","03","04",...],
+     *         "total_numbers": 25,
+     *         "description": "牛、马、羊、鸡、狗、猪(共25个号码)"
      *       },
-     *       ...
-     *     ]
+     *       {
+     *         "type": "wild",
+     *         "label": "野兽",
+     *         "zodiacs": ["鼠", "虎", "兔", "龍", "蛇", "猴"],
+     *         "numbers": ["02","05","06",...],
+     *         "total_numbers": 24,
+     *         "description": "鼠、虎、兔、龙、蛇、猴(共24个号码)"
+     *       }
+     *     ],
+     *     "odds_types": [
+     *       {"type": "normal", "label": "普通", "odds": "1.9700"},
+     *       {"type": "win", "label": "中", "odds": "0.0000"},
+     *       {"type": "not_win", "label": "不中", "odds": "1.9680"}
+     *     ],
+     *     "special_rules": {
+     *       "rule_49": "开出49号视为和局,投注金额退还"
+     *     }
      *   }
      * }
      */
