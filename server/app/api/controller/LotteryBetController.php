@@ -281,12 +281,11 @@ class LotteryBetController extends BaseApiController
      *
      * 请求参数:
      * @param int gid 游戏ID(必填, 200=新澳门六合彩)
-     * @param int ftype_class 玩法分类(可选, 0=特码, 1=平码, 5=特肖)
      *
      * 响应示例:
      * {
      *   "code": 1,
-     *   "msg": "success",
+     *   "msg": "获取成功",
      *   "data": {
      *     "list": [
      *       {
@@ -303,24 +302,21 @@ class LotteryBetController extends BaseApiController
     {
         // 获取请求参数
         $gid = $this->request->param('gid/d', 0);
-        $ftypeClass = $this->request->param('ftype_class', '');
 
         // 参数验证
         if (empty($gid)) {
             return $this->fail('请输入游戏ID');
         }
 
-        // 构建查询
-        $query = \think\facade\Db::table('x_play')
+        // 定义支持的玩法名称
+        $supportedPlays = ['特码', '特肖', '平码', '六肖', '五肖', '四肖', '三肖'];
+
+        // 查询玩法列表
+        $list = \think\facade\Db::table('x_play')
             ->where('gid', $gid)
-            ->where('ifok', 1);  // 只查询开放的玩法
-
-        if ($ftypeClass !== '') {
-            // 通过ftype字段关联查询(需要先查x_game表获取ftype配置)
-            // 这里简化处理,后续可以优化
-        }
-
-        $list = $query->field('pid,name,peilv1,peilv2,ifok')
+            ->where('ifok', 1)  // 只查询开放的玩法
+            ->whereIn('name', $supportedPlays)  // 只返回支持的玩法
+            ->field('pid,name,peilv1,ifok')
             ->order('pid', 'asc')
             ->select()
             ->toArray();
