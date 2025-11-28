@@ -379,59 +379,73 @@ class LotteryBetController extends BaseApiController
 
 
     /**
-     * @notes 获取可投注的号码序列(含赔率、生肖等信息)
+     * @notes 获取可投注的号码/生肖数据(含赔率)
      * @return Json
      * @author Claude
-     * @date 2025/11/27
+     * @date 2025/11/28
      *
      * 请求参数:
-     * @param int year 年份(可选,默认当前年份)
+     * @param string play_name 玩法名称(必填, 如"特碼","正碼","特肖","三肖","四肖","五肖","六肖")
+     * @param int gid 游戏ID(可选, 默认200)
+     * @param int year 年份(可选, 默认当前年份, 仅生肖玩法需要)
      *
-     * 响应示例:
+     * 响应示例(特碼/正碼):
      * {
      *   "code": 1,
-     *   "msg": "success",
+     *   "msg": "获取成功",
      *   "data": {
-     *     "year": 2025,
-     *     "year_zodiac": "蛇",
-     *     "numbers": [
+     *     "play_name": "特碼",
+     *     "play_type": "number",
+     *     "options": [
      *       {
-     *         "number": "01",
-     *         "zodiac": "蛇",
-     *         "is_current_year_zodiac": true,
-     *         "odds": {
-     *           "special_number": "47",
-     *           "normal_number": "8"
-     *         }
+     *         "value": "01",
+     *         "label": "01",
+     *         "odds": "42.0000",
+     *         "zodiac": "蛇"
      *       },
      *       ...
-     *     ],
-     *     "zodiacs": {
-     *       "鼠": {
-     *         "numbers": ["06", "18", "30", "42"],
-     *         "odds": {
-     *           "special_zodiac": "12",
-     *           "three_zodiac": "7",
-     *           "four_zodiac": "5",
-     *           "five_zodiac": "4",
-     *           "six_zodiac": "3"
-     *         }
+     *     ]
+     *   }
+     * }
+     *
+     * 响应示例(特肖/三肖/四肖/五肖/六肖):
+     * {
+     *   "code": 1,
+     *   "msg": "获取成功",
+     *   "data": {
+     *     "play_name": "三肖",
+     *     "play_type": "zodiac",
+     *     "options": [
+     *       {
+     *         "value": "鼠",
+     *         "label": "鼠",
+     *         "odds": "88.0000",
+     *         "numbers": ["06", "18", "30", "42"]
      *       },
      *       ...
-     *     }
+     *     ]
      *   }
      * }
      */
     public function getBetNumbers()
     {
-        // 获取年份参数
+        // 获取请求参数
+        $playName = $this->request->param('play_name', '');
+        $gid = $this->request->param('gid/d', 200);
         $year = $this->request->param('year/d', 0);
+
+        // 参数验证
+        if (empty($playName)) {
+            return $this->fail('请输入玩法名称');
+        }
+
+        // 年份默认值
         if (empty($year)) {
             $year = (int)date('Y');
         }
 
         // 调用逻辑层获取数据
-        $result = LotteryBetLogic::getBetNumbers($year);
+        $result = LotteryBetLogic::getBetOptions($playName, $gid, $year);
 
         if ($result === false) {
             return $this->fail(LotteryBetLogic::getError());

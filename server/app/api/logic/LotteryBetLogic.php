@@ -681,6 +681,168 @@ class LotteryBetLogic
 
 
     /**
+     * @notes 根据玩法名称获取可投注选项(号码或生肖)及赔率
+     * @param string $playName 玩法名称(特碼/正碼/特肖/三肖/四肖/五肖/六肖)
+     * @param int $gid 游戏ID
+     * @param int $year 年份(用于生肖轮转计算)
+     * @return array|false
+     * @author Claude
+     * @date 2025/11/28
+     */
+    public static function getBetOptions(string $playName, int $gid = 200, int $year = 0)
+    {
+        try {
+            if (empty($year)) {
+                $year = (int)date('Y');
+            }
+
+            // 规范化玩法名称(处理繁简体和别名)
+            $normalizedName = self::normalizePlayName($playName);
+
+            // 判断玩法类型
+            if (in_array($normalizedName, ['特码', '平码'])) {
+                // 号码类玩法
+                return self::getNumberOptions($normalizedName, $gid, $year);
+            } elseif (in_array($normalizedName, ['特肖', '三肖', '四肖', '五肖', '六肖'])) {
+                // 生肖类玩法
+                return self::getZodiacOptions($normalizedName, $gid, $year);
+            } else {
+                self::setError('不支持的玩法类型: ' . $playName);
+                return false;
+            }
+
+        } catch (\Exception $e) {
+            self::setError('获取投注选项失败: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+
+    /**
+     * @notes 规范化玩法名称(繁简体转换、别名处理)
+     * @param string $playName 原始玩法名称
+     * @return string 规范化后的名称
+     */
+    private static function normalizePlayName(string $playName): string
+    {
+        $mapping = [
+            '特碼' => '特码',
+            '正碼' => '平码',
+            '正码' => '平码',
+            '平碼' => '平码',
+        ];
+
+        return $mapping[$playName] ?? $playName;
+    }
+
+
+    /**
+     * @notes 获取号码类玩法的选项(01-49号码)
+     * @param string $playName 玩法名称(特码/平码)
+     * @param int $gid 游戏ID
+     * @param int $year 年份
+     * @return array
+     */
+    private static function getNumberOptions(string $playName, int $gid, int $year): array
+    {
+        // 获取生肖映射表
+        $numberMap = ZodiacYearService::getNumberMapByYear($year);
+
+        // 构建49个号码选项
+        $options = [];
+        for ($i = 1; $i <= 49; $i++) {
+            $numberStr = str_pad($i, 2, '0', STR_PAD_LEFT);
+
+            // 从x_play表查询该号码的赔率
+            $odds = Db::table('x_play')
+                ->where('gid', $gid)
+                ->where('name', $numberStr)
+                ->where('ifok', 1)
+                ->value('peilv1');
+
+            // 如果数据库没有赔率,使用默认值
+            if (!$odds) {
+                $odds = ($i == 49) ? 47.0 : 42.0;  // 49号特殊赔率
+            }
+
+            $options[] = [
+                'value' => $numberStr,
+                'label' => $numberStr,
+                'odds' => number_format((float)$odds, 4, '.', ''),
+                'zodiac' => $numberMap[$i] ?? '',
+            ];
+        }
+
+        return [
+            'play_name' => $playName,
+            'play_type' => 'number',
+            'year' => $year,
+            'total_options' => 49,
+            'options' => $options,
+        ];
+    }
+
+
+    /**
+     * @notes 获取生肖类玩法的选项(12生肖)
+     * @param string $playName 玩法名称(特肖/三肖/四肖/五肖/六肖)
+     * @param int $gid 游戏ID
+     * @param int $year 年份
+     * @return array
+     */
+    private static function getZodiacOptions(string $playName, int $gid, int $year): array
+    {
+        // 获取当年生肖表
+        $zodiacTable = ZodiacYearService::getZodiacTableByYear($year);
+        $yearZodiac = ZodiacYearService::getYearZodiac($year);
+
+        // 从x_play表查询该玩法的赔率
+        $oddsValue = Db::table('x_play')
+            ->where('gid', $gid)
+            ->where('name', $playName)
+            ->where('ifok', 1)
+            ->value('peilv1');
+
+        // 默认赔率配置
+        $defaultOdds = [
+            '特肖' => 12.0,
+            '三肖' => 88.0,
+            '四肖' => 11.0,
+            '五肖' => 2.09,
+            '六肖' => 1.97,
+        ];
+
+        $odds = $oddsValue ?? $defaultOdds[$playName] ?? 1.0;
+
+        // 构建12生肖选项
+        $options = [];
+        foreach ($zodiacTable as $zodiac => $numbers) {
+            $numbersFormatted = array_map(function($num) {
+                return str_pad($num, 2, '0', STR_PAD_LEFT);
+            }, $numbers);
+
+            $options[] = [
+                'value' => $zodiac,
+                'label' => $zodiac,
+                'odds' => number_format((float)$odds, 4, '.', ''),
+                'numbers' => $numbersFormatted,
+                'count' => count($numbers),
+                'is_current_year' => ($zodiac === $yearZodiac),
+            ];
+        }
+
+        return [
+            'play_name' => $playName,
+            'play_type' => 'zodiac',
+            'year' => $year,
+            'year_zodiac' => $yearZodiac,
+            'total_options' => 12,
+            'options' => $options,
+        ];
+    }
+
+
+    /**
      * @notes 从x_play表查询赔率配置
      * @return array 赔率配置数组
      * @author Claude
