@@ -9,6 +9,7 @@
       <excludeFolder url="file://$MODULE_DIR$/houtai_nyedCc/__MACOSX" />
       <excludeFolder url="file://$MODULE_DIR$/houtai_nyedCc/cache" />
       <excludeFolder url="file://$MODULE_DIR$/houtai_nyedCc/phpqrcode/cache" />
+      <excludeFolder url="file://$MODULE_DIR$/admin/.vscode" />
       <excludeFolder url="file://$MODULE_DIR$/server/vendor/adbario/php-dot-notation" />
       <excludeFolder url="file://$MODULE_DIR$/server/vendor/alibabacloud/client" />
       <excludeFolder url="file://$MODULE_DIR$/server/vendor/alibabacloud/tea" />

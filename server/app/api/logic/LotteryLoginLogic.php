@@ -63,7 +63,6 @@ class LotteryLoginLogic extends BaseLogic
 
             // 步骤3: 加密密码（与老系统一致）
             $encryptedPassword = self::encryptPassword($password);
-
             // 步骤4: 查询用户
             $user = Db::table('x_user')
                 ->where('username', $username)
@@ -135,13 +134,17 @@ class LotteryLoginLogic extends BaseLogic
      * @author Claude
      * @date 2025/11/27
      *
-     * 老系统加密规则（来自 houtai_nyedCc/mxj/login.php 第18行）：
-     * $pass = md5($_POST['pass'] . $config['upass']);
-     * 即：md5(明文密码 + 'puhh8kik')
+     * 老系统有两种加密方式:
+     * 1. 添加用户时: md5(明文密码 + 'puhh8kik')  - hide/suser.php 第6行
+     * 2. 修改密码时: md5(md5(明文密码) + 'puhh8kik') - hide/suser.php 第59行
+     *
+     * 根据用户提供的测试数据:
+     * 明文 Aa123456 -> fdbac61e316fff1d2156a26b31318c32
+     * 应该使用第2种方式（两次MD5）
      */
     private static function encryptPassword(string $password): string
     {
-        return md5($password . self::PASSWORD_SALT);
+        return md5(md5($password) . self::PASSWORD_SALT);
     }
 
 
