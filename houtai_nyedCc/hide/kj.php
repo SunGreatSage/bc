@@ -32,8 +32,9 @@ switch ($_REQUEST['xtype']) {
 		$game[0]['opentimekj']   = $msql->f('opentimekj');
 		$game[0]['closetimekj']   = $msql->f('closetimekj');
 		$game[0]['fast']   = $msql->f('fast');
-		$game[0]['guanfang']   = $msql->f('guanfang');        
-        $game[0]['thisbml'] = $msql->f('thisbml');
+		$game[0]['guanfang']   = $msql->f('guanfang');
+        // 新系统: thisbml字段不再使用,生肖计算从dates提取年份
+        $game[0]['thisbml'] = '';  // 保留兼容性,但置空
 		$tpl->assign('cs', json_decode($msql->f('cs'),true));
         $msql->query("select * from `$tb_game` where gid!='$gid' and ifopen=1 order by xsort");
         $i = 1;
@@ -155,17 +156,16 @@ switch ($_REQUEST['xtype']) {
         $closetime = $_POST['closetime'];
         $kjtime    = $_POST['kjtime'];
         $qishu     = $_POST['qishu'];
-        $msql->query("select thisbml from `$tb_game` where gid='$gid'");
-        $msql->next_record();
-        $bml       = $msql->f('thisbml');
+        // 新系统: 不再需要从x_game读取thisbml,生肖计算直接从dates提取年份
         $editstart = str_replace(':', '', $config['editstart']);
         if (str_replace(':', '', substr($kjtime, -8)) < $editstart) {
             $dates = sqldate(strtotime($kjtime));
         } else {
             $dates = substr($kjtime, 0, 10);
         }
-        $sql = "insert into `$tb_kj` set kjtime='$kjtime',opentime='$opentime',closetime='$closetime',qishu='$qishu',dates='$dates',bml='$bml',gid='$gid',baostatus=1";
-       // var_dump("insert into `$tb_kj` set kjtime='$kjtime',opentime='$opentime',closetime='$closetime',qishu='$qishu',dates='$dates',bml='$bml',gid='$gid',baostatus=1");
+        // 新系统: 去掉bml字段,仅使用dates
+        $sql = "insert into `$tb_kj` set kjtime='$kjtime',opentime='$opentime',closetime='$closetime',qishu='$qishu',dates='$dates',gid='$gid',baostatus=1";
+       // var_dump("insert into `$tb_kj` set kjtime='$kjtime',opentime='$opentime',closetime='$closetime',qishu='$qishu',dates='$dates',gid='$gid',baostatus=1");
 		$msql->query("select 1 from `$tb_kj` where gid='$gid' and qishu='$qishu'");
         $msql->next_record();
         if ($msql->f(0) != 1) {

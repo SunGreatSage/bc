@@ -58,13 +58,14 @@ class Malist                                                        {
 
             case 100:
                 $ma = json_decode($cs['ma'], true);
-                $kj['sx1'] = $kjnum[0] == '' ? '' : self::shengxiao($kjnum[0], $kj['bml'], 0);
-                $kj['sx2'] = $kjnum[1] == '' ? '' : self::shengxiao($kjnum[1], $kj['bml'], 0);
-                $kj['sx3'] = $kjnum[2] == '' ? '' : self::shengxiao($kjnum[2], $kj['bml'], 0);
-                $kj['sx4'] = $kjnum[3] == '' ? '' : self::shengxiao($kjnum[3], $kj['bml'], 0);
-                $kj['sx5'] = $kjnum[4] == '' ? '' : self::shengxiao($kjnum[4], $kj['bml'], 0);
-                $kj['sx6'] = $kjnum[5] == '' ? '' : self::shengxiao($kjnum[5], $kj['bml'], 0);
-                $kj['sx7'] = $kjnum[6] == '' ? '' : self::shengxiao($kjnum[6], $kj['bml'], 0);
+                // 新系统: 使用dates字段替代bml
+                $kj['sx1'] = $kjnum[0] == '' ? '' : self::shengxiao($kjnum[0], $kj['dates'], 0);
+                $kj['sx2'] = $kjnum[1] == '' ? '' : self::shengxiao($kjnum[1], $kj['dates'], 0);
+                $kj['sx3'] = $kjnum[2] == '' ? '' : self::shengxiao($kjnum[2], $kj['dates'], 0);
+                $kj['sx4'] = $kjnum[3] == '' ? '' : self::shengxiao($kjnum[3], $kj['dates'], 0);
+                $kj['sx5'] = $kjnum[4] == '' ? '' : self::shengxiao($kjnum[4], $kj['dates'], 0);
+                $kj['sx6'] = $kjnum[5] == '' ? '' : self::shengxiao($kjnum[5], $kj['dates'], 0);
+                $kj['sx7'] = $kjnum[6] == '' ? '' : self::shengxiao($kjnum[6], $kj['dates'], 0);
                 $kj['wh1'] = $kjnum[0] == '' ? '' : self::lhwuhang($kjnum[0], $kj['bml'], 0);
                 $kj['wh2'] = $kjnum[1] == '' ? '' : self::lhwuhang($kjnum[1], $kj['bml'], 0);
                 $kj['wh3'] = $kjnum[2] == '' ? '' : self::lhwuhang($kjnum[2], $kj['bml'], 0);
@@ -767,29 +768,71 @@ class Malist                                                        {
             return ((1922 - $ma + $in - 1) % 60) % 5;
         }
     }
-    public static function shengxiao($ma, $bml, $i) {
-        $jiazhi = ['甲子', '乙丑', '丙寅', '丁卯', '戊辰', '己巳', '庚午', '辛未', '壬申', '癸酉', '甲戌', '乙亥', '丙子', '丁丑', '戊寅', '己卯', '庚辰', '辛巳', '壬午', '癸未', '甲申', '乙酉', '丙戌', '丁亥', '戊子', '己丑', '庚寅', '辛卯', '壬辰', '癸巳', '甲午', '乙未', '丙申', '丁酉', '戊戌', '己亥', '庚子', '辛丑', '壬寅', '癸卯', '甲辰', '乙巳', '丙午', '丁未', '戊申', '己酉', '庚戌', '辛亥', '壬子', '癸丑', '甲寅', '乙卯', '丙辰', '丁巳', '戊午', '己未', '庚申', '辛酉', '壬戌', '癸亥'];
-        $index = 0;
-        foreach ($jiazhi as $key => $val) {
-            if ($val == $bml) {
-                $index = $key;
+    /**
+     * 新生肖计算算法 - 基于年份和号码
+     * @param int $ma 号码(1-49)
+     * @param mixed $year_or_date 年份(如2025)或日期(如"2025-11-28")
+     * @param int $i 返回类型 (0=生肖名称, 1=生肖索引)
+     * @return string|int 生肖名称或索引
+     */
+    public static function shengxiao($ma, $year_or_date, $i) {
+        // 基准年份: 2025年(蛇年)
+        $baseYear = 2025;
+
+        // 生肖顺序(从鼠开始)
+        $zodiacOrder = ['鼠', '牛', '虎', '兔', '龍', '蛇', '馬', '羊', '猴', '雞', '狗', '豬'];
+
+        // 2025年生肖对照表
+        $baseTable = [
+            '鼠' => [6, 18, 30, 42],
+            '牛' => [5, 17, 29, 41],
+            '虎' => [4, 16, 28, 40],
+            '兔' => [3, 15, 27, 39],
+            '龍' => [2, 14, 26, 38],
+            '蛇' => [1, 13, 25, 37, 49],  // 当年生肖5个号码
+            '馬' => [12, 24, 36, 48],
+            '羊' => [11, 23, 35, 47],
+            '猴' => [10, 22, 34, 46],
+            '雞' => [9, 21, 33, 45],
+            '狗' => [8, 20, 32, 44],
+            '豬' => [7, 19, 31, 43],
+        ];
+
+        // 提取年份
+        if (is_numeric($year_or_date) && strlen($year_or_date) == 4) {
+            $year = (int)$year_or_date;
+        } else {
+            $year = (int)date('Y', strtotime($year_or_date));
+        }
+
+        // 计算年份差
+        $yearDiff = $year - $baseYear;
+
+        // 生肖向前移动yearDiff位,构建新对照表
+        $newTable = [];
+        foreach ($baseTable as $zodiac => $numbers) {
+            $currentIndex = array_search($zodiac, $zodiacOrder);
+            $newIndex = (($currentIndex - $yearDiff) % 12 + 12) % 12;
+            $newZodiac = $zodiacOrder[$newIndex];
+            $newTable[$newZodiac] = $numbers;
+        }
+
+        // 查找号码对应的生肖
+        $resultZodiac = '鼠';
+        $resultIndex = 0;
+        foreach ($newTable as $zodiac => $numbers) {
+            if (in_array($ma, $numbers)) {
+                $resultZodiac = $zodiac;
+                $resultIndex = array_search($zodiac, $zodiacOrder);
                 break;
             }
         }
-        $index = $index % 12 + 1;
-        $ma = $ma % 12;
-        $arr = ['鼠', '牛', '虎', '兔', '龍', '蛇', '馬', '羊', '猴', '雞', '狗', '豬'];
-        $in = 0;
-        if ($index >= $ma) {
-            $in = $index - $ma;
-        } else {
-            $in = $index - $ma + 12;
-        }
-        if ($in >= 12) $in-= 12;
+
+        // 根据$i返回类型
         if ($i == 0) {
-            return $arr[$in];
+            return $resultZodiac;
         } else {
-            return $in;
+            return $resultIndex;
         }
     }
     public static function rshengxiao($sx, $bml) {

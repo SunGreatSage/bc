@@ -88,6 +88,7 @@ switch ($_REQUEST['xtype']) {
 		$msql->query("select * from `$tb_kj` where gid='$gid' and  qishu='" . $config['thisqishu'] . "'   ");
         $msql->next_record();
 		$upqishu = $msql->f('qishu');
+		$kj_dates = $msql->f('dates');  // 获取开奖日期,用于生肖计算
 		//var_dump($upqishu);
 		 for ($i = 1; $i <= $config['mnum']; $i++) {
             if ($i > 1)
@@ -97,7 +98,8 @@ switch ($_REQUEST['xtype']) {
 		 for ($i = 1; $i <= $config['mnum']; $i++) {
             if ($i > 1)
 			$upsx .= ",";
-			$upsx .= shengxiao($msql->f('m' . $i),$msql->f('bml'));
+			// 使用新算法: 从dates提取年份计算生肖
+			$upsx .= shengxiao($msql->f('m' . $i), $kj_dates);
         }
 		$tpl->assign("upkj", $upkj);
 		$tpl->assign("upqishu", $upqishu);

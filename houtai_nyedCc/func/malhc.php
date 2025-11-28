@@ -94,27 +94,82 @@ function wuhang($ma,$bml){
 	
 }
 
-function shengxiao($ma, $bml)
+/**
+ * 新生肖计算算法 - 基于年份和号码
+ * @param int $ma 号码(1-49)
+ * @param mixed $year_or_date 年份(如2025)或日期(如"2025-11-28")
+ * @return string 生肖名称
+ */
+function shengxiao($ma, $year_or_date)
 {
-    $jiazhi = array('甲子', '乙丑', '丙寅', '丁卯', '戊辰', '己巳', '庚午', '辛未', '壬申', '癸酉', '甲戌', '乙亥', '丙子', '丁丑', '戊寅', '己卯', '庚辰', '辛巳', '壬午', '癸未', '甲申', '乙酉', '丙戌', '丁亥', '戊子', '己丑', '庚寅', '辛卯', '壬辰', '癸巳', '甲午', '乙未', '丙申', '丁酉', '戊戌', '己亥', '庚子', '辛丑', '壬寅', '癸卯', '甲辰', '乙巳', '丙午', '丁未', '戊申', '己酉', '庚戌', '辛亥', '壬子', '癸丑', '甲寅', '乙卯', '丙辰', '丁巳', '戊午', '己未', '庚申', '辛酉', '壬戌', '癸亥');
-    $index = 0;
-    foreach ($jiazhi as $key => $val) {
-        if ($val == $bml) {
-            $index = $key;
-            break;
+    // 基准年份: 2025年(蛇年)
+    $baseYear = 2025;
+
+    // 生肖顺序(从鼠开始)
+    $zodiacOrder = ['鼠', '牛', '虎', '兔', '龍', '蛇', '馬', '羊', '猴', '雞', '狗', '豬'];
+
+    // 2025年生肖对照表
+    $baseTable = [
+        '鼠' => [6, 18, 30, 42],
+        '牛' => [5, 17, 29, 41],
+        '虎' => [4, 16, 28, 40],
+        '兔' => [3, 15, 27, 39],
+        '龍' => [2, 14, 26, 38],
+        '蛇' => [1, 13, 25, 37, 49],  // 当年生肖5个号码
+        '馬' => [12, 24, 36, 48],
+        '羊' => [11, 23, 35, 47],
+        '猴' => [10, 22, 34, 46],
+        '雞' => [9, 21, 33, 45],
+        '狗' => [8, 20, 32, 44],
+        '豬' => [7, 19, 31, 43],
+    ];
+
+    // 提取年份
+    if (is_numeric($year_or_date) && strlen($year_or_date) == 4) {
+        // 直接传入年份
+        $year = (int)$year_or_date;
+    } else {
+        // 从日期字符串提取年份
+        $year = (int)date('Y', strtotime($year_or_date));
+    }
+
+    // 如果是基准年份,直接查表
+    if ($year === $baseYear) {
+        foreach ($baseTable as $zodiac => $numbers) {
+            if (in_array($ma, $numbers)) {
+                return $zodiac;
+            }
+        }
+        return '鼠';  // 默认返回
+    }
+
+    // 计算年份差
+    $yearDiff = $year - $baseYear;
+
+    // 生肖向前移动yearDiff位,构建新对照表
+    $newTable = [];
+    foreach ($baseTable as $zodiac => $numbers) {
+        // 找到当前生肖在顺序中的位置
+        $currentIndex = array_search($zodiac, $zodiacOrder);
+
+        // 计算新生肖位置 (向前移动yearDiff位)
+        $newIndex = (($currentIndex - $yearDiff) % 12 + 12) % 12;
+
+        // 获取新生肖
+        $newZodiac = $zodiacOrder[$newIndex];
+
+        // 号码不变,生肖改变
+        $newTable[$newZodiac] = $numbers;
+    }
+
+    // 查找号码对应的生肖
+    foreach ($newTable as $zodiac => $numbers) {
+        if (in_array($ma, $numbers)) {
+            return $zodiac;
         }
     }
-    $index = $index % 12 + 2;
-    $ma = $ma % 12;
-    $arr = array('鼠', '牛', '虎', '兔', '龍', '蛇', '馬', '羊', '猴', '雞', '狗', '豬');
-	$in= 0 ;
-    if ($index >= $ma) {
-      $in = $index - $ma;
-    } else {
-       $in =  $index - $ma + 12;
-    }
-	if($in>=12) $in -=12;
-	return $arr[$in];
+
+    return '鼠';  // 默认返回
 }
 function rshengxiao($sx, $bml)
 {
