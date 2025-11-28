@@ -289,10 +289,15 @@ class LotteryBetController extends BaseApiController
      *   "data": {
      *     "list": [
      *       {
-     *         "pid": 21401,
-     *         "name": "特码",
-     *         "peilv1": "42.0000",
-     *         "ifok": 1
+     *         "id": "bclass_24926",
+     *         "name": "特碼",
+     *         "type": "bclass"
+     *       },
+     *       {
+     *         "id": "play_21365",
+     *         "name": "四肖",
+     *         "type": "play",
+     *         "peilv1": "11.0000"
      *       }
      *     ]
      *   }
@@ -308,29 +313,67 @@ class LotteryBetController extends BaseApiController
             return $this->fail('请输入游戏ID');
         }
 
-        // 定义支持的玩法名称(包含简体、繁体及可能的别名)
-        $supportedPlays = [
-            '特码', '特碼',           // 特码(简繁体)
-            '特肖',                   // 特肖
-            '平码', '平碼', '正码', '正碼',  // 平码(简繁体及别名)
-            '六肖',                   // 六肖
-            '五肖',                   // 五肖
-            '四肖',                   // 四肖
-            '三肖'                    // 三肖
-        ];
+        // 定义支持的玩法名称
+        // 大类玩法(在 x_bclass 表中): 特碼、正碼(平码)、特肖
+        $bclassPlays = ['特码', '特碼', '特肖', '平码', '平碼', '正码', '正碼'];
 
-        // 查询玩法列表
-        $list = \think\facade\Db::table('x_play')
+        // 具体玩法(在 x_play 表中): 三肖、四肖、五肖、六肖
+        $playPlays = ['三肖', '四肖', '五肖', '六肖'];
+
+        // 1. 从 x_bclass 表查询玩法大类
+        $bclassList = \think\facade\Db::table('x_bclass')
             ->where('gid', $gid)
-            ->where('ifok', 1)  // 只查询开放的玩法
-            ->whereIn('name', $supportedPlays)  // 只返回支持的玩法
-            ->field('pid,name,peilv1,ifok')
-            ->order('pid', 'asc')
+            ->where('ifok', 1)
+            ->whereIn('name', $bclassPlays)
+            ->field('id,name,xsort')
             ->select()
             ->toArray();
 
+        // 2. 从 x_play 表查询具体玩法
+        $playList = \think\facade\Db::table('x_play')
+            ->where('gid', $gid)
+            ->where('ifok', 1)
+            ->whereIn('name', $playPlays)
+            ->field('pid as id,name,peilv1')
+            ->select()
+            ->toArray();
+
+        // 3. 合并结果并标记类型
+        $result = [];
+
+        // 添加大类玩法
+        foreach ($bclassList as $item) {
+            $result[] = [
+                'id' => 'bclass_' . $item['id'],
+                'name' => $item['name'],
+                'type' => 'bclass',
+                'sort' => $item['xsort']
+            ];
+        }
+
+        // 添加具体玩法
+        foreach ($playList as $item) {
+            $result[] = [
+                'id' => 'play_' . $item['id'],
+                'name' => $item['name'],
+                'type' => 'play',
+                'peilv1' => $item['peilv1'],
+                'sort' => 99  // 默认排在后面
+            ];
+        }
+
+        // 4. 按排序号排序
+        usort($result, function($a, $b) {
+            return $a['sort'] - $b['sort'];
+        });
+
+        // 5. 移除排序字段
+        foreach ($result as &$item) {
+            unset($item['sort']);
+        }
+
         return $this->success('获取成功', [
-            'list' => $list,
+            'list' => $result,
         ]);
     }
 
