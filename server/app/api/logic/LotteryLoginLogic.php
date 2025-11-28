@@ -104,17 +104,22 @@ class LotteryLoginLogic extends BaseLogic
             // 步骤7: 记录成功日志
             self::logLoginSuccess($username, $ip);
 
-            // 步骤8: 生成 token（使用新系统的 UserTokenService）
-            $userInfo = self::generateToken($user, $params['terminal'] ?? 1);
+            // 步骤8: 生成 token（直接使用 x_user 的 userid）
+            $token = UserTokenService::setToken($user['userid'], $params['terminal'] ?? 1);
 
-            // 步骤9: 合并老系统的用户信息（保留 kmoney 等字段）
-            $userInfo['legacy_userid'] = $user['userid'];     // 老系统的 userid
-            $userInfo['legacy_username'] = $user['username']; // 老系统的 username
-            $userInfo['kmoney'] = $user['kmoney'] ?? 0;       // 老系统的余额
-            $userInfo['legacy_status'] = $user['status'];     // 老系统的状态
-
-            // 返回登录信息
-            return $userInfo;
+            // 步骤9: 返回用户信息
+            return [
+                'userInfo' => [
+                    'id' => $user['userid'],
+                    'username' => $user['username'],
+                    'nickname' => $user['name'] ?: $user['username'],
+                    'avatar' => $user['avatar'] ?: '/static/default_avatar.png',
+                    'mobile' => $user['tel'] ?: '',
+                    'money' => $user['kmoney'] ?? 0,
+                    'status' => $user['status'],
+                ],
+                'token' => $token['token'] ?? $token,
+            ];
 
         } catch (\Exception $e) {
             self::setError($e->getMessage());
@@ -143,64 +148,6 @@ class LotteryLoginLogic extends BaseLogic
     }
 
 
-    /**
-     * @notes 生成 Token（使用新系统的 UserTokenService）
-     * @param array $legacyUser x_user 表的用户数据
-     * @param int $terminal 终端类型
-     * @return array 包含 token 和用户信息
-     * @throws \Exception
-     * @author Claude
-     * @date 2025/11/27
-     */
-    private static function generateToken(array $legacyUser, int $terminal): array
-    {
-        // 步骤1: 查找或创建 la_user 映射记录
-        $newUserId = self::findOrCreateUserMapping($legacyUser);
-
-        // 步骤2: 使用新系统的 UserTokenService 生成 token
-        $userInfo = UserTokenService::setToken($newUserId, $terminal);
-
-        return $userInfo;
-    }
-
-
-    /**
-     * @notes 查找或创建用户映射（x_user -> la_user）
-     * @param array $legacyUser x_user 表的用户数据
-     * @return int la_user 表的用户ID
-     * @throws \Exception
-     * @author Claude
-     * @date 2025/11/27
-     */
-    private static function findOrCreateUserMapping(array $legacyUser): int
-    {
-        // 方案A: 在 la_user 表中查找 account 相同的记录
-        $newUser = User::where('account', $legacyUser['username'])->find();
-
-        if ($newUser) {
-            return $newUser->id;
-        }
-
-        // 方案B: 创建新用户映射记录
-        $userSn = User::createUserSn();
-        $avatar = ConfigService::get('default_image', 'user_avatar');
-
-        $newUser = User::create([
-            'sn' => $userSn,
-            'avatar' => $avatar,
-            'nickname' => $legacyUser['name'] ?: ('用户' . $legacyUser['userid']),
-            'account' => $legacyUser['username'],
-            'mobile' => $legacyUser['tel'] ?: '',
-            // 密码字段可以留空或设置一个随机密码（因为实际验证在 x_user）
-            'password' => md5(uniqid()),
-            'channel' => 1,
-            'sex' => self::convertSex($legacyUser['sex'] ?? ''),
-            'create_time' => strtotime($legacyUser['regtime'] ?? 'now'),
-            'status' => $legacyUser['status'] ?? 1,
-        ]);
-
-        return $newUser->id;
-    }
 
 
     /**
@@ -258,24 +205,17 @@ class LotteryLoginLogic extends BaseLogic
 
 
     /**
-     * @notes 根据新系统用户ID获取老系统用户信息
-     * @param int $newUserId la_user 表的用户ID
+     * @notes 根据用户ID获取老系统用户信息
+     * @param int $userid x_user 表的用户ID
      * @return array|null x_user 表的用户信息
      * @author Claude
      * @date 2025/11/27
      */
-    public static function getLegacyUserByNewUserId(int $newUserId)
+    public static function getLegacyUserByNewUserId(int $userid)
     {
-        // 通过 account 字段关联查询
-        $newUser = User::find($newUserId);
-
-        if (!$newUser) {
-            return null;
-        }
-
-        // 查询老系统用户
+        // 直接查询 x_user 表
         $legacyUser = Db::table('x_user')
-            ->where('username', $newUser->account)
+            ->where('userid', $userid)
             ->where('status', 1)
             ->find();
 
