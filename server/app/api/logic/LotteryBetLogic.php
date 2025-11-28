@@ -608,18 +608,8 @@ class LotteryBetLogic
             $zodiacTable = ZodiacYearService::getZodiacTableByYear($year);
             $numberMap = ZodiacYearService::getNumberMapByYear($year);
 
-            // 3. 查询赔率配置(从x_play表)
-            // TODO: 这里需要根据实际的pid来查询,暂时使用固定赔率
-            $odds = [
-                'special_number_normal' => 42,  // 普通号码特码赔率
-                'special_number_49' => 47,      // 49号特码赔率(客户确认)
-                'normal_number' => 8,           // 平码赔率
-                'special_zodiac' => 12,         // 特肖赔率
-                'three_zodiac' => 7,            // 三肖赔率
-                'four_zodiac' => 5,             // 四肖赔率
-                'five_zodiac' => 4,             // 五肖赔率
-                'six_zodiac' => 3,              // 六肖赔率
-            ];
+            // 3. 从x_play表查询赔率配置
+            $odds = self::getOddsFromDatabase();
 
             // 4. 构建号码数据(01-49)
             $numbers = [];
@@ -686,6 +676,118 @@ class LotteryBetLogic
         } catch (\Exception $e) {
             self::setError('获取号码数据失败: ' . $e->getMessage());
             return false;
+        }
+    }
+
+
+    /**
+     * @notes 从x_play表查询赔率配置
+     * @return array 赔率配置数组
+     * @author Claude
+     * @date 2025/11/28
+     *
+     * 查询逻辑:
+     * 1. 特码赔率: 查询pid对应号码01-49的peilv1
+     * 2. 平码赔率: 查询平码玩法的peilv1
+     * 3. 生肖赔率: 查询特肖、三肖、四肖、五肖、六肖的peilv1
+     *
+     * 表结构参考:
+     * - x_play.pid: 玩法ID
+     * - x_play.name: 玩法名称(如"01","特肖","三肖")
+     * - x_play.peilv1: 普通用户赔率
+     * - x_play.gid: 游戏ID (200=香港六合彩)
+     * - x_play.ifok: 是否启用 (1=启用)
+     */
+    private static function getOddsFromDatabase(): array
+    {
+        // 默认赔率(兜底值)
+        $defaultOdds = [
+            'special_number_normal' => 42.0,
+            'special_number_49' => 47.0,
+            'normal_number' => 8.0,
+            'special_zodiac' => 12.0,
+            'three_zodiac' => 7.0,
+            'four_zodiac' => 5.0,
+            'five_zodiac' => 4.0,
+            'six_zodiac' => 3.0,
+        ];
+
+        try {
+            // 查询特码赔率(号码01的赔率,通用赔率)
+            $specialNumberNormal = Db::table('x_play')
+                ->where('gid', 200)
+                ->where('name', '01')
+                ->where('ifok', 1)
+                ->value('peilv1');
+
+            // 查询49号特码赔率
+            $specialNumber49 = Db::table('x_play')
+                ->where('gid', 200)
+                ->where('name', '49')
+                ->where('ifok', 1)
+                ->value('peilv1');
+
+            // 查询平码赔率(查询平码玩法)
+            $normalNumber = Db::table('x_play')
+                ->where('gid', 200)
+                ->where('name', 'like', '%平码%')
+                ->where('ifok', 1)
+                ->value('peilv1');
+
+            // 查询特肖赔率
+            $specialZodiac = Db::table('x_play')
+                ->where('gid', 200)
+                ->where('name', 'like', '%特肖%')
+                ->where('ifok', 1)
+                ->value('peilv1');
+
+            // 查询三肖赔率
+            $threeZodiac = Db::table('x_play')
+                ->where('gid', 200)
+                ->where('name', 'like', '%三肖%')
+                ->where('name', 'not like', '%不中%')
+                ->where('ifok', 1)
+                ->value('peilv1');
+
+            // 查询四肖赔率
+            $fourZodiac = Db::table('x_play')
+                ->where('gid', 200)
+                ->where('name', 'like', '%四肖%')
+                ->where('name', 'not like', '%不中%')
+                ->where('ifok', 1)
+                ->value('peilv1');
+
+            // 查询五肖赔率
+            $fiveZodiac = Db::table('x_play')
+                ->where('gid', 200)
+                ->where('name', 'like', '%五肖%')
+                ->where('name', 'not like', '%不中%')
+                ->where('ifok', 1)
+                ->value('peilv1');
+
+            // 查询六肖赔率
+            $sixZodiac = Db::table('x_play')
+                ->where('gid', 200)
+                ->where('name', 'like', '%六肖%')
+                ->where('name', 'not like', '%不中%')
+                ->where('ifok', 1)
+                ->value('peilv1');
+
+            // 组装赔率数组(使用数据库值,如果查询失败则使用默认值)
+            return [
+                'special_number_normal' => $specialNumberNormal ?: $defaultOdds['special_number_normal'],
+                'special_number_49' => $specialNumber49 ?: $defaultOdds['special_number_49'],
+                'normal_number' => $normalNumber ?: $defaultOdds['normal_number'],
+                'special_zodiac' => $specialZodiac ?: $defaultOdds['special_zodiac'],
+                'three_zodiac' => $threeZodiac ?: $defaultOdds['three_zodiac'],
+                'four_zodiac' => $fourZodiac ?: $defaultOdds['four_zodiac'],
+                'five_zodiac' => $fiveZodiac ?: $defaultOdds['five_zodiac'],
+                'six_zodiac' => $sixZodiac ?: $defaultOdds['six_zodiac'],
+            ];
+
+        } catch (\Exception $e) {
+            // 查询失败时返回默认赔率
+            return $defaultOdds;
         }
     }
 }
