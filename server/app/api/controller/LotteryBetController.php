@@ -308,8 +308,16 @@ class LotteryBetController extends BaseApiController
             return $this->fail('请输入游戏ID');
         }
 
-        // 定义支持的玩法名称
-        $supportedPlays = ['特码', '特肖', '平码', '六肖', '五肖', '四肖', '三肖'];
+        // 定义支持的玩法名称(包含简体、繁体及可能的别名)
+        $supportedPlays = [
+            '特码', '特碼',           // 特码(简繁体)
+            '特肖',                   // 特肖
+            '平码', '平碼', '正码', '正碼',  // 平码(简繁体及别名)
+            '六肖',                   // 六肖
+            '五肖',                   // 五肖
+            '四肖',                   // 四肖
+            '三肖'                    // 三肖
+        ];
 
         // 查询玩法列表
         $list = \think\facade\Db::table('x_play')
