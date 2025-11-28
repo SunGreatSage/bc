@@ -112,7 +112,6 @@ class LotteryLoginLogic extends BaseLogic
                     'id' => $user['userid'],
                     'username' => $user['username'],
                     'nickname' => $user['name'] ?: $user['username'],
-                    'avatar' => $user['avatar'] ?: '/static/default_avatar.png',
                     'mobile' => $user['tel'] ?: '',
                     'money' => $user['kmoney'] ?? 0,
                     'status' => $user['status'],
