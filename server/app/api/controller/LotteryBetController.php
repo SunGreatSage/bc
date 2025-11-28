@@ -259,7 +259,7 @@ class LotteryBetController extends BaseApiController
         // 查询游戏信息
         $game = \think\facade\Db::table('x_game')
             ->where('gid', $gid)
-            ->field('thisqishu,name')
+            ->field('thisqishu,gname')
             ->find();
 
         if (!$game) {
@@ -268,7 +268,7 @@ class LotteryBetController extends BaseApiController
 
         return $this->success('获取成功', [
             'qishu' => $game['thisqishu'],
-            'game_name' => $game['name'],
+            'game_name' => $game['gname'],
         ]);
     }
 
