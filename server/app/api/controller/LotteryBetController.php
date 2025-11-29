@@ -26,27 +26,36 @@ class LotteryBetController extends BaseApiController
 
 
     /**
-     * @notes 投注下单接口
+     * @notes 投注下单接口(支持批量)
      * @return Json
      * @author Claude
-     * @date 2025/11/27
+     * @date 2025/11/29
      *
-     * 请求参数:
-     * @param int gid 游戏ID(必填, 200=新澳门六合彩)
-     * @param string qishu 期号(必填, 如2025112)
-     * @param int pid 玩法ID(必填, 如21401=特码)
-     * @param string bet_content 投注内容(必填, 如"08")
-     * @param float bet_amount 投注金额(必填, 必须为正整数)
+     * 请求参数(JSON格式):
+     * {
+     *   "gid": 200,
+     *   "qishu": "2025334",
+     *   "orders": [
+     *     {"pid": "bclass_24927", "bet_content": "26", "bet_amount": 1},
+     *     {"pid": "bclass_24927", "bet_content": "08", "bet_amount": 2},
+     *     {"pid": "play_97000135", "bet_content": "鼠,牛,虎,兔", "bet_amount": 5}
+     *   ]
+     * }
      *
      * 响应示例:
      * {
      *   "code": 1,
      *   "msg": "投注成功",
      *   "data": {
-     *     "tid": "20251127141530001",
-     *     "balance": "9900.00",
-     *     "qishu": "2025112",
-     *     "expected_prize": "4200.00"
+     *     "success_count": 3,
+     *     "fail_count": 0,
+     *     "total_amount": "8.00",
+     *     "balance": "92.00",
+     *     "results": [
+     *       {"tid": 20000001, "status": "success", "bet_content": "26", "bet_amount": "1.00"},
+     *       {"tid": 20000002, "status": "success", "bet_content": "08", "bet_amount": "2.00"},
+     *       {"tid": 20000003, "status": "success", "bet_content": "鼠,牛,虎,兔", "bet_amount": "5.00"}
+     *     ]
      *   }
      * }
      */
@@ -65,26 +74,7 @@ class LotteryBetController extends BaseApiController
         // 获取请求参数
         $gid = $this->request->param('gid/d', 0);
         $qishu = $this->request->param('qishu', '');
-        $pidParam = $this->request->param('pid', '');  // 支持 "play_123" 或 "bclass_456" 或纯数字
-        $betContent = $this->request->param('bet_content', '');
-        $betAmount = $this->request->param('bet_amount/f', 0);
-
-        // 解析 pid 参数
-        // 支持格式: "play_23379272", "bclass_24926", "23379272"
-        $pid = 0;
-        $pidType = '';  // play 或 bclass
-        if (!empty($pidParam)) {
-            if (strpos($pidParam, 'play_') === 0) {
-                $pid = (int)substr($pidParam, 5);
-                $pidType = 'play';
-            } elseif (strpos($pidParam, 'bclass_') === 0) {
-                $pid = (int)substr($pidParam, 7);
-                $pidType = 'bclass';
-            } else {
-                $pid = (int)$pidParam;
-                $pidType = 'play';  // 默认当作 play
-            }
-        }
+        $orders = $this->request->param('orders/a', []);  // 订单数组
 
         // 参数验证
         if (empty($gid)) {
@@ -95,35 +85,133 @@ class LotteryBetController extends BaseApiController
             return $this->fail('请输入期号');
         }
 
-        if (empty($pid)) {
-            return $this->fail('请选择玩法');
+        if (empty($orders) || !is_array($orders)) {
+            return $this->fail('请输入投注订单');
         }
 
-        if (empty($betContent)) {
-            return $this->fail('请输入投注内容');
+        if (count($orders) > 100) {
+            return $this->fail('单次最多投注100注');
         }
 
-        if ($betAmount <= 0) {
-            return $this->fail('投注金额必须大于0');
+        // 处理每个订单
+        $results = [];
+        $successCount = 0;
+        $failCount = 0;
+        $totalAmount = 0;
+        $lastBalance = 0;
+        $ip = $this->request->ip();
+
+        foreach ($orders as $index => $order) {
+            // 解析 pid 参数
+            $pidParam = $order['pid'] ?? '';
+            $betContent = $order['bet_content'] ?? '';
+            $betAmount = (float)($order['bet_amount'] ?? 0);
+
+            // 解析 pid 格式: "play_123", "bclass_456", "123"
+            $pid = 0;
+            $pidType = 'play';
+            if (!empty($pidParam)) {
+                if (strpos($pidParam, 'play_') === 0) {
+                    $pid = (int)substr($pidParam, 5);
+                    $pidType = 'play';
+                } elseif (strpos($pidParam, 'bclass_') === 0) {
+                    $pid = (int)substr($pidParam, 7);
+                    $pidType = 'bclass';
+                } else {
+                    $pid = (int)$pidParam;
+                    $pidType = 'play';
+                }
+            }
+
+            // 单项验证
+            if (empty($pid)) {
+                $results[] = [
+                    'index' => $index,
+                    'status' => 'fail',
+                    'error' => '请选择玩法',
+                    'bet_content' => $betContent,
+                ];
+                $failCount++;
+                continue;
+            }
+
+            if (empty($betContent)) {
+                $results[] = [
+                    'index' => $index,
+                    'status' => 'fail',
+                    'error' => '请输入投注内容',
+                    'bet_content' => $betContent,
+                ];
+                $failCount++;
+                continue;
+            }
+
+            if ($betAmount <= 0) {
+                $results[] = [
+                    'index' => $index,
+                    'status' => 'fail',
+                    'error' => '投注金额必须大于0',
+                    'bet_content' => $betContent,
+                ];
+                $failCount++;
+                continue;
+            }
+
+            // 调用投注逻辑
+            $result = LotteryBetLogic::placeBet([
+                'legacy_userid' => $legacyUser['userid'],
+                'gid' => $gid,
+                'qishu' => $qishu,
+                'pid' => $pid,
+                'pid_type' => $pidType,
+                'bet_content' => $betContent,
+                'bet_amount' => $betAmount,
+                'ip' => $ip,
+            ]);
+
+            if ($result === false) {
+                $results[] = [
+                    'index' => $index,
+                    'status' => 'fail',
+                    'error' => LotteryBetLogic::getError(),
+                    'bet_content' => $betContent,
+                    'bet_amount' => number_format($betAmount, 2, '.', ''),
+                ];
+                $failCount++;
+            } else {
+                $results[] = [
+                    'index' => $index,
+                    'status' => 'success',
+                    'tid' => $result['tid'],
+                    'bet_content' => $betContent,
+                    'bet_amount' => $result['bet_amount'],
+                    'play_name' => $result['play_name'],
+                    'peilv' => $result['peilv'],
+                    'expected_prize' => $result['expected_prize'],
+                ];
+                $successCount++;
+                $totalAmount += $betAmount;
+                $lastBalance = $result['balance'];
+            }
         }
 
-        // 调用投注逻辑
-        $result = LotteryBetLogic::placeBet([
-            'legacy_userid' => $legacyUser['userid'],
-            'gid' => $gid,
+        // 全部失败
+        if ($successCount == 0) {
+            return $this->fail('投注失败', [
+                'success_count' => 0,
+                'fail_count' => $failCount,
+                'results' => $results,
+            ]);
+        }
+
+        return $this->success('投注成功', [
+            'success_count' => $successCount,
+            'fail_count' => $failCount,
+            'total_amount' => number_format($totalAmount, 2, '.', ''),
+            'balance' => $lastBalance,
             'qishu' => $qishu,
-            'pid' => $pid,
-            'pid_type' => $pidType,  // play 或 bclass
-            'bet_content' => $betContent,
-            'bet_amount' => $betAmount,
-            'ip' => $this->request->ip(),
+            'results' => $results,
         ]);
-
-        if ($result === false) {
-            return $this->fail(LotteryBetLogic::getError());
-        }
-
-        return $this->success('投注成功', $result);
     }
 
 
