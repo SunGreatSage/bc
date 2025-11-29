@@ -149,16 +149,63 @@ class LotteryBetLogic
 
             // ========== 阶段2: 查询玩法配置 ==========
             // 参考makelib.php:225-238
+            //
+            // 玩法层级结构:
+            // x_bclass (大类: 特碼/正碼/連碼等) -> bid
+            // x_class (子类) -> cid
+            // x_play (具体玩法: 号码/生肖等) -> pid
+            //
+            // 支持两种投注方式:
+            // 1. pid_type='play': 直接通过 x_play.pid 投注具体玩法
+            // 2. pid_type='bclass': 通过 x_bclass.id 投注大类,根据bet_content查找具体pid
 
-            $play = Db::table('x_play')
-                ->where('gid', $gid)
-                ->where('pid', $pid)
-                ->field('bid,sid,cid,peilv1,peilv2,ifok,name,ztype,znum1,znum2')
-                ->find();
+            $pidType = $params['pid_type'] ?? 'play';
+            $play = null;
 
-            if (!$play) {
-                self::setError('玩法不存在');
-                return false;
+            if ($pidType === 'bclass') {
+                // bclass模式: 根据大类ID和投注内容查找具体玩法
+                // 例如: bclass_24926 (特碼大类) + bet_content="08" -> 找到号码08的pid
+                $bclass = Db::table('x_bclass')
+                    ->where('id', $pid)
+                    ->where('gid', $gid)
+                    ->where('ifok', 1)
+                    ->field('bid,name')
+                    ->find();
+
+                if (!$bclass) {
+                    self::setError('玩法大类不存在');
+                    return false;
+                }
+
+                // 根据大类和投注内容查找具体玩法
+                // bet_content 可能是号码(如"08")或生肖(如"虎")
+                $play = Db::table('x_play')
+                    ->where('gid', $gid)
+                    ->where('bid', $bclass['bid'])
+                    ->where('name', $betContent)
+                    ->where('ifok', 1)
+                    ->field('pid,bid,sid,cid,peilv1,peilv2,ifok,name,ztype,znum1,znum2')
+                    ->find();
+
+                if (!$play) {
+                    self::setError('投注内容无效: ' . $betContent . ' (大类: ' . $bclass['name'] . ')');
+                    return false;
+                }
+
+                // 更新pid为实际的玩法pid
+                $pid = $play['pid'];
+            } else {
+                // play模式: 直接通过pid查询
+                $play = Db::table('x_play')
+                    ->where('gid', $gid)
+                    ->where('pid', $pid)
+                    ->field('pid,bid,sid,cid,peilv1,peilv2,ifok,name,ztype,znum1,znum2')
+                    ->find();
+
+                if (!$play) {
+                    self::setError('玩法不存在 (pid=' . $pid . ')');
+                    return false;
+                }
             }
 
             // 检查玩法是否开放

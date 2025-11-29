@@ -65,9 +65,26 @@ class LotteryBetController extends BaseApiController
         // 获取请求参数
         $gid = $this->request->param('gid/d', 0);
         $qishu = $this->request->param('qishu', '');
-        $pid = $this->request->param('pid/d', 0);
+        $pidParam = $this->request->param('pid', '');  // 支持 "play_123" 或 "bclass_456" 或纯数字
         $betContent = $this->request->param('bet_content', '');
         $betAmount = $this->request->param('bet_amount/f', 0);
+
+        // 解析 pid 参数
+        // 支持格式: "play_23379272", "bclass_24926", "23379272"
+        $pid = 0;
+        $pidType = '';  // play 或 bclass
+        if (!empty($pidParam)) {
+            if (strpos($pidParam, 'play_') === 0) {
+                $pid = (int)substr($pidParam, 5);
+                $pidType = 'play';
+            } elseif (strpos($pidParam, 'bclass_') === 0) {
+                $pid = (int)substr($pidParam, 7);
+                $pidType = 'bclass';
+            } else {
+                $pid = (int)$pidParam;
+                $pidType = 'play';  // 默认当作 play
+            }
+        }
 
         // 参数验证
         if (empty($gid)) {
@@ -96,6 +113,7 @@ class LotteryBetController extends BaseApiController
             'gid' => $gid,
             'qishu' => $qishu,
             'pid' => $pid,
+            'pid_type' => $pidType,  // play 或 bclass
             'bet_content' => $betContent,
             'bet_amount' => $betAmount,
             'ip' => $this->request->ip(),
