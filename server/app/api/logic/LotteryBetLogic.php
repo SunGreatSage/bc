@@ -797,8 +797,9 @@ class LotteryBetLogic
         $yearZodiac = ZodiacYearService::getYearZodiac($year);
 
         // 家禽/野兽分类定义(固定的生肖分类,来自老系统 malhc.php)
-        $domesticZodiacs = ['牛', '馬', '羊', '雞', '狗', '豬'];  // 家禽
-        $wildZodiacs = ['鼠', '虎', '兔', '龍', '蛇', '猴'];      // 野兽
+        // 注意:使用简体字,与ZodiacYearService返回的数据保持一致
+        $domesticZodiacs = ['牛', '马', '羊', '鸡', '狗', '猪'];  // 家禽(简体)
+        $wildZodiacs = ['鼠', '虎', '兔', '龙', '蛇', '猴'];      // 野兽(简体)
 
         // 查询赔率(普通玩法和中/不中玩法)
         $oddsData = self::getZodiacOddsFromDatabase($playName, $gid);
