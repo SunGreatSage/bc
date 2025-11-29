@@ -9,7 +9,10 @@
 namespace app\api\logic;
 
 use app\common\logic\BaseLogic;
+use app\common\model\user\User;
+use app\api\service\UserTokenService;
 use think\facade\Db;
+use think\facade\Config;
 
 /**
  * 彩票系统登录逻辑（基于 x_user 表）
@@ -32,19 +35,22 @@ class LotteryLoginLogic extends BaseLogic
      * @author Claude
      * @date 2025/11/27
      *
-     * 登录流程（完全按照老系统逻辑）：
+     * 登录流程：
      * 1. 验证用户名格式
      * 2. 检查密码错误次数（超过5次禁止登录）
      * 3. 查询 x_user 表验证密码
      * 4. 验证账号状态（status=1）
-     * 5. 更新登录信息（登录次数、最后登录时间、IP）
-     * 6. 生成 token 返回
+     * 5. 更新老系统登录信息
+     * 6. 同步/创建新系统 la_user 用户
+     * 7. 通过 UserTokenService 生成正规 token（写入 la_user_session）
+     * 8. 返回用户信息
      */
     public static function loginByXUser(array $params)
     {
         try {
             $username = strtoupper($params['username']); // 转大写
             $password = $params['password'];
+            $terminal = $params['terminal'] ?? 1;
             $ip = request()->ip();
 
             // 步骤1: 验证用户名格式（1-12位字母数字下划线）
@@ -63,15 +69,16 @@ class LotteryLoginLogic extends BaseLogic
 
             // 步骤3: 加密密码（与老系统一致）
             $encryptedPassword = self::encryptPassword($password);
-            // 步骤4: 查询用户
-            $user = Db::table('x_user')
+
+            // 步骤4: 查询老系统用户
+            $legacyUser = Db::table('x_user')
                 ->where('username', $username)
                 ->where('userpass', $encryptedPassword)
                 ->where('ifagent', 0) // 非代理
                 ->where('ifson', 0)   // 非子账号
                 ->find();
 
-            if (!$user) {
+            if (!$legacyUser) {
                 // 记录失败日志
                 self::logLoginFail($username, $ip);
 
@@ -85,13 +92,13 @@ class LotteryLoginLogic extends BaseLogic
             }
 
             // 步骤5: 检查账号状态
-            if ($user['status'] != 1) {
+            if ($legacyUser['status'] != 1) {
                 throw new \Exception('账号已被禁用');
             }
 
-            // 步骤6: 更新登录信息
+            // 步骤6: 更新老系统登录信息
             Db::table('x_user')
-                ->where('userid', $user['userid'])
+                ->where('userid', $legacyUser['userid'])
                 ->update([
                     'errortimes' => 0,
                     'logintimes' => Db::raw('logintimes+1'),
@@ -103,26 +110,74 @@ class LotteryLoginLogic extends BaseLogic
             // 步骤7: 记录成功日志
             self::logLoginSuccess($username, $ip);
 
-            // 步骤8: 生成 token（直接基于 userid）
-            $token = self::generateSimpleToken($user['userid']);
+            // 步骤8: 同步/创建新系统用户（la_user 表）
+            $newUser = self::syncToNewUser($legacyUser);
 
-            // 步骤9: 返回用户信息
+            // 步骤9: 通过 UserTokenService 生成正规 token（写入 la_user_session）
+            $userInfo = UserTokenService::setToken($newUser['id'], $terminal);
+
+            // 步骤10: 返回用户信息
             return [
                 'userInfo' => [
-                    'id' => $user['userid'],
-                    'username' => $user['username'],
-                    'nickname' => $user['name'] ?: $user['username'],
-                    'mobile' => $user['tel'] ?: '',
-                    'money' => $user['kmoney'] ?? 0,
-                    'status' => $user['status'],
+                    'id' => $newUser['id'],              // 新系统 ID
+                    'legacy_userid' => $legacyUser['userid'], // 老系统 userid
+                    'username' => $legacyUser['username'],
+                    'nickname' => $userInfo['nickname'] ?? ($legacyUser['name'] ?: $legacyUser['username']),
+                    'mobile' => $userInfo['mobile'] ?? ($legacyUser['tel'] ?: ''),
+                    'money' => $legacyUser['kmoney'] ?? 0,
+                    'status' => $legacyUser['status'],
                 ],
-                'token' => $token,
+                'token' => $userInfo['token'],
             ];
 
         } catch (\Exception $e) {
             self::setError($e->getMessage());
             return false;
         }
+    }
+
+
+    /**
+     * @notes 同步老系统用户到新系统（la_user 表）
+     * @param array $legacyUser x_user 表的用户数据
+     * @return array 新系统用户数据
+     * @author Claude
+     * @date 2025/11/29
+     *
+     * 策略：
+     * - 使用 account 字段存储老系统 username（唯一索引）
+     * - 使用 sn 字段存储老系统 userid（便于映射查询）
+     */
+    private static function syncToNewUser(array $legacyUser): array
+    {
+        // 使用老系统 username 作为 account 查找是否已存在
+        $newUser = User::where('account', $legacyUser['username'])->find();
+
+        if ($newUser) {
+            // 已存在，更新登录信息
+            $newUser->login_time = time();
+            $newUser->login_ip = request()->ip();
+            $newUser->save();
+            return $newUser->toArray();
+        }
+
+        // 不存在，创建新用户
+        // sn 使用老系统 userid，确保一一对应
+        $newUser = User::create([
+            'sn' => $legacyUser['userid'],  // 使用老系统 userid 作为 sn
+            'account' => $legacyUser['username'],  // 老系统用户名
+            'nickname' => $legacyUser['name'] ?: $legacyUser['username'],
+            'mobile' => $legacyUser['tel'] ?: '',
+            'avatar' => '',
+            'password' => '',  // 密码验证走老系统，这里不存
+            'channel' => 3,    // H5
+            'login_time' => time(),
+            'login_ip' => request()->ip(),
+            'create_time' => time(),
+            'update_time' => time(),
+        ]);
+
+        return $newUser->toArray();
     }
 
 
@@ -144,26 +199,6 @@ class LotteryLoginLogic extends BaseLogic
     private static function encryptPassword(string $password): string
     {
         return md5(md5($password) . self::PASSWORD_SALT);
-    }
-
-
-    /**
-     * @notes 生成简单的Token（基于 userid）
-     * @param int $userid x_user 表的用户ID
-     * @return string Token字符串
-     * @author Claude
-     * @date 2025/11/27
-     */
-    private static function generateSimpleToken(int $userid): string
-    {
-        // 生成简单的token: md5(userid + 时间戳 + 随机数)
-        $token = md5($userid . time() . uniqid());
-
-        // 将token存入 x_user 表的 token 字段(如果有的话)
-        // 或者存入 session/缓存
-        // 这里简化处理,直接返回token
-
-        return $token;
     }
 
 
@@ -224,21 +259,50 @@ class LotteryLoginLogic extends BaseLogic
 
 
     /**
-     * @notes 根据用户ID获取老系统用户信息
-     * @param int $userid x_user 表的用户ID
+     * @notes 根据新系统用户ID获取老系统用户信息
+     * @param int $newUserId la_user 表的用户ID
      * @return array|null x_user 表的用户信息
      * @author Claude
-     * @date 2025/11/27
+     * @date 2025/11/29
+     *
+     * 映射关系：
+     * - la_user.sn 存储的是 x_user.userid
+     * - la_user.account 存储的是 x_user.username
      */
-    public static function getLegacyUserByNewUserId(int $userid)
+    public static function getLegacyUserByNewUserId(int $newUserId)
     {
-        // 直接查询 x_user 表
-        $legacyUser = Db::table('x_user')
-            ->where('userid', $userid)
-            ->where('status', 1)
-            ->find();
+        // 首先从 la_user 获取 sn（存储的是老系统 userid）
+        $newUser = User::where('id', $newUserId)->find();
 
-        return $legacyUser;
+        if (!$newUser) {
+            return null;
+        }
+
+        // 方法1：通过 sn（老系统 userid）查询
+        if ($newUser->sn) {
+            $legacyUser = Db::table('x_user')
+                ->where('userid', $newUser->sn)
+                ->where('status', 1)
+                ->find();
+
+            if ($legacyUser) {
+                return $legacyUser;
+            }
+        }
+
+        // 方法2：通过 account（老系统 username）查询
+        if ($newUser->account) {
+            $legacyUser = Db::table('x_user')
+                ->where('username', $newUser->account)
+                ->where('status', 1)
+                ->find();
+
+            if ($legacyUser) {
+                return $legacyUser;
+            }
+        }
+
+        return null;
     }
 
 
