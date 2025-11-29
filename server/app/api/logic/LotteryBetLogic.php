@@ -533,23 +533,79 @@ class LotteryBetLogic
         // 查询总数
         $total = $query->count();
 
-        // 分页查询
+        // 分页查询 - 包含pid和bid用于关联查询
         $list = $query->page($page, $limit)
-            ->field('tid,qishu,gid,content,je,peilv1,z,prize,time')
+            ->field('tid,qishu,gid,bid,pid,content,je,peilv1,z,prize,time')
             ->select()
             ->toArray();
 
+        // 缓存游戏名称和玩法大类名称,避免重复查询
+        $gameCache = [];
+        $bclassCache = [];
+        $playCache = [];
+
         // 关联查询玩法名称
         foreach ($list as &$item) {
-            $play = Db::table('x_play')
-                ->where('pid', $item['pid'] ?? 0)
-                ->field('name')
-                ->find();
+            // 1. 查询游戏名称
+            $gid = $item['gid'];
+            if (!isset($gameCache[$gid])) {
+                $game = Db::table('x_game')
+                    ->where('gid', $gid)
+                    ->field('gname')
+                    ->find();
+                $gameCache[$gid] = $game['gname'] ?? '';
+            }
+            $item['game_name'] = $gameCache[$gid];
 
-            $item['play_name'] = $play['name'] ?? '';
+            // 2. 查询玩法大类名称(x_bclass)
+            $bid = $item['bid'];
+            if (!isset($bclassCache[$bid])) {
+                $bclass = Db::table('x_bclass')
+                    ->where('bid', $bid)
+                    ->field('name')
+                    ->find();
+                $bclassCache[$bid] = $bclass['name'] ?? '';
+            }
+            $item['bclass_name'] = $bclassCache[$bid];
 
-            // 格式化中奖状态
+            // 3. 查询具体玩法名称(x_play)
+            $pid = $item['pid'];
+            if (!isset($playCache[$pid])) {
+                $play = Db::table('x_play')
+                    ->where('pid', $pid)
+                    ->field('name')
+                    ->find();
+                $playCache[$pid] = $play['name'] ?? '';
+            }
+            $item['play_name'] = $playCache[$pid];
+
+            // 4. 组合显示名称: 玩法大类 + 具体玩法
+            // 例如: "特碼 - 08" 或 "六肖 - 鼠,牛,虎,兔,龙,蛇"
+            if (!empty($item['bclass_name']) && !empty($item['play_name'])) {
+                // 如果play_name和content相同(如号码),只显示大类
+                if ($item['play_name'] === $item['content']) {
+                    $item['play_display'] = $item['bclass_name'];
+                } else {
+                    $item['play_display'] = $item['bclass_name'] . ' - ' . $item['play_name'];
+                }
+            } elseif (!empty($item['bclass_name'])) {
+                $item['play_display'] = $item['bclass_name'];
+            } elseif (!empty($item['play_name'])) {
+                $item['play_display'] = $item['play_name'];
+            } else {
+                $item['play_display'] = '未知玩法';
+            }
+
+            // 5. 格式化中奖状态
             $item['status_text'] = self::getStatusText($item['z']);
+
+            // 6. 格式化金额
+            $item['je'] = number_format((float)$item['je'], 2, '.', '');
+            $item['prize'] = number_format((float)$item['prize'], 2, '.', '');
+            $item['peilv1'] = number_format((float)$item['peilv1'], 4, '.', '');
+
+            // 7. 预期奖金
+            $item['expected_prize'] = number_format((float)$item['je'] * (float)$item['peilv1'], 2, '.', '');
         }
 
         return [

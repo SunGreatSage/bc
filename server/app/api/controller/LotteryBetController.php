@@ -224,7 +224,7 @@ class LotteryBetController extends BaseApiController
      * @notes 查询投注记录
      * @return Json
      * @author Claude
-     * @date 2025/11/27
+     * @date 2025/11/29
      *
      * 请求参数:
      * @param int page 页码(可选, 默认1)
@@ -236,20 +236,46 @@ class LotteryBetController extends BaseApiController
      * 响应示例:
      * {
      *   "code": 1,
-     *   "msg": "success",
+     *   "msg": "获取成功",
      *   "data": {
      *     "list": [
      *       {
-     *         "tid": "20251127141530001",
-     *         "qishu": "2025112",
+     *         "tid": 20000001,
+     *         "qishu": "2025334",
      *         "gid": 200,
+     *         "bid": 24926,
+     *         "pid": 97000108,
      *         "content": "08",
      *         "je": "100.00",
      *         "peilv1": "42.0000",
      *         "z": 9,
-     *         "status_text": "未开奖",
      *         "prize": "0.00",
-     *         "time": "2025-11-27 14:15:30"
+     *         "time": "2025-11-29 14:15:30",
+     *         "game_name": "新澳門六合彩",
+     *         "bclass_name": "特碼",
+     *         "play_name": "08",
+     *         "play_display": "特碼",
+     *         "status_text": "未开奖",
+     *         "expected_prize": "4200.00"
+     *       },
+     *       {
+     *         "tid": 20000002,
+     *         "qishu": "2025334",
+     *         "gid": 200,
+     *         "bid": 24950,
+     *         "pid": 21365,
+     *         "content": "鼠-牛-虎-兔-龙-蛇",
+     *         "je": "50.00",
+     *         "peilv1": "1.9700",
+     *         "z": 9,
+     *         "prize": "0.00",
+     *         "time": "2025-11-29 14:10:00",
+     *         "game_name": "新澳門六合彩",
+     *         "bclass_name": "連肖",
+     *         "play_name": "六肖",
+     *         "play_display": "連肖 - 六肖",
+     *         "status_text": "未开奖",
+     *         "expected_prize": "98.50"
      *       }
      *     ],
      *     "total": 100,
@@ -257,6 +283,14 @@ class LotteryBetController extends BaseApiController
      *     "limit": 20
      *   }
      * }
+     *
+     * 字段说明:
+     * - game_name: 游戏名称(如"新澳門六合彩")
+     * - bclass_name: 玩法大类名称(如"特碼"、"連肖")
+     * - play_name: 具体玩法名称(如"08"、"六肖")
+     * - play_display: 组合显示名称,用于前端展示
+     * - status_text: 中奖状态文本(未开奖/已中奖/未中奖)
+     * - expected_prize: 预期中奖金额(je * peilv1)
      */
     public function getBetList()
     {
