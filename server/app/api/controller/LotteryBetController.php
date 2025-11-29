@@ -195,15 +195,20 @@ class LotteryBetController extends BaseApiController
             }
         }
 
-        // 全部失败
+        // 全部失败 - 只返回第一个错误信息
         if ($successCount == 0) {
-            return $this->fail('投注失败', [
-                'success_count' => 0,
-                'fail_count' => $failCount,
-                'results' => $results,
-            ]);
+            // 找到第一个错误信息
+            $firstError = '投注失败';
+            foreach ($results as $result) {
+                if ($result['status'] === 'fail' && !empty($result['error'])) {
+                    $firstError = $result['error'];
+                    break;
+                }
+            }
+            return $this->fail($firstError);
         }
 
+        // 部分成功或全部成功
         return $this->success('投注成功', [
             'success_count' => $successCount,
             'fail_count' => $failCount,

@@ -319,18 +319,21 @@ class LotteryBetLogic
 
                 // ========== 阶段7: 记录资金流水 ==========
                 // 参考makelib.php:659行的usermoneylog函数
+                // 表名: x_money_log (不是 x_user_money_log)
 
                 $logData = [
                     'userid' => $legacyUserId,
-                    'money' => -$betAmount,  // 负数表示扣除
-                    'aftermoney' => $newBalance,
-                    'remark' => '投注',
-                    'status' => 1,  // 1=成功
+                    'modiuser' => $legacyUserId,  // 操作人
+                    'modisonuser' => 0,           // 子账号(无)
+                    'money' => -$betAmount,       // 负数表示扣除
+                    'usermoney' => $newBalance,   // 变动后余额
+                    'type' => 1,                  // 1=成功
                     'ip' => $ip,
                     'time' => date('Y-m-d H:i:s'),
+                    'bz' => '投注',               // 备注
                 ];
 
-                $logResult = Db::table('x_user_money_log')->insert($logData);
+                $logResult = Db::table('x_money_log')->insert($logData);
 
                 if (!$logResult) {
                     throw new Exception('记录资金流水失败');
