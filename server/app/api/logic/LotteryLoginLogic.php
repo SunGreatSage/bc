@@ -154,9 +154,13 @@ class LotteryLoginLogic extends BaseLogic
         $newUser = User::where('account', $legacyUser['username'])->find();
 
         if ($newUser) {
-            // 已存在，更新登录信息
+            // 已存在，更新登录信息和 sn（确保老系统 userid 映射正确）
             $newUser->login_time = time();
             $newUser->login_ip = request()->ip();
+            // 修复：确保 sn 存储老系统 userid（之前可能是0或其他值）
+            if (empty($newUser->sn) || $newUser->sn != $legacyUser['userid']) {
+                $newUser->sn = $legacyUser['userid'];
+            }
             $newUser->save();
             return $newUser->toArray();
         }
