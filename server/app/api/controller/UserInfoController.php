@@ -78,17 +78,25 @@ class UserInfoController extends BaseApiController
             return $this->fail('用户账户不存在');
         }
 
-        // 计算信用额度相关数据
-        $creditLimit = (float)$userInfo['kmaxmoney'];  // 信用额度
-        $betAmount = (float)$userInfo['kmoney'];  // 已下注金额(已使用信用)
+        // ========== 字段含义(参考老系统 uxj/top.php) ==========
+        // kmaxmoney: 信用额度上限
+        // kmoney: 可用余额(用于投注判断的余额)
+        // sy: 上水/返点金额
+        // jzkmoney: 冻结金额
+        // kmoneyuse: 剩余可用额度 = kmaxmoney + sy - jzkmoney - kmoney (计算值)
 
-        // 信用余额 = 信用额度 + 上水 - 冻结金额 - 已使用信用
+        $creditLimit = (float)$userInfo['kmaxmoney'];  // 信用额度上限
+        $availableBalance = (float)$userInfo['kmoney'];  // 可用余额(可投注金额)
+        $sy = (float)$userInfo['sy'];  // 上水/返点
+        $frozenMoney = (float)$userInfo['jzkmoney'];  // 冻结金额
+
+        // 剩余可用额度(参考老系统 uxj/top.php 第22-24行)
         if ($creditLimit == 0) {
-            // 如果信用额度为0,使用现金账户
-            $creditBalance = (float)$userInfo['sy'] - (float)$userInfo['jzkmoney'] - $betAmount;
+            // 如果信用额度为0
+            $remainingCredit = $sy - $frozenMoney - $availableBalance;
         } else {
             // 使用信用账户
-            $creditBalance = $creditLimit + (float)$userInfo['sy'] - (float)$userInfo['jzkmoney'] - $betAmount;
+            $remainingCredit = $creditLimit + $sy - $frozenMoney - $availableBalance;
         }
 
         // 2. 获取当前期号和时间信息
@@ -148,9 +156,11 @@ class UserInfoController extends BaseApiController
 
         // 3. 组装返回数据
         $result = [
-            'credit_limit' => number_format($creditLimit, 2, '.', ''),  // 信用额度
-            'bet_amount' => number_format($betAmount, 2, '.', ''),  // 已下注金额
-            'credit_balance' => number_format($creditBalance, 2, '.', ''),  // 信用余额(可用额度)
+            'credit_limit' => number_format($creditLimit, 2, '.', ''),  // 信用额度上限
+            'available_balance' => number_format($availableBalance, 2, '.', ''),  // 可用余额(可投注金额,与placeBet一致)
+            'remaining_credit' => number_format($remainingCredit, 2, '.', ''),  // 剩余可用额度
+            'sy' => number_format($sy, 2, '.', ''),  // 上水/返点
+            'frozen_money' => number_format($frozenMoney, 2, '.', ''),  // 冻结金额
             'time_info' => $timeInfo,
         ];
 
@@ -216,20 +226,24 @@ class UserInfoController extends BaseApiController
             'balance' => number_format((float)$userInfo['maxmoney'] - (float)$userInfo['money'], 2, '.', ''),  // 现金余额
         ];
 
-        // 信用账户
-        $creditLimit = (float)$userInfo['kmaxmoney'];
-        $betAmount = (float)$userInfo['kmoney'];
+        // 信用账户(参考老系统 uxj/top.php)
+        // kmoney: 可用余额(用于投注判断)
+        // kmoneyuse: 剩余可用额度 = kmaxmoney + sy - jzkmoney - kmoney
+        $creditLimit = (float)$userInfo['kmaxmoney'];  // 信用额度上限
+        $availableBalance = (float)$userInfo['kmoney'];  // 可用余额
+        $sy = (float)$userInfo['sy'];  // 上水/返点
+        $frozenMoney = (float)$userInfo['jzkmoney'];  // 冻结金额
 
         if ($creditLimit == 0) {
-            $creditBalance = (float)$userInfo['sy'] - (float)$userInfo['jzkmoney'] - $betAmount;
+            $remainingCredit = $sy - $frozenMoney - $availableBalance;
         } else {
-            $creditBalance = $creditLimit + (float)$userInfo['sy'] - (float)$userInfo['jzkmoney'] - $betAmount;
+            $remainingCredit = $creditLimit + $sy - $frozenMoney - $availableBalance;
         }
 
         $creditAccount = [
-            'credit_limit' => number_format($creditLimit, 2, '.', ''),  // 信用额度
-            'bet_amount' => number_format($betAmount, 2, '.', ''),  // 已下注金额
-            'credit_balance' => number_format($creditBalance, 2, '.', ''),  // 信用余额
+            'credit_limit' => number_format($creditLimit, 2, '.', ''),  // 信用额度上限
+            'available_balance' => number_format($availableBalance, 2, '.', ''),  // 可用余额(可投注金额)
+            'remaining_credit' => number_format($remainingCredit, 2, '.', ''),  // 剩余可用额度
         ];
 
         // 账户类型 (0=固定额度, 1=信用额度)
