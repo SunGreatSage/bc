@@ -142,7 +142,7 @@ class LotteryBetLogic
 
             // 检查余额
             if ($user['kmoney'] < $betAmount) {
-                self::setError('余额不足');
+                self::setError('余额不足 (可用: ' . $user['kmoney'] . ', 投注: ' . $betAmount . ')');
                 return false;
             }
 
