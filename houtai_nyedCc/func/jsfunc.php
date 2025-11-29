@@ -508,8 +508,29 @@ function zhongfabai($v)
     }
     return $v;
 }
-function sx_100($m, $arr)
+/**
+ * 根据号码获取生肖（支持年份轮转）
+ * @param int $m 号码(1-49)
+ * @param array $arr 旧版生肖映射表(兼容参数,不再使用)
+ * @param string $dates 日期字符串(可选,用于提取年份)
+ * @return string 生肖名称
+ */
+function sx_100($m, $arr, $dates = null)
 {
+    // 使用新的生肖算法（支持年份轮转）
+    // 优先从 $dates 参数获取年份，否则使用当前年份
+    if ($dates) {
+        $year = date('Y', strtotime($dates));
+    } else {
+        $year = date('Y');
+    }
+
+    // 调用 malhc.php 中的新算法
+    if (function_exists('shengxiao')) {
+        return shengxiao($m, $year);
+    }
+
+    // 兼容回退：如果新函数不存在，使用旧逻辑
     $sx = array(
         "鼠",
         "牛",

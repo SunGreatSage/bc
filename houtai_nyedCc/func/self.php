@@ -1,6 +1,7 @@
 <?php
 
 include_once 'jsfunc.php';
+include_once 'malhc.php';  // 引入生肖年度轮转算法
 function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
 {
     global $fsql, $tsql, $psql, $tb_bclass, $tb_sclass, $tb_class, $tb_play, $tb_lib, $tb_user, $tb_kj, $tb_z, $tb_config,$tb_shui;
@@ -32,6 +33,10 @@ function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
 
 
     $psql->query("update `{$tb_lib}` set kk=1,z=9,prize=0 where {$whi} and z!=7");
+
+    // 保存开奖日期，用于生肖年度轮转计算
+    $kjDates = $tsql->f('dates');
+
     $kj = [];
     $kj[0] = [];
     $kj[0]['m'] = [];
@@ -65,7 +70,8 @@ function calc($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype,$qz=false)
         $ws = [];
         if ($fenlei == 100) {
             foreach ($kj[$i]['m'] as $ks => $vs) {
-                $sx[] = sx_100($vs, $marr);
+                // 传递日期参数，使用新的生肖年度轮转算法
+                $sx[] = sx_100($vs, $marr, $kjDates);
                 $ws[] = $vs % 10;
             }
         }
@@ -242,9 +248,10 @@ function calcmoni($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype)
     }
     if ($zje < $cs['kongje'] || $cs['xtmode'] == 0 || $cl == 0) {
         return suiji($fenlei, $gid, $qishu);
-    }     
+    }
+    // 提前获取日期，用于生肖年度轮转计算（确保变量始终有值）
+    $dates = isset($lib[0]['dates']) ? $lib[0]['dates'] : date('Y-m-d');
     if($cs["ylup"]>0) {
-        $dates = $lib[0]['dates'];
         $tsql->query("select sum(je*zc0/100),sum(if(z=1,peilv11,0)*je*zc0/100),sum(je*zc0*points1/100*100) from `$tb_lib` where gid='$gid' and dates='$dates' and z in(0,1)");
         $tsql->next_record();
         $zje = $tsql->f(0);
@@ -291,7 +298,8 @@ function calcmoni($fenlei, $gid, $cs, $qishu, $mnum, $ztype, $mtype)
         $ws = [];
         if ($fenlei == 100) {
             foreach ($kj[$i]['m'] as $ks => $vs) {
-                $sx[] = sx_100($vs, $marr);
+                // 传递日期参数，使用新的生肖年度轮转算法
+                $sx[] = sx_100($vs, $marr, $dates);
                 $ws[] = $vs % 10;
             }
         }
