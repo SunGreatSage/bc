@@ -257,8 +257,17 @@ class LotteryBetLogic
                 }
 
                 // ========== 阶段4: 生成订单号 ==========
-                // 格式: YmdHis + 3位随机数
-                $tid = date('YmdHis') . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+                // 参考老系统 csfunc.php setuptid() 函数
+                // tid 是 int(11) 类型,最大值约21亿,所以用8位数字递增
+                $maxTid = Db::table('x_lib')
+                    ->where('userid', $legacyUserId)
+                    ->max('tid');
+
+                if (empty($maxTid)) {
+                    $tid = 20000000;  // 初始值
+                } else {
+                    $tid = $maxTid + rand(1, 3);  // 递增 1-3
+                }
 
 
                 // ========== 阶段5: 插入投注记录 ==========
