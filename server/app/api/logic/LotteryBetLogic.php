@@ -371,6 +371,314 @@ class LotteryBetLogic
 
 
     /**
+     * @notes 批量下单投注（原子性操作：全部成功或全部失败）
+     * @param array $orders 订单数组
+     * @return array|false
+     * @author Claude
+     * @date 2025/11/30
+     *
+     * 参数说明:
+     * @param array orders 订单数组，每个订单包含:
+     *   - index: 订单序号
+     *   - legacy_userid: 老系统用户ID
+     *   - gid: 游戏ID
+     *   - qishu: 期号
+     *   - pid: 玩法ID
+     *   - pid_type: 玩法类型(play/bclass)
+     *   - bet_content: 投注内容
+     *   - bet_amount: 投注金额
+     *   - ip: IP地址
+     *
+     * 返回:
+     * {
+     *   "success_count": 3,
+     *   "total_amount": "8.00",
+     *   "balance": "92.00",
+     *   "qishu": "2025334",
+     *   "results": [...]
+     * }
+     */
+    public static function placeBetBatch(array $orders)
+    {
+        if (empty($orders)) {
+            self::setError('订单列表不能为空');
+            return false;
+        }
+
+        // 获取第一个订单的基础信息（所有订单应该是同一用户、同一游戏、同一期号）
+        $firstOrder = $orders[0];
+        $legacyUserId = $firstOrder['legacy_userid'];
+        $gid = $firstOrder['gid'];
+        $qishu = $firstOrder['qishu'];
+
+        // 计算总投注金额
+        $totalBetAmount = 0;
+        foreach ($orders as $order) {
+            $totalBetAmount += (float)$order['bet_amount'];
+        }
+
+        try {
+            // ========== 阶段1: 事务外预验证（快速失败） ==========
+
+            // 1.1 验证用户状态
+            $user = Db::table('x_user')
+                ->where('userid', $legacyUserId)
+                ->field('kmoney,status,yingdeny,fudong,pan')
+                ->find();
+
+            if (!$user) {
+                self::setError('用户不存在');
+                return false;
+            }
+
+            if ($user['status'] != 1) {
+                self::setError('账户已被停用');
+                return false;
+            }
+
+            if ($user['yingdeny'] == 1) {
+                self::setError('账户暂不可用');
+                return false;
+            }
+
+            // 1.2 检查总余额是否足够
+            if ($user['kmoney'] < $totalBetAmount) {
+                self::setError('余额不足 (可用: ' . $user['kmoney'] . ', 需要: ' . $totalBetAmount . ')');
+                return false;
+            }
+
+            // 1.3 验证期号
+            $currentQishu = self::getCurrentQishu($gid);
+            if ($qishu != $currentQishu) {
+                self::setError('期号已过期,当前期号:' . $currentQishu);
+                return false;
+            }
+
+            // 1.4 检查开盘/封盘状态
+            $periodCheck = self::checkPeriodStatus($gid, $qishu);
+            if (!$periodCheck['can_bet']) {
+                self::setError($periodCheck['message']);
+                return false;
+            }
+
+            // 1.5 预验证所有订单的玩法
+            $validatedOrders = [];
+            foreach ($orders as $order) {
+                $index = $order['index'];
+                $pid = $order['pid'];
+                $pidType = $order['pid_type'] ?? 'play';
+                $betContent = $order['bet_content'];
+                $betAmount = (float)$order['bet_amount'];
+
+                // 金额验证
+                if ($betAmount != floor($betAmount)) {
+                    self::setError('第' . ($index + 1) . '注投注失败: 投注金额必须为整数');
+                    return false;
+                }
+
+                $limitCheck = BetLimitService::validateBetAmount($betAmount);
+                if (!$limitCheck['valid']) {
+                    self::setError('第' . ($index + 1) . '注投注失败: ' . $limitCheck['error']);
+                    return false;
+                }
+
+                // 查询玩法配置
+                $play = null;
+                if ($pidType === 'bclass') {
+                    $bclass = Db::table('x_bclass')
+                        ->where('id', $pid)
+                        ->where('gid', $gid)
+                        ->where('ifok', 1)
+                        ->field('bid,name')
+                        ->find();
+
+                    if (!$bclass) {
+                        self::setError('第' . ($index + 1) . '注投注失败: 玩法大类不存在');
+                        return false;
+                    }
+
+                    $play = Db::table('x_play')
+                        ->where('gid', $gid)
+                        ->where('bid', $bclass['bid'])
+                        ->where('name', $betContent)
+                        ->where('ifok', 1)
+                        ->field('pid,bid,sid,cid,peilv1,peilv2,ifok,name,ztype,znum1,znum2')
+                        ->find();
+
+                    if (!$play) {
+                        self::setError('第' . ($index + 1) . '注投注失败: 投注内容无效 (' . $betContent . ')');
+                        return false;
+                    }
+
+                    $pid = $play['pid'];
+                } else {
+                    $play = Db::table('x_play')
+                        ->where('gid', $gid)
+                        ->where('pid', $pid)
+                        ->field('pid,bid,sid,cid,peilv1,peilv2,ifok,name,ztype,znum1,znum2')
+                        ->find();
+
+                    if (!$play) {
+                        self::setError('第' . ($index + 1) . '注投注失败: 玩法不存在 (pid=' . $pid . ')');
+                        return false;
+                    }
+                }
+
+                if ($play['ifok'] != 1) {
+                    self::setError('第' . ($index + 1) . '注投注失败: 玩法已关闭');
+                    return false;
+                }
+
+                // 保存验证通过的订单数据
+                $validatedOrders[] = [
+                    'index' => $index,
+                    'pid' => $pid,
+                    'play' => $play,
+                    'bet_content' => $betContent,
+                    'bet_amount' => $betAmount,
+                    'ip' => $order['ip'],
+                ];
+            }
+
+            // ========== 阶段2: 开启事务执行所有投注 ==========
+            Db::startTrans();
+
+            try {
+                // 重新获取用户余额（带锁）
+                $user = Db::table('x_user')
+                    ->where('userid', $legacyUserId)
+                    ->field('kmoney')
+                    ->lock(true)
+                    ->find();
+
+                // 再次检查余额
+                if ($user['kmoney'] < $totalBetAmount) {
+                    throw new Exception('余额不足 (可用: ' . $user['kmoney'] . ', 需要: ' . $totalBetAmount . ')');
+                }
+
+                $results = [];
+                $currentBalance = (float)$user['kmoney'];
+
+                // 获取当前最大tid
+                $maxTid = Db::table('x_lib')
+                    ->where('userid', $legacyUserId)
+                    ->max('tid');
+
+                if (empty($maxTid)) {
+                    $tid = 20000000;
+                } else {
+                    $tid = $maxTid;
+                }
+
+                // 逐个处理订单
+                foreach ($validatedOrders as $orderData) {
+                    $index = $orderData['index'];
+                    $pid = $orderData['pid'];
+                    $play = $orderData['play'];
+                    $betContent = $orderData['bet_content'];
+                    $betAmount = $orderData['bet_amount'];
+                    $ip = $orderData['ip'];
+
+                    // 生成订单号
+                    $tid = $tid + rand(1, 3);
+
+                    // 插入投注记录
+                    $insertData = [
+                        'tid' => $tid,
+                        'userid' => $legacyUserId,
+                        'dates' => date('Y-m-d'),
+                        'qishu' => $qishu,
+                        'gid' => $gid,
+                        'bid' => $play['bid'],
+                        'sid' => $play['sid'],
+                        'cid' => $play['cid'],
+                        'pid' => $pid,
+                        'content' => $betContent,
+                        'je' => $betAmount,
+                        'peilv1' => $play['peilv1'],
+                        'peilv2' => $play['peilv2'] ?? 0,
+                        'xtype' => 0,
+                        'z' => 9,
+                        'bs' => 1,
+                        'time' => date('Y-m-d H:i:s'),
+                        'ip' => $ip,
+                    ];
+
+                    $insertResult = Db::table('x_lib')->insert($insertData);
+
+                    if (!$insertResult) {
+                        throw new Exception('第' . ($index + 1) . '注投注失败: 插入记录失败');
+                    }
+
+                    // 更新余额
+                    $currentBalance -= $betAmount;
+
+                    // 记录结果
+                    $results[] = [
+                        'index' => $index,
+                        'tid' => $tid,
+                        'bet_content' => $betContent,
+                        'bet_amount' => number_format($betAmount, 2, '.', ''),
+                        'play_name' => $play['name'],
+                        'peilv' => $play['peilv1'],
+                        'expected_prize' => number_format($betAmount * $play['peilv1'], 2, '.', ''),
+                    ];
+                }
+
+                // 一次性扣除总余额
+                $updateResult = Db::table('x_user')
+                    ->where('userid', $legacyUserId)
+                    ->dec('kmoney', $totalBetAmount)
+                    ->update();
+
+                if (!$updateResult) {
+                    throw new Exception('扣除余额失败');
+                }
+
+                // 记录资金流水（一条汇总记录）
+                $logData = [
+                    'userid' => $legacyUserId,
+                    'modiuser' => $legacyUserId,
+                    'modisonuser' => 0,
+                    'money' => -$totalBetAmount,
+                    'usermoney' => $currentBalance,
+                    'type' => 1,
+                    'ip' => $firstOrder['ip'],
+                    'time' => date('Y-m-d H:i:s'),
+                    'bz' => '批量投注(' . count($orders) . '注)',
+                ];
+
+                $logResult = Db::table('x_money_log')->insert($logData);
+
+                if (!$logResult) {
+                    throw new Exception('记录资金流水失败');
+                }
+
+                // 提交事务
+                Db::commit();
+
+                return [
+                    'success_count' => count($results),
+                    'total_amount' => number_format($totalBetAmount, 2, '.', ''),
+                    'balance' => number_format($currentBalance, 2, '.', ''),
+                    'qishu' => $qishu,
+                    'results' => $results,
+                ];
+
+            } catch (\Exception $e) {
+                Db::rollback();
+                self::setError($e->getMessage());
+                return false;
+            }
+
+        } catch (\Exception $e) {
+            self::setError('系统错误: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+
+    /**
      * @notes 获取当前期号
      * @param int $gid 游戏ID
      * @return string

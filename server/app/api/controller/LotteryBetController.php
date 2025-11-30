@@ -26,10 +26,10 @@ class LotteryBetController extends BaseApiController
 
 
     /**
-     * @notes 投注下单接口(支持批量)
+     * @notes 投注下单接口(支持批量，原子性操作：全部成功或全部失败)
      * @return Json
      * @author Claude
-     * @date 2025/11/29
+     * @date 2025/11/30
      *
      * 请求参数(JSON格式):
      * {
@@ -42,21 +42,26 @@ class LotteryBetController extends BaseApiController
      *   ]
      * }
      *
-     * 响应示例:
+     * 响应示例(成功):
      * {
      *   "code": 1,
      *   "msg": "投注成功",
      *   "data": {
      *     "success_count": 3,
-     *     "fail_count": 0,
      *     "total_amount": "8.00",
      *     "balance": "92.00",
      *     "results": [
-     *       {"tid": 20000001, "status": "success", "bet_content": "26", "bet_amount": "1.00"},
-     *       {"tid": 20000002, "status": "success", "bet_content": "08", "bet_amount": "2.00"},
-     *       {"tid": 20000003, "status": "success", "bet_content": "鼠,牛,虎,兔", "bet_amount": "5.00"}
+     *       {"tid": 20000001, "bet_content": "26", "bet_amount": "1.00"},
+     *       {"tid": 20000002, "bet_content": "08", "bet_amount": "2.00"},
+     *       {"tid": 20000003, "bet_content": "鼠,牛,虎,兔", "bet_amount": "5.00"}
      *     ]
      *   }
+     * }
+     *
+     * 响应示例(失败 - 任何一个订单失败则全部失败):
+     * {
+     *   "code": 0,
+     *   "msg": "第2注投注失败: 余额不足"
      * }
      */
     public function placeBet()
@@ -93,13 +98,9 @@ class LotteryBetController extends BaseApiController
             return $this->fail('单次最多投注100注');
         }
 
-        // 处理每个订单
-        $results = [];
-        $successCount = 0;
-        $failCount = 0;
-        $totalAmount = 0;
-        $lastBalance = 0;
+        // 预处理订单数据
         $ip = $this->request->ip();
+        $parsedOrders = [];
 
         foreach ($orders as $index => $order) {
             // 解析 pid 参数
@@ -123,42 +124,21 @@ class LotteryBetController extends BaseApiController
                 }
             }
 
-            // 单项验证
+            // 基础参数验证（在事务外进行，快速失败）
             if (empty($pid)) {
-                $results[] = [
-                    'index' => $index,
-                    'status' => 'fail',
-                    'error' => '请选择玩法',
-                    'bet_content' => $betContent,
-                ];
-                $failCount++;
-                continue;
+                return $this->fail('第' . ($index + 1) . '注投注失败: 请选择玩法');
             }
 
             if (empty($betContent)) {
-                $results[] = [
-                    'index' => $index,
-                    'status' => 'fail',
-                    'error' => '请输入投注内容',
-                    'bet_content' => $betContent,
-                ];
-                $failCount++;
-                continue;
+                return $this->fail('第' . ($index + 1) . '注投注失败: 请输入投注内容');
             }
 
             if ($betAmount <= 0) {
-                $results[] = [
-                    'index' => $index,
-                    'status' => 'fail',
-                    'error' => '投注金额必须大于0',
-                    'bet_content' => $betContent,
-                ];
-                $failCount++;
-                continue;
+                return $this->fail('第' . ($index + 1) . '注投注失败: 投注金额必须大于0');
             }
 
-            // 调用投注逻辑
-            $result = LotteryBetLogic::placeBet([
+            $parsedOrders[] = [
+                'index' => $index,
                 'legacy_userid' => $legacyUser['userid'],
                 'gid' => $gid,
                 'qishu' => $qishu,
@@ -167,56 +147,17 @@ class LotteryBetController extends BaseApiController
                 'bet_content' => $betContent,
                 'bet_amount' => $betAmount,
                 'ip' => $ip,
-            ]);
-
-            if ($result === false) {
-                $results[] = [
-                    'index' => $index,
-                    'status' => 'fail',
-                    'error' => LotteryBetLogic::getError(),
-                    'bet_content' => $betContent,
-                    'bet_amount' => number_format($betAmount, 2, '.', ''),
-                ];
-                $failCount++;
-            } else {
-                $results[] = [
-                    'index' => $index,
-                    'status' => 'success',
-                    'tid' => $result['tid'],
-                    'bet_content' => $betContent,
-                    'bet_amount' => $result['bet_amount'],
-                    'play_name' => $result['play_name'],
-                    'peilv' => $result['peilv'],
-                    'expected_prize' => $result['expected_prize'],
-                ];
-                $successCount++;
-                $totalAmount += $betAmount;
-                $lastBalance = $result['balance'];
-            }
+            ];
         }
 
-        // 全部失败 - 只返回第一个错误信息
-        if ($successCount == 0) {
-            // 找到第一个错误信息
-            $firstError = '投注失败';
-            foreach ($results as $result) {
-                if ($result['status'] === 'fail' && !empty($result['error'])) {
-                    $firstError = $result['error'];
-                    break;
-                }
-            }
-            return $this->fail($firstError);
+        // 调用批量投注逻辑（原子性操作）
+        $result = LotteryBetLogic::placeBetBatch($parsedOrders);
+
+        if ($result === false) {
+            return $this->fail(LotteryBetLogic::getError());
         }
 
-        // 部分成功或全部成功
-        return $this->success('投注成功', [
-            'success_count' => $successCount,
-            'fail_count' => $failCount,
-            'total_amount' => number_format($totalAmount, 2, '.', ''),
-            'balance' => $lastBalance,
-            'qishu' => $qishu,
-            'results' => $results,
-        ]);
+        return $this->success('投注成功', $result);
     }
 
 
