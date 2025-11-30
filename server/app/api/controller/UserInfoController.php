@@ -36,8 +36,11 @@ class UserInfoController extends BaseApiController
      *   "msg": "获取成功",
      *   "data": {
      *     "credit_limit": "10000.00",
-     *     "bet_amount": "100.00",
-     *     "credit_balance": "9900.00",
+     *     "available_balance": "9900.00",
+     *     "remaining_credit": "100.00",
+     *     "sy": "0.00",
+     *     "frozen_money": "0.00",
+     *     "period_bet_amount": "500.00",
      *     "time_info": {
      *       "current_qishu": "2025112",
      *       "open_time": "2025-11-28 09:00:00",
@@ -111,6 +114,14 @@ class UserInfoController extends BaseApiController
 
         $currentQishu = $gameInfo['thisqishu'];
 
+        // 3. 查询用户当期下注金额(从x_lib表)
+        $periodBetAmount = \think\facade\Db::table('x_lib')
+            ->where('userid', $legacyUserId)
+            ->where('gid', $gid)
+            ->where('qishu', $currentQishu)
+            ->where('bs', 1)  // 有效投注
+            ->sum('je');
+
         // 获取当前期的时间信息
         $kjInfo = \think\facade\Db::table('x_kj')
             ->where('gid', $gid)
@@ -154,13 +165,14 @@ class UserInfoController extends BaseApiController
             }
         }
 
-        // 3. 组装返回数据
+        // 4. 组装返回数据
         $result = [
             'credit_limit' => number_format($creditLimit, 2, '.', ''),  // 信用额度上限
             'available_balance' => number_format($availableBalance, 2, '.', ''),  // 可用余额(可投注金额,与placeBet一致)
             'remaining_credit' => number_format($remainingCredit, 2, '.', ''),  // 剩余可用额度
             'sy' => number_format($sy, 2, '.', ''),  // 上水/返点
             'frozen_money' => number_format($frozenMoney, 2, '.', ''),  // 冻结金额
+            'period_bet_amount' => number_format((float)$periodBetAmount, 2, '.', ''),  // 当期下注金额
             'time_info' => $timeInfo,
         ];
 
