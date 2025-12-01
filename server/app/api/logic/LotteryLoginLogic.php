@@ -345,16 +345,24 @@ class LotteryLoginLogic extends BaseLogic
     public static function adminLogin(array $params)
     {
         try {
-            $username = strtolower($params['username']); // 转小写（与老系统一致）
+            // 步骤1: 处理用户名（与老系统一致）
+            // 老系统: $user = strtolower($_POST['username']);
+            //         $user = explode('_', $user); $user = $user[0];
+            $username = strtolower($params['username']);
+            $usernameParts = explode('_', $username);
+            $username = $usernameParts[0];  // 如果有下划线，只取第一部分
+
             $password = $params['password'];
             $ip = request()->ip();
 
-            // 步骤1: 加密密码（管理员使用一次MD5，与老系统一致）
+            // 步骤2: 加密密码（管理员使用一次MD5，与老系统一致）
             // 老系统：md5($_POST['pass'] . $config['upass'])
             $encryptedPassword = md5($password . self::PASSWORD_SALT);
 
-            // 步骤2: 查询管理员
-            // 注意: x_admins 表只有 adminid, adminname, adminpass, regtime 等基础字段
+            // 步骤3: 查询管理员
+            // 老系统 login.php: ifhide=0 (总管理员)
+            // 老系统 admins.php 创建的管理员: ifhide=1 (普通管理员)
+            // 这里同时支持两种类型的管理员登录
             $admin = Db::table('x_admins')
                 ->where('adminname', $username)
                 ->where('adminpass', $encryptedPassword)
@@ -364,14 +372,13 @@ class LotteryLoginLogic extends BaseLogic
                 throw new \Exception('用户名或密码不正确');
             }
 
-            // 步骤3: 同步到新系统用户（la_user 表）
+            // 步骤4: 同步到新系统用户（la_user 表）
             $newUser = self::syncAdminToNewUser($admin);
 
-            // 步骤4: 生成 token
+            // 步骤5: 生成 token
             $userInfo = UserTokenService::setToken($newUser['id'], 1);
 
-            // 步骤5: 返回管理员信息
-            // 注意: x_admins 表只有基础字段 adminid, adminname, adminpass, regtime
+            // 步骤6: 返回管理员信息
             return [
                 'adminInfo' => [
                     'id' => $newUser['id'],              // 新系统 ID
