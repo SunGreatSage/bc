@@ -355,9 +355,9 @@ class LotteryLoginLogic extends BaseLogic
             $password = $params['password'];
             $ip = request()->ip();
 
-            // 步骤2: 加密密码（管理员使用一次MD5，与老系统一致）
-            // 老系统：md5($_POST['pass'] . $config['upass'])
-            $encryptedPassword = md5($password . self::PASSWORD_SALT);
+            // 步骤2: 加密密码（管理员也使用两次MD5，与用户加密方式相同）
+            // 实际加密方式：md5(md5(密码) + 盐值)
+            $encryptedPassword = md5(md5($password) . self::PASSWORD_SALT);
 
             // 步骤3: 查询管理员
             // 老系统 login.php: ifhide=0 (总管理员)
