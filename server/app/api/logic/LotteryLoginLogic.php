@@ -354,72 +354,29 @@ class LotteryLoginLogic extends BaseLogic
             $encryptedPassword = md5($password . self::PASSWORD_SALT);
 
             // 步骤2: 查询管理员
+            // 注意: x_admins 表只有 adminid, adminname, adminpass, regtime 等基础字段
             $admin = Db::table('x_admins')
                 ->where('adminname', $username)
                 ->where('adminpass', $encryptedPassword)
-                ->where('ifhide', 0)  // 未隐藏
                 ->find();
 
             if (!$admin) {
-                // 记录失败日志
-                self::logAdminLoginFail($username, $ip, $encryptedPassword);
                 throw new \Exception('用户名或密码不正确');
             }
 
-            // 步骤3: 更新登录信息
-            Db::table('x_admins')
-                ->where('adminid', $admin['adminid'])
-                ->update([
-                    'logintimes' => Db::raw('logintimes+1'),
-                    'lastloginip' => $ip,
-                    'lastlogintime' => date('Y-m-d H:i:s'),
-                ]);
-
-            // 步骤4: 记录成功日志
-            self::logAdminLoginSuccess($username, $ip);
-
-            // 步骤5: 检查是否有管理员权限（caopan权限）
-            $hasAdminPage = Db::table('x_admins_page')
-                ->where('adminid', $admin['adminid'])
-                ->where('xpage', 'caopan')
-                ->where('ifok', 1)
-                ->find();
-
-            $isSuper = !empty($hasAdminPage);
-
-            // 步骤6: 同步到新系统用户（la_user 表）
+            // 步骤3: 同步到新系统用户（la_user 表）
             $newUser = self::syncAdminToNewUser($admin);
 
-            // 步骤7: 生成 token
+            // 步骤4: 生成 token
             $userInfo = UserTokenService::setToken($newUser['id'], 1);
 
-            // 步骤8: 在 x_online 表记录在线状态（与老系统兼容）
-            $passcode = (microtime(true) * 100000000) . time();
-            Db::table('x_online')
-                ->where('xtype', 0)
-                ->where('userid', $admin['adminid'])
-                ->delete();
-
-            Db::table('x_online')->insert([
-                'page' => 'welcome',
-                'passcode' => $passcode,
-                'xtype' => 0,  // 0=管理员
-                'userid' => $admin['adminid'],
-                'logintime' => date('Y-m-d H:i:s'),
-                'savetime' => date('Y-m-d H:i:s'),
-                'ip' => $ip,
-                'server' => $_SERVER['SERVER_NAME'] ?? '',
-                'os' => $_SERVER['HTTP_USER_AGENT'] ?? '',
-            ]);
-
-            // 步骤9: 返回管理员信息
+            // 步骤5: 返回管理员信息
+            // 注意: x_admins 表只有基础字段 adminid, adminname, adminpass, regtime
             return [
                 'adminInfo' => [
                     'id' => $newUser['id'],              // 新系统 ID
                     'adminid' => $admin['adminid'],      // 老系统管理员 ID
                     'adminname' => $admin['adminname'],
-                    'is_super' => $isSuper,              // 是否超级管理员
-                    'logintimes' => $admin['logintimes'] + 1,
                 ],
                 'token' => $userInfo['token'],
             ];
@@ -499,7 +456,6 @@ class LotteryLoginLogic extends BaseLogic
         if ($newUser->sn) {
             $admin = Db::table('x_admins')
                 ->where('adminid', $newUser->sn)
-                ->where('ifhide', 0)
                 ->find();
 
             if ($admin) {
@@ -511,7 +467,6 @@ class LotteryLoginLogic extends BaseLogic
         $adminname = substr($newUser->account, 6); // 去掉 "admin_" 前缀
         $admin = Db::table('x_admins')
             ->where('adminname', $adminname)
-            ->where('ifhide', 0)
             ->find();
 
         return $admin;
