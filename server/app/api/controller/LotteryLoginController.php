@@ -21,7 +21,7 @@ class LotteryLoginController extends BaseApiController
     /**
      * 不需要登录的接口
      */
-    public array $notNeedLogin = ['login', 'test'];
+    public array $notNeedLogin = ['login', 'adminLogin', 'test'];
 
 
     /**
@@ -170,6 +170,85 @@ class LotteryLoginController extends BaseApiController
         }
 
         return $this->success('密码修改成功');
+    }
+
+
+    /**
+     * @notes 管理员登录接口（基于 x_admins 表）
+     * @return Json
+     * @author Claude
+     * @date 2025/12/01
+     *
+     * 请求参数：
+     * @param string username 管理员用户名（必填）
+     * @param string password 密码（必填，明文）
+     *
+     * 响应示例：
+     * {
+     *   "code": 1,
+     *   "msg": "登录成功",
+     *   "data": {
+     *     "adminInfo": {
+     *       "adminid": 10000,
+     *       "adminname": "admin",
+     *       "is_super": true
+     *     },
+     *     "token": "abc123..."
+     *   }
+     * }
+     */
+    public function adminLogin()
+    {
+        // 获取请求参数
+        $username = $this->request->param('username', '');
+        $password = $this->request->param('password', '');
+
+        // 参数验证
+        if (empty($username)) {
+            return $this->fail('请输入用户名');
+        }
+
+        if (empty($password)) {
+            return $this->fail('请输入密码');
+        }
+
+        // 调用管理员登录逻辑
+        $result = LotteryLoginLogic::adminLogin([
+            'username' => $username,
+            'password' => $password,
+        ]);
+
+        if ($result === false) {
+            return $this->fail(LotteryLoginLogic::getError());
+        }
+
+        return $this->success('登录成功', $result);
+    }
+
+
+    /**
+     * @notes 获取管理员信息（需登录）
+     * @return Json
+     * @author Claude
+     * @date 2025/12/01
+     */
+    public function getAdminInfo()
+    {
+        // 获取管理员信息
+        $adminInfo = LotteryLoginLogic::getAdminByNewUserId($this->userId);
+
+        if (!$adminInfo) {
+            return $this->fail('管理员信息不存在');
+        }
+
+        return $this->success('获取成功', [
+            'new_user_id' => $this->userId,
+            'adminid' => $adminInfo['adminid'],
+            'adminname' => $adminInfo['adminname'],
+            'logintimes' => $adminInfo['logintimes'],
+            'lastloginip' => $adminInfo['lastloginip'],
+            'lastlogintime' => $adminInfo['lastlogintime'],
+        ]);
     }
 
 

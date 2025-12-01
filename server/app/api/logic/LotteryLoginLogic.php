@@ -328,6 +328,250 @@ class LotteryLoginLogic extends BaseLogic
 
 
     /**
+     * @notes 管理员登录（基于 x_admins 表）
+     * @param array $params ['username'=>'用户名', 'password'=>'明文密码']
+     * @return array|false
+     * @author Claude
+     * @date 2025/12/01
+     *
+     * 登录流程（参考 hide/login.php）：
+     * 1. 用户名转小写
+     * 2. 密码加密：md5(密码 + 盐值)（注意：管理员是一次MD5，用户是两次MD5）
+     * 3. 查询 x_admins 表验证
+     * 4. 更新登录信息
+     * 5. 同步/创建新系统用户
+     * 6. 生成 token
+     */
+    public static function adminLogin(array $params)
+    {
+        try {
+            $username = strtolower($params['username']); // 转小写（与老系统一致）
+            $password = $params['password'];
+            $ip = request()->ip();
+
+            // 步骤1: 加密密码（管理员使用一次MD5，与老系统一致）
+            // 老系统：md5($_POST['pass'] . $config['upass'])
+            $encryptedPassword = md5($password . self::PASSWORD_SALT);
+
+            // 步骤2: 查询管理员
+            $admin = Db::table('x_admins')
+                ->where('adminname', $username)
+                ->where('adminpass', $encryptedPassword)
+                ->where('ifhide', 0)  // 未隐藏
+                ->find();
+
+            if (!$admin) {
+                // 记录失败日志
+                self::logAdminLoginFail($username, $ip, $encryptedPassword);
+                throw new \Exception('用户名或密码不正确');
+            }
+
+            // 步骤3: 更新登录信息
+            Db::table('x_admins')
+                ->where('adminid', $admin['adminid'])
+                ->update([
+                    'logintimes' => Db::raw('logintimes+1'),
+                    'lastloginip' => $ip,
+                    'lastlogintime' => date('Y-m-d H:i:s'),
+                ]);
+
+            // 步骤4: 记录成功日志
+            self::logAdminLoginSuccess($username, $ip);
+
+            // 步骤5: 检查是否有管理员权限（caopan权限）
+            $hasAdminPage = Db::table('x_admins_page')
+                ->where('adminid', $admin['adminid'])
+                ->where('xpage', 'caopan')
+                ->where('ifok', 1)
+                ->find();
+
+            $isSuper = !empty($hasAdminPage);
+
+            // 步骤6: 同步到新系统用户（la_user 表）
+            $newUser = self::syncAdminToNewUser($admin);
+
+            // 步骤7: 生成 token
+            $userInfo = UserTokenService::setToken($newUser['id'], 1);
+
+            // 步骤8: 在 x_online 表记录在线状态（与老系统兼容）
+            $passcode = (microtime(true) * 100000000) . time();
+            Db::table('x_online')
+                ->where('xtype', 0)
+                ->where('userid', $admin['adminid'])
+                ->delete();
+
+            Db::table('x_online')->insert([
+                'page' => 'welcome',
+                'passcode' => $passcode,
+                'xtype' => 0,  // 0=管理员
+                'userid' => $admin['adminid'],
+                'logintime' => date('Y-m-d H:i:s'),
+                'savetime' => date('Y-m-d H:i:s'),
+                'ip' => $ip,
+                'server' => $_SERVER['SERVER_NAME'] ?? '',
+                'os' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+            ]);
+
+            // 步骤9: 返回管理员信息
+            return [
+                'adminInfo' => [
+                    'id' => $newUser['id'],              // 新系统 ID
+                    'adminid' => $admin['adminid'],      // 老系统管理员 ID
+                    'adminname' => $admin['adminname'],
+                    'is_super' => $isSuper,              // 是否超级管理员
+                    'logintimes' => $admin['logintimes'] + 1,
+                ],
+                'token' => $userInfo['token'],
+            ];
+
+        } catch (\Exception $e) {
+            self::setError($e->getMessage());
+            return false;
+        }
+    }
+
+
+    /**
+     * @notes 同步管理员到新系统用户（la_user 表）
+     * @param array $admin x_admins 表的管理员数据
+     * @return array 新系统用户数据
+     * @author Claude
+     * @date 2025/12/01
+     */
+    private static function syncAdminToNewUser(array $admin): array
+    {
+        // 使用 "admin_" + adminname 作为 account，区分普通用户
+        $account = 'admin_' . $admin['adminname'];
+
+        $newUser = User::where('account', $account)->find();
+
+        if ($newUser) {
+            // 已存在，更新登录信息
+            $newUser->login_time = time();
+            $newUser->login_ip = request()->ip();
+            if (empty($newUser->sn) || $newUser->sn != $admin['adminid']) {
+                $newUser->sn = $admin['adminid'];
+            }
+            $newUser->save();
+            return $newUser->toArray();
+        }
+
+        // 不存在，创建新用户
+        $newUser = User::create([
+            'sn' => $admin['adminid'],
+            'account' => $account,
+            'nickname' => $admin['adminname'],
+            'mobile' => '',
+            'avatar' => '',
+            'password' => '',
+            'channel' => 4,    // 4=管理后台
+            'login_time' => time(),
+            'login_ip' => request()->ip(),
+            'create_time' => time(),
+            'update_time' => time(),
+        ]);
+
+        return $newUser->toArray();
+    }
+
+
+    /**
+     * @notes 根据新系统用户ID获取管理员信息
+     * @param int $newUserId la_user 表的用户ID
+     * @return array|null x_admins 表的管理员信息
+     * @author Claude
+     * @date 2025/12/01
+     */
+    public static function getAdminByNewUserId(int $newUserId)
+    {
+        $newUser = User::where('id', $newUserId)->find();
+
+        if (!$newUser) {
+            return null;
+        }
+
+        // 检查是否是管理员账号（account 以 "admin_" 开头）
+        if (strpos($newUser->account, 'admin_') !== 0) {
+            return null;
+        }
+
+        // 通过 sn（老系统 adminid）查询
+        if ($newUser->sn) {
+            $admin = Db::table('x_admins')
+                ->where('adminid', $newUser->sn)
+                ->where('ifhide', 0)
+                ->find();
+
+            if ($admin) {
+                return $admin;
+            }
+        }
+
+        // 通过 adminname 查询
+        $adminname = substr($newUser->account, 6); // 去掉 "admin_" 前缀
+        $admin = Db::table('x_admins')
+            ->where('adminname', $adminname)
+            ->where('ifhide', 0)
+            ->find();
+
+        return $admin;
+    }
+
+
+    /**
+     * @notes 记录管理员登录失败日志
+     * @param string $username
+     * @param string $ip
+     * @param string $password 加密后的密码
+     * @return void
+     * @author Claude
+     * @date 2025/12/01
+     */
+    private static function logAdminLoginFail(string $username, string $ip, string $password)
+    {
+        try {
+            Db::table('x_admins_login')->insert([
+                'adminname' => $username,
+                'adminpass' => $password,
+                'ifok' => 0,
+                'time' => date('Y-m-d H:i:s'),
+                'ip' => $ip,
+                'server' => '',
+                'os' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+            ]);
+        } catch (\Exception $e) {
+            // 日志失败不影响主流程
+        }
+    }
+
+
+    /**
+     * @notes 记录管理员登录成功日志
+     * @param string $username
+     * @param string $ip
+     * @return void
+     * @author Claude
+     * @date 2025/12/01
+     */
+    private static function logAdminLoginSuccess(string $username, string $ip)
+    {
+        try {
+            Db::table('x_admins_login')->insert([
+                'adminname' => $username,
+                'adminpass' => 'OK',
+                'ifok' => 1,
+                'time' => date('Y-m-d H:i:s'),
+                'ip' => $ip,
+                'server' => '',
+                'os' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+            ]);
+        } catch (\Exception $e) {
+            // 日志失败不影响主流程
+        }
+    }
+
+
+    /**
      * @notes 修改密码
      * @param int $userid
      * @param string $oldPassword 旧密码（明文）
