@@ -295,8 +295,9 @@ class LotteryLoginController extends BaseApiController
                 return $this->fail('账号不存在');
             }
 
-            // 验证密码
-            if (!password_verify($password, $admin->password) && md5($password) !== $admin->password) {
+            // 验证密码 - 使用与 adminapi 相同的加密方式
+            $passwordSalt = \think\facade\Config::get('project.unique_identification');
+            if ($admin->password !== create_password($password, $passwordSalt)) {
                 return $this->fail('密码错误');
             }
 
