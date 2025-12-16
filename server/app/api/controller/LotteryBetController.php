@@ -36,11 +36,24 @@ class LotteryBetController extends BaseApiController
      *   "gid": 200,
      *   "qishu": "2025334",
      *   "orders": [
-     *     {"pid": "bclass_24927", "bet_content": "26", "bet_amount": 1},
-     *     {"pid": "bclass_24927", "bet_content": "08", "bet_amount": 2},
-     *     {"pid": "play_97000135", "bet_content": "鼠,牛,虎,兔", "bet_amount": 5}
+     *     {"pid": 1, "bet_content": "26", "bet_amount": 1},
+     *     {"pid": 1, "bet_content": "08", "bet_amount": 2},
+     *     {"pid": 5, "bet_content": "鼠,牛,虎,兔", "bet_amount": 5}
      *   ]
      * }
+     *
+     * 参数说明:
+     * - gid: 游戏ID (必填, 200=新澳门六合彩)
+     * - qishu: 期号 (必填, 如 "2025334")
+     * - orders: 投注订单数组 (必填, 支持批量)
+     *   - pid: 玩法ID (必填, la_play_method.id)
+     *   - bet_content: 投注内容 (必填, 号码或生肖，多个用逗号分隔)
+     *   - bet_amount: 投注金额 (必填, 必须>0)
+     *
+     * ⚠️ 业务规则说明:
+     * - 用户只能投注'win'类型(即押号码中奖)
+     * - 后端强制设置bet_type='win',忽略前端传值
+     * - '不中'是平台盈利逻辑,不是用户投注选项
      *
      * 响应示例(成功):
      * {
@@ -67,14 +80,7 @@ class LotteryBetController extends BaseApiController
     public function placeBet()
     {
         // 获取新系统的用户ID(来自token验证)
-        $newUserId = $this->userId;
-
-        // 映射到老系统用户
-        $legacyUser = LotteryLoginLogic::getLegacyUserByNewUserId($newUserId);
-
-        if (!$legacyUser) {
-            return $this->fail('用户信息不存在');
-        }
+        $userId = $this->userId;
 
         // 获取请求参数
         $gid = $this->request->param('gid/d', 0);
@@ -103,25 +109,16 @@ class LotteryBetController extends BaseApiController
         $parsedOrders = [];
 
         foreach ($orders as $index => $order) {
-            // 解析 pid 参数
+            // 解析 pid 参数（玩法ID）
             $pidParam = $order['pid'] ?? '';
             $betContent = $order['bet_content'] ?? '';
             $betAmount = (float)($order['bet_amount'] ?? 0);
+            $betType = $order['bet_type'] ?? 'win';  // 新增: 投注类型，默认为"中"
 
-            // 解析 pid 格式: "play_123", "bclass_456", "123"
+            // 解析 pid 格式: 直接使用数字ID（对应 la_play_method.id）
             $pid = 0;
-            $pidType = 'play';
             if (!empty($pidParam)) {
-                if (strpos($pidParam, 'play_') === 0) {
-                    $pid = (int)substr($pidParam, 5);
-                    $pidType = 'play';
-                } elseif (strpos($pidParam, 'bclass_') === 0) {
-                    $pid = (int)substr($pidParam, 7);
-                    $pidType = 'bclass';
-                } else {
-                    $pid = (int)$pidParam;
-                    $pidType = 'play';
-                }
+                $pid = (int)$pidParam;
             }
 
             // 基础参数验证（在事务外进行，快速失败）
@@ -137,15 +134,20 @@ class LotteryBetController extends BaseApiController
                 return $this->fail('第' . ($index + 1) . '注投注失败: 投注金额必须大于0');
             }
 
+            // ⚠️ 业务规则: 用户只能投注'win'类型(押号码中奖)
+            // 'not_win'是平台盈利逻辑(用户未押的号码开出时平台赚钱)
+            // 前端已移除'中/不中'选项,后端强制设为'win'
+            $betType = 'win';  // 强制为'win',忽略前端传值
+
             $parsedOrders[] = [
                 'index' => $index,
-                'legacy_userid' => $legacyUser['userid'],
+                'user_id' => $userId,
                 'gid' => $gid,
                 'qishu' => $qishu,
                 'pid' => $pid,
-                'pid_type' => $pidType,
                 'bet_content' => $betContent,
                 'bet_amount' => $betAmount,
+                'bet_type' => $betType,  // 固定为'win'
                 'ip' => $ip,
             ];
         }
@@ -236,14 +238,7 @@ class LotteryBetController extends BaseApiController
     public function getBetList()
     {
         // 获取新系统的用户ID
-        $newUserId = $this->userId;
-
-        // 映射到老系统用户
-        $legacyUser = LotteryLoginLogic::getLegacyUserByNewUserId($newUserId);
-
-        if (!$legacyUser) {
-            return $this->fail('用户信息不存在');
-        }
+        $userId = $this->userId;
 
         // 获取查询参数
         $page = $this->request->param('page/d', 1);
@@ -251,14 +246,16 @@ class LotteryBetController extends BaseApiController
         $qishu = $this->request->param('qishu', '');
         $gid = $this->request->param('gid/d', 0);
         $z = $this->request->param('z', '');
+        $plateCode = $this->request->param('plate_code', '');
 
         // 调用查询逻辑
-        $result = LotteryBetLogic::getBetList($legacyUser['userid'], [
+        $result = LotteryBetLogic::getBetList($userId, [
             'page' => $page,
             'limit' => $limit,
             'qishu' => $qishu,
             'gid' => $gid,
             'z' => $z,
+            'plate_code' => $plateCode,
         ]);
 
         return $this->success('获取成功', $result);
@@ -292,6 +289,7 @@ class LotteryBetController extends BaseApiController
         // 获取请求参数
         $gid = $this->request->param('gid/d', 0);
         $qishu = $this->request->param('qishu', '');
+        $plateCode = $this->request->param('plate_code', '');  // 新增：盘口参数(可选)
 
         // 参数验证
         if (empty($gid)) {
@@ -303,7 +301,7 @@ class LotteryBetController extends BaseApiController
         }
 
         // 查询开奖结果
-        $result = LotteryBetLogic::getKjResult($gid, $qishu);
+        $result = LotteryBetLogic::getKjResult($gid, $qishu, $plateCode);
 
         if ($result === false) {
             return $this->fail(LotteryBetLogic::getError());
@@ -336,25 +334,56 @@ class LotteryBetController extends BaseApiController
     {
         // 获取请求参数
         $gid = $this->request->param('gid/d', 0);
+        $plateCode = $this->request->param('plate_code', '');  // 新增：获取盘口参数
 
         // 参数验证
         if (empty($gid)) {
             return $this->fail('请输入游戏ID');
         }
 
-        // 查询游戏信息
-        $game = \think\facade\Db::table('x_game')
-            ->where('gid', $gid)
-            ->field('thisqishu,gname')
-            ->find();
+        // 构建查询
+        $query = \think\facade\Db::table('la_lottery_issue')
+            ->where('game_id', $gid)
+            ->where('status', 1);  // 1=投注中
 
-        if (!$game) {
-            return $this->fail('游戏不存在');
+        // 新增：如果传了盘口参数，则按盘口筛选
+        if (!empty($plateCode)) {
+            $query->where('plate_code', $plateCode);
         }
 
+        // 查询当前可投注的期号
+        $currentIssue = $query->order('draw_time', 'asc')->find();
+
+        if (!$currentIssue) {
+            // 如果没有投注中的期号，查询该盘口最新的期号
+            $query2 = \think\facade\Db::table('la_lottery_issue')
+                ->where('game_id', $gid);
+
+            // 如果有盘口参数，也要筛选
+            if (!empty($plateCode)) {
+                $query2->where('plate_code', $plateCode);
+            }
+
+            $currentIssue = $query2->order('draw_time', 'desc')->find();
+        }
+
+        if (!$currentIssue) {
+            return $this->fail('暂无可用期号');
+        }
+
+        // 游戏名称映射
+        $gameNames = [
+            200 => '新澳门六合彩',
+        ];
+
         return $this->success('获取成功', [
-            'qishu' => $game['thisqishu'],
-            'game_name' => $game['gname'],
+            'qishu' => $currentIssue['issue'],
+            'game_name' => $gameNames[$gid] ?? '未知游戏',
+            'plate_code' => $currentIssue['plate_code'],
+            'status' => $currentIssue['status'],
+            'open_time' => date('Y-m-d H:i:s', $currentIssue['open_time']),
+            'close_time' => date('Y-m-d H:i:s', $currentIssue['close_time']),
+            'draw_time' => date('Y-m-d H:i:s', $currentIssue['draw_time']),
         ]);
     }
 
@@ -399,63 +428,32 @@ class LotteryBetController extends BaseApiController
             return $this->fail('请输入游戏ID');
         }
 
-        // 定义支持的玩法名称
-        // 大类玩法(在 x_bclass 表中): 特碼、正碼(平码)、特肖
-        $bclassPlays = ['特码', '特碼', '特肖', '平码', '平碼', '正码', '正碼'];
-
-        // 具体玩法(在 x_play 表中): 三肖、四肖、五肖、六肖
-        $playPlays = ['三肖', '四肖', '五肖', '六肖'];
-
-        // 1. 从 x_bclass 表查询玩法大类
-        $bclassList = \think\facade\Db::table('x_bclass')
-            ->where('gid', $gid)
-            ->where('ifok', 1)
-            ->whereIn('name', $bclassPlays)
-            ->field('id,name,xsort')
+        // 从 la_play_method 表查询玩法列表
+        $playList = \think\facade\Db::table('la_play_method')
+            ->where('game_id', $gid)
+            ->where('is_enabled', 1)
+            ->field('id,name,code,odds_default,sort')
+            ->order('sort', 'asc')
             ->select()
             ->toArray();
 
-        // 2. 从 x_play 表查询具体玩法
-        $playList = \think\facade\Db::table('x_play')
-            ->where('gid', $gid)
-            ->where('ifok', 1)
-            ->whereIn('name', $playPlays)
-            ->field('pid as id,name,peilv1')
-            ->select()
-            ->toArray();
-
-        // 3. 合并结果并标记类型
-        $result = [];
-
-        // 添加大类玩法
-        foreach ($bclassList as $item) {
-            $result[] = [
-                'id' => 'bclass_' . $item['id'],
-                'name' => $item['name'],
-                'type' => 'bclass',
-                'sort' => $item['xsort']
-            ];
+        if (empty($playList)) {
+            return $this->success('获取成功', [
+                'list' => [],
+            ]);
         }
 
-        // 添加具体玩法
+        // 格式化返回数据
+        $result = [];
         foreach ($playList as $item) {
             $result[] = [
-                'id' => 'play_' . $item['id'],
+                'id' => $item['id'],
+                'pid' => $item['id'],  // 兼容前端
                 'name' => $item['name'],
-                'type' => 'play',
-                'peilv1' => $item['peilv1'],
-                'sort' => 99  // 默认排在后面
+                'code' => $item['code'],
+                'peilv1' => number_format($item['odds_default'], 4, '.', ''),  // 赔率（包本金）
+                'label' => $item['name'],  // 兼容前端
             ];
-        }
-
-        // 4. 按排序号排序
-        usort($result, function($a, $b) {
-            return $a['sort'] - $b['sort'];
-        });
-
-        // 5. 移除排序字段
-        foreach ($result as &$item) {
-            unset($item['sort']);
         }
 
         return $this->success('获取成功', [
@@ -554,6 +552,7 @@ class LotteryBetController extends BaseApiController
         $playName = $this->request->param('play_name', '');
         $gid = $this->request->param('gid/d', 200);
         $year = $this->request->param('year/d', 0);
+        $plateCode = $this->request->param('plate_code', '');
 
         // 参数验证
         if (empty($playName)) {
@@ -566,7 +565,7 @@ class LotteryBetController extends BaseApiController
         }
 
         // 调用逻辑层获取数据
-        $result = LotteryBetLogic::getBetOptions($playName, $gid, $year);
+        $result = LotteryBetLogic::getBetOptions($playName, $gid, $year, $plateCode);
 
         if ($result === false) {
             return $this->fail(LotteryBetLogic::getError());

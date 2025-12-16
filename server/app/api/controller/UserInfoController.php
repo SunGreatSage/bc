@@ -9,7 +9,9 @@
 namespace app\api\controller;
 
 use app\api\logic\LotteryLoginLogic;
+use app\common\service\LotteryIssueService;
 use think\response\Json;
+use think\facade\Db;
 
 /**
  * 用户信息控制器
@@ -35,148 +37,88 @@ class UserInfoController extends BaseApiController
      *   "code": 1,
      *   "msg": "获取成功",
      *   "data": {
-     *     "credit_limit": "10000.00",
-     *     "available_balance": "9900.00",
-     *     "remaining_credit": "100.00",
-     *     "sy": "0.00",
-     *     "frozen_money": "0.00",
-     *     "period_bet_amount": "500.00",
+     *     "balance": "10000.00",
+     *     "frozen_amount": "0.00",
+     *     "total_bet": "500.00",
+     *     "total_prize": "0.00",
+     *     "period_bet_amount": "100.00",
      *     "time_info": {
-     *       "current_qishu": "2025112",
-     *       "open_time": "2025-11-28 09:00:00",
-     *       "close_time": "2025-11-28 21:25:00",
-     *       "kj_time": "2025-11-28 21:30:00",
+     *       "issue": "2025121201",
+     *       "game_id": 200,
+     *       "plate_code": "A",
+     *       "open_time": "2025-12-12 06:00:00",
+     *       "close_time": "2025-12-12 09:25:00",
+     *       "draw_time": "2025-12-12 09:30:00",
      *       "seconds_to_open": -36000,
      *       "seconds_to_close": 8100,
-     *       "seconds_to_kj": 8400,
-     *       "status": "betting"
+     *       "seconds_to_draw": 8400,
+     *       "status": "betting",
+     *       "status_code": 1,
+     *       "result": ""
      *     }
      *   }
      * }
      */
     public function getUserInfo()
     {
-        // 获取新系统的用户ID
-        $newUserId = $this->userId;
+        try {
+            // 获取用户ID
+            $userId = $this->userId;
 
-        // 映射到老系统用户
-        $legacyUser = LotteryLoginLogic::getLegacyUserByNewUserId($newUserId);
+            // 获取游戏ID(默认200=新澳门六合彩)
+            $gid = $this->request->param('gid/d', 200);
 
-        if (!$legacyUser) {
-            return $this->fail('用户信息不存在');
-        }
+            // 获取盘口参数(默认A)
+            $plateCode = $this->request->param('plate_code', 'A');
 
-        $legacyUserId = $legacyUser['userid'];
+            // 1. 获取用户账户信息(使用新系统表 la_user_account)
+            $account = Db::table('la_user_account')
+                ->where('user_id', $userId)
+                ->find();
 
-        // 获取游戏ID(默认200=新澳门六合彩)
-        $gid = $this->request->param('gid/d', 200);
-
-        // 1. 获取用户账户信息
-        $userInfo = \think\facade\Db::table('x_user')
-            ->where('userid', $legacyUserId)
-            ->field('kmaxmoney,kmoney,sy,jzkmoney,money,maxmoney')
-            ->find();
-
-        if (!$userInfo) {
-            return $this->fail('用户账户不存在');
-        }
-
-        // ========== 字段含义(参考老系统 uxj/top.php) ==========
-        // kmaxmoney: 信用额度上限
-        // kmoney: 可用余额(用于投注判断的余额)
-        // sy: 上水/返点金额
-        // jzkmoney: 冻结金额
-        // kmoneyuse: 剩余可用额度 = kmaxmoney + sy - jzkmoney - kmoney (计算值)
-
-        $creditLimit = (float)$userInfo['kmaxmoney'];  // 信用额度上限
-        $availableBalance = (float)$userInfo['kmoney'];  // 可用余额(可投注金额)
-        $sy = (float)$userInfo['sy'];  // 上水/返点
-        $frozenMoney = (float)$userInfo['jzkmoney'];  // 冻结金额
-
-        // 剩余可用额度(参考老系统 uxj/top.php 第22-24行)
-        if ($creditLimit == 0) {
-            // 如果信用额度为0
-            $remainingCredit = $sy - $frozenMoney - $availableBalance;
-        } else {
-            // 使用信用账户
-            $remainingCredit = $creditLimit + $sy - $frozenMoney - $availableBalance;
-        }
-
-        // 2. 获取当前期号和时间信息
-        $gameInfo = \think\facade\Db::table('x_game')
-            ->where('gid', $gid)
-            ->field('thisqishu')
-            ->find();
-
-        if (!$gameInfo) {
-            return $this->fail('游戏不存在');
-        }
-
-        $currentQishu = $gameInfo['thisqishu'];
-
-        // 3. 查询用户当期下注金额(从x_lib表)
-        $periodBetAmount = \think\facade\Db::table('x_lib')
-            ->where('userid', $legacyUserId)
-            ->where('gid', $gid)
-            ->where('qishu', $currentQishu)
-            ->where('bs', 1)  // 有效投注
-            ->sum('je');
-
-        // 获取当前期的时间信息
-        $kjInfo = \think\facade\Db::table('x_kj')
-            ->where('gid', $gid)
-            ->where('qishu', $currentQishu)
-            ->field('opentime,closetime,kjtime')
-            ->find();
-
-        $timeInfo = [
-            'current_qishu' => $currentQishu,
-            'open_time' => null,
-            'close_time' => null,
-            'kj_time' => null,
-            'seconds_to_open' => null,
-            'seconds_to_close' => null,
-            'seconds_to_kj' => null,
-            'status' => 'unknown',  // unknown/before_open/betting/closed/settled
-        ];
-
-        if ($kjInfo) {
-            $now = time();
-            $openTime = strtotime($kjInfo['opentime']);
-            $closeTime = strtotime($kjInfo['closetime']);
-            $kjTime = strtotime($kjInfo['kjtime']);
-
-            $timeInfo['open_time'] = $kjInfo['opentime'];
-            $timeInfo['close_time'] = $kjInfo['closetime'];
-            $timeInfo['kj_time'] = $kjInfo['kjtime'];
-            $timeInfo['seconds_to_open'] = $openTime - $now;
-            $timeInfo['seconds_to_close'] = $closeTime - $now;
-            $timeInfo['seconds_to_kj'] = $kjTime - $now;
-
-            // 判断当前状态
-            if ($now < $openTime) {
-                $timeInfo['status'] = 'before_open';  // 未开盘
-            } elseif ($now >= $openTime && $now < $closeTime) {
-                $timeInfo['status'] = 'betting';  // 投注中
-            } elseif ($now >= $closeTime && $now < $kjTime) {
-                $timeInfo['status'] = 'closed';  // 已封盘
-            } else {
-                $timeInfo['status'] = 'settled';  // 已开奖
+            if (!$account) {
+                return $this->fail('用户账户不存在');
             }
+
+            // 2. 【只读模式】获取当前期号(不创建新期号,安全原则)
+            // ⚠️ 前端API只能查询期号,不能创建期号
+            // ⚠️ 只有开奖接口才能创建新期号
+            trace("🎯 [UserInfo] 开始获取期号(只读): gid=$gid, plate_code=$plateCode", 'info');
+            $currentIssue = LotteryIssueService::getCurrentIssueReadOnly($gid, $plateCode);
+
+            if (!$currentIssue) {
+                trace("❌ [UserInfo] 暂无可用期号,等待开奖后自动创建", 'warning');
+                return $this->fail('当前暂无可投注期号,请等待开奖后再试');
+            }
+
+            trace("✅ [UserInfo] 获取期号成功: issue={$currentIssue['issue']}, status={$currentIssue['status']}, result=" . ($currentIssue['result'] ?: '空'), 'info');
+
+            // 3. 获取期号详情(包含倒计时)
+            $timeInfo = LotteryIssueService::getIssueWithCountdown($currentIssue);
+
+            // 4. 查询用户当期下注金额
+            $periodBetAmount = Db::table('la_betting_record')
+                ->where('user_id', $userId)
+                ->where('game_id', $gid)
+                ->where('issue_id', $currentIssue['id'])
+                ->where('status', '<>', 3)  // 排除已撤单
+                ->sum('total_amount');
+
+            // 5. 组装返回数据
+            $result = [
+                'balance' => number_format((float)$account['balance'], 2, '.', ''),  // 可用余额
+                'frozen_amount' => number_format((float)$account['frozen_amount'], 2, '.', ''),  // 冻结金额
+                'total_bet' => number_format((float)$account['total_bet'], 2, '.', ''),  // 累计投注
+                'total_prize' => number_format((float)$account['total_prize'], 2, '.', ''),  // 累计中奖
+                'period_bet_amount' => number_format((float)$periodBetAmount, 2, '.', ''),  // 当期下注金额
+                'time_info' => $timeInfo,
+            ];
+
+            return $this->success('获取成功', $result);
+
+        } catch (\Exception $e) {
+            return $this->fail('获取失败: ' . $e->getMessage());
         }
-
-        // 4. 组装返回数据
-        $result = [
-            'credit_limit' => number_format($creditLimit, 2, '.', ''),  // 信用额度上限
-            'available_balance' => number_format($availableBalance, 2, '.', ''),  // 可用余额(可投注金额,与placeBet一致)
-            'remaining_credit' => number_format($remainingCredit, 2, '.', ''),  // 剩余可用额度
-            'sy' => number_format($sy, 2, '.', ''),  // 上水/返点
-            'frozen_money' => number_format($frozenMoney, 2, '.', ''),  // 冻结金额
-            'period_bet_amount' => number_format((float)$periodBetAmount, 2, '.', ''),  // 当期下注金额
-            'time_info' => $timeInfo,
-        ];
-
-        return $this->success('获取成功', $result);
     }
 
 

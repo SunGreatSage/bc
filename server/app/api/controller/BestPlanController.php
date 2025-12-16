@@ -32,7 +32,8 @@ class BestPlanController extends BaseApiController
         'calculateRealtime',
         'findByTargetRate',
         'getBetSummary',
-        'getNumberDistribution'
+        'getNumberDistribution',
+        'createNewIssue'  // 新增：手动创建新期号
     ];
 
     /**
@@ -93,6 +94,13 @@ class BestPlanController extends BaseApiController
      *
      * @return Json
      * @route POST /api/best_plan/calculate_realtime
+     *
+     * 请求参数：
+     * - gid: 游戏ID（默认200）
+     * - qishu: 期号
+     * - year: 年份（可选）
+     * - target_rate: 目标利润率（可选，如10表示10%，为空则最大化利润）
+     * - tolerance: 允许误差（可选，默认5%）
      */
     public function calculateRealtime(): Json
     {
@@ -103,14 +111,18 @@ class BestPlanController extends BaseApiController
         $gid = (int)$this->request->post('gid', 200);
         $qishu = $this->request->post('qishu', '');
         $year = $this->request->post('year');
+        $targetRate = $this->request->post('target_rate');  // 新增：目标利润率
+        $tolerance = $this->request->post('tolerance');      // 新增：误差范围
 
         if (empty($qishu)) {
             return $this->fail('期号不能为空');
         }
 
         $year = $year ? (int)$year : null;
+        $targetRate = $targetRate !== '' && $targetRate !== null ? (float)$targetRate : null;
+        $tolerance = $tolerance !== '' && $tolerance !== null ? (float)$tolerance : 5.0;
 
-        $result = BestPlanLogic::calculateRealtime($gid, $qishu, $year);
+        $result = BestPlanLogic::calculateRealtime($gid, $qishu, $year, $targetRate, $tolerance);
 
         if ($result === false) {
             return $this->fail(BestPlanLogic::getError());
@@ -214,12 +226,23 @@ class BestPlanController extends BaseApiController
     public function getCurrentQishu(): Json
     {
         $gid = (int)$this->request->get('gid', 200);
+        $plateCode = $this->request->get('plate_code', 'am');  // ✅ 获取盘口代码
 
-        $qishu = BestPlanLogic::getCurrentQishu($gid);
+        trace("🎯 [Controller] 接收参数: gid=$gid, plate_code=$plateCode", 'info');
+
+        $qishu = BestPlanLogic::getCurrentQishu($gid, $plateCode);  // ✅ 传递盘口参数
+
+        // 调试：查看Logic返回的数据
+        trace("🎯 [Controller] Logic返回的数据类型: " . gettype($qishu), 'info');
+        trace("🎯 [Controller] Logic返回的数据: " . json_encode($qishu, JSON_UNESCAPED_UNICODE), 'info');
+        trace("🎯 [Controller] 数据字段: " . implode(', ', array_keys($qishu ?: [])), 'info');
 
         if (!$qishu) {
             return $this->fail('暂无可分析的期号');
         }
+
+        // 在返回前再次验证数据
+        trace("🎯 [Controller] 即将返回的数据: " . json_encode($qishu, JSON_UNESCAPED_UNICODE), 'info');
 
         return $this->success('获取成功', $qishu);
     }
@@ -270,6 +293,52 @@ class BestPlanController extends BaseApiController
         $distribution = BestPlanLogic::getNumberBetDistribution($gid, $qishu);
 
         return $this->success('获取成功', $distribution);
+    }
+
+    /**
+     * 手动创建新期号
+     *
+     * @return Json
+     * @route POST /api/best_plan/create_new_issue
+     *
+     * 请求参数：
+     * - gid: 游戏ID（默认200）
+     * - plate_code: 盘口代码（默认am）
+     *
+     * 返回示例：
+     * {
+     *   "code": 1,
+     *   "msg": "新期号创建成功",
+     *   "data": {
+     *     "issue": "2025113",
+     *     "open_time": "2025-12-12 06:00:00",
+     *     "close_time": "2025-12-12 09:30:00",
+     *     "draw_time": "2025-12-12 09:50:00",
+     *     "status": 0
+     *   }
+     * }
+     */
+    public function createNewIssue(): Json
+    {
+        // 验证是否是管理员
+        if (!$this->isAdmin()) {
+            return $this->fail('需要管理员权限');
+        }
+
+        $gid = (int)$this->request->post('gid', 200);
+        $plateCode = $this->request->post('plate_code', 'am');
+
+        try {
+            $result = BestPlanLogic::manualCreateNewIssue($gid, $plateCode);
+
+            if ($result === false) {
+                return $this->fail(BestPlanLogic::getError());
+            }
+
+            return $this->success('新期号创建成功', $result);
+        } catch (\Exception $e) {
+            return $this->fail('创建失败: ' . $e->getMessage());
+        }
     }
 
     /**

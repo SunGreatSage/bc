@@ -14,6 +14,8 @@
 
 return [
     'middleware' => [
+        // CORS 跨域支持（必须放在最前面）
+        app\adminapi\http\middleware\CorsMiddleware::class,
         // 初始化
         app\adminapi\http\middleware\InitMiddleware::class,
         // 登录验证

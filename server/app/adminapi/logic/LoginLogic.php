@@ -58,6 +58,9 @@ class LoginLogic extends BaseLogic
             'avatar' => $avatar,
             'role_name' => $adminInfo['role_name'],
             'token' => $adminInfo['token'],
+            'root' => $admin->root,  // 角色类型: 1=总管理, 2=代理
+            'admin_id' => $admin->id,  // 管理员ID
+            'credit_limit' => $admin->credit_limit ?? 0,  // 信用额度(代理)
         ];
     }
 

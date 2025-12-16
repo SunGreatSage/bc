@@ -15,3 +15,6 @@ node_modules/
 
 # Large archives (keep repo slim)
 vue/admin/admin.zip
+
+# Windows reserved device filename accidentally created
+nul

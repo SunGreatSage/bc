@@ -1,0 +1,412 @@
+<?php
+// +----------------------------------------------------------------------
+// | BC 彩票系统 - 期号自动创建服务
+// +----------------------------------------------------------------------
+// | Author: Claude AI
+// | Date: 2025-12-12
+// +----------------------------------------------------------------------
+
+namespace app\common\service;
+
+use think\facade\Db;
+
+/**
+ * 期号自动创建服务
+ * Class LotteryIssueService
+ * @package app\common\service
+ */
+class LotteryIssueService
+{
+    /**
+     * 【只读模式】获取当前可投注的期号(不创建新期号)
+     *
+     * ⚠️ 前端API专用: 只查询已存在的期号,不会创建新期号
+     * ⚠️ 安全原则: 只有开奖接口才能创建新期号
+     *
+     * @param int $gameId 游戏ID(默认200=新澳门六合彩)
+     * @param string $plateCode 盘口代码(默认A)
+     * @return array|null 返回期号信息,如果没有可用期号返回null
+     */
+    public static function getCurrentIssueReadOnly(int $gameId = 200, string $plateCode = 'A'): ?array
+    {
+        $now = time();
+        trace("🔍 [只读] 查询期号: gameId=$gameId, plateCode=$plateCode", 'info');
+
+        // 1. 查询待开盘(status=0)或投注中(status=1)的期号
+        $currentIssue = Db::table('la_lottery_issue')
+            ->where('game_id', $gameId)
+            ->where('plate_code', $plateCode)
+            ->whereIn('status', [0, 1])
+            ->order('draw_time', 'asc')
+            ->find();
+
+        if ($currentIssue) {
+            trace("📌 [只读] 找到期号: " . $currentIssue['issue'] . ", status=" . $currentIssue['status'], 'info');
+
+            // 更新状态(如果需要)
+            $needUpdate = false;
+            $newStatus = $currentIssue['status'];
+
+            if ($now >= $currentIssue['open_time'] && $now < $currentIssue['close_time'] && $currentIssue['status'] != 1) {
+                $newStatus = 1;
+                $needUpdate = true;
+            } elseif ($now >= $currentIssue['close_time'] && $currentIssue['status'] != 2) {
+                $newStatus = 2;
+                $needUpdate = true;
+            }
+
+            if ($needUpdate) {
+                Db::table('la_lottery_issue')
+                    ->where('id', $currentIssue['id'])
+                    ->update(['status' => $newStatus]);
+                $currentIssue['status'] = $newStatus;
+            }
+
+            return $currentIssue;
+        }
+
+        // 2. 查询已封盘(status=2)的期号
+        $pendingIssue = Db::table('la_lottery_issue')
+            ->where('game_id', $gameId)
+            ->where('plate_code', $plateCode)
+            ->where('status', 2)
+            ->order('draw_time', 'desc')
+            ->find();
+
+        if ($pendingIssue) {
+            trace("⏳ [只读] 找到等待开奖的期号: " . $pendingIssue['issue'], 'info');
+            return $pendingIssue;
+        }
+
+        // 3. 没有找到任何可用期号
+        trace("❌ [只读] 没有找到可用期号,需要等待开奖后自动创建", 'warning');
+        return null;
+    }
+
+
+    /**
+     * 获取或创建当前可投注的期号
+     *
+     * ⚠️ 仅供开奖接口使用: 开奖后自动创建下一期
+     * ⚠️ 核心规则: 必须等上一期开奖完毕(status=3且有开奖结果),才能创建下一期
+     *
+     * @param int $gameId 游戏ID(默认200=新澳门六合彩)
+     * @param string $plateCode 盘口代码(默认A)
+     * @return array|null 返回期号信息,失败返回null
+     */
+    public static function getOrCreateCurrentIssue(int $gameId = 200, string $plateCode = 'A'): ?array
+    {
+        $now = time();
+        trace("🔍 开始获取期号: gameId=$gameId, plateCode=$plateCode", 'info');
+
+        // 1. 先查询是否存在待开盘(status=0)或投注中(status=1)的期号
+        $currentIssue = Db::table('la_lottery_issue')
+            ->where('game_id', $gameId)
+            ->where('plate_code', $plateCode)
+            ->whereIn('status', [0, 1])  // 0=待开盘, 1=投注中
+            ->order('draw_time', 'asc')
+            ->find();
+
+        if ($currentIssue) {
+            trace("📌 找到待开盘或投注中的期号: " . $currentIssue['issue'], 'info');
+        }
+
+        // 2. 如果找到了待开盘或投注中的期号,检查是否需要更新状态
+        if ($currentIssue) {
+            $needUpdate = false;
+            $newStatus = $currentIssue['status'];
+
+            if ($now >= $currentIssue['open_time'] && $now < $currentIssue['close_time'] && $currentIssue['status'] != 1) {
+                $newStatus = 1;  // 投注中
+                $needUpdate = true;
+            } elseif ($now >= $currentIssue['close_time'] && $now < $currentIssue['draw_time'] && $currentIssue['status'] != 2) {
+                $newStatus = 2;  // 已封盘,等待开奖
+                $needUpdate = true;
+            } elseif ($now >= $currentIssue['draw_time'] && $currentIssue['status'] != 3) {
+                // 注意: 到达开奖时间时,不自动设置为已开奖,需要手动开奖后才变为status=3
+                // 这里只更新状态为"已封盘",等待管理员开奖
+                if ($currentIssue['status'] != 2) {
+                    $newStatus = 2;
+                    $needUpdate = true;
+                }
+            }
+
+            if ($needUpdate) {
+                Db::table('la_lottery_issue')
+                    ->where('id', $currentIssue['id'])
+                    ->update(['status' => $newStatus]);
+                $currentIssue['status'] = $newStatus;
+            }
+
+            return $currentIssue;
+        }
+
+        // 3. 查询是否有已封盘(status=2)的期号
+        $pendingIssue = Db::table('la_lottery_issue')
+            ->where('game_id', $gameId)
+            ->where('plate_code', $plateCode)
+            ->where('status', 2)  // 2=已封盘,等待开奖
+            ->order('draw_time', 'desc')
+            ->find();
+
+        // 4. 如果有等待开奖的期号,直接返回(不创建新期号)
+        // 前端会显示"等待开奖中"
+        if ($pendingIssue) {
+            trace("⏳ 找到等待开奖的期号: " . $pendingIssue['issue'], 'info');
+            return $pendingIssue;
+        }
+
+        // 5. 查询最新的已开奖期号
+        $latestIssue = Db::table('la_lottery_issue')
+            ->where('game_id', $gameId)
+            ->where('plate_code', $plateCode)
+            ->order('draw_time', 'desc')
+            ->find();
+
+        // 6. 判断是否可以创建新期号
+        if ($latestIssue) {
+            trace("📋 找到最新期号: " . $latestIssue['issue'] . ", status=" . $latestIssue['status'] . ", result=" . ($latestIssue['result'] ?: '空'), 'info');
+
+            // 必须满足: status=3(已开奖) 且 有开奖结果(result不为空)
+            if ($latestIssue['status'] == 3 && !empty($latestIssue['result'])) {
+                trace("✨ 上一期已开奖,准备创建新期号", 'info');
+                return self::autoCreateNextIssue($gameId, $plateCode, $latestIssue);
+            } else {
+                trace("⏳ 上一期还未开奖完毕,返回最新期号", 'info');
+                return $latestIssue;
+            }
+        }
+
+        // 7. 如果没有任何期号,创建第一个
+        trace("🆕 没有任何期号,创建第一期", 'info');
+        return self::autoCreateNextIssue($gameId, $plateCode, null);
+    }
+
+
+    /**
+     * 自动创建下一期期号
+     *
+     * @param int $gameId 游戏ID
+     * @param string $plateCode 盘口代码
+     * @param array|null $latestIssue 最新期号信息(用于生成期号序列)
+     * @return array|null 创建成功返回期号信息,失败返回null
+     */
+    private static function autoCreateNextIssue(int $gameId, string $plateCode, ?array $latestIssue): ?array
+    {
+        try {
+            $now = time();
+            $today = date('Ymd');
+
+            // 0. 读取盘口配置
+            $plateConfig = Db::table('la_plate')
+                ->where('game_id', $gameId)
+                ->where('code', $plateCode)
+                ->where('status', 1)  // 仅读取启用的盘口
+                ->find();
+
+            if (!$plateConfig) {
+                trace("❌ 未找到盘口配置: gameId=$gameId, plateCode=$plateCode", 'error');
+                // 如果没有配置,使用默认值
+                $plateConfig = [
+                    'open_time' => '06:00',
+                    'close_time' => '09:30',
+                    'draw_time' => '09:50',
+                ];
+            }
+
+            trace("🔧 [创建期号] 使用盘口配置: open_time={$plateConfig['open_time']}, close_time={$plateConfig['close_time']}, draw_time={$plateConfig['draw_time']}", 'info');
+
+            // 1. 生成新期号
+            if ($latestIssue) {
+                // 有历史期号,生成下一期
+                $latestIssueDate = substr($latestIssue['issue'], 0, 8);
+
+                if ($latestIssueDate === $today) {
+                    // 最新期号是今天的,期号加1
+                    $issueNumber = (int)substr($latestIssue['issue'], 8) + 1;
+                    $newIssue = $today . str_pad($issueNumber, 2, '0', STR_PAD_LEFT);
+                } else {
+                    // 最新期号不是今天的,创建今天的第1期
+                    $newIssue = $today . '01';
+                }
+            } else {
+                // 没有历史期号,创建第一期
+                $newIssue = $today . '01';
+            }
+
+            // 2. 设置开奖时间(使用盘口配置)
+            // 优先策略: 如果有上一期且是今天的且时间未过期,则在上一期基础上延后; 否则使用盘口配置或立即开盘
+            if ($latestIssue && $latestIssue['draw_time']) {
+                $latestIssueDate = substr($latestIssue['issue'], 0, 8);
+
+                // 如果上一期是今天的,检查是否可以连续开奖
+                if ($latestIssueDate === $today) {
+                    $nextOpenTime = $latestIssue['draw_time'] + 300;  // 上一期开奖后5分钟
+
+                    // 检查计算出的开盘时间是否在未来(如果在过去,说明上一期时间过期了)
+                    if ($nextOpenTime > $now) {
+                        // 连续开奖模式: 时间未过期,可以在上一期基础上延后
+                        trace("🔧 [创建期号] 连续开奖模式: 基于上一期时间创建", 'info');
+                        $openTime = $nextOpenTime;
+                        $closeTime = $openTime + 900;  // 开盘后15分钟封盘
+                        $drawTime = $closeTime + 300;  // 封盘后5分钟开奖
+                    } else {
+                        // 上一期时间已过期,立即开盘
+                        trace("🔧 [创建期号] 上一期时间已过期,立即开盘", 'info');
+                        $openTime = $now;
+                        $closeTime = $now + 900;  // 15分钟后封盘
+                        $drawTime = $closeTime + 300;  // 封盘后5分钟开奖
+                    }
+                } else {
+                    // 上一期不是今天的,使用盘口配置的时间(新的一天)
+                    trace("🔧 [创建期号] 新的一天: 使用盘口配置时间", 'info');
+                    $todayStr = date('Y-m-d');
+                    $openTime = strtotime("$todayStr {$plateConfig['open_time']}:00");
+                    $closeTime = strtotime("$todayStr {$plateConfig['close_time']}:00");
+                    $drawTime = strtotime("$todayStr {$plateConfig['draw_time']}:00");
+
+                    // 如果当前时间已经超过配置的开盘时间,则立即开盘
+                    if ($now > $openTime) {
+                        trace("🔧 [创建期号] 当前时间超过配置开盘时间,立即开盘", 'info');
+                        $openTime = $now;
+                        $closeTime = $now + 900;  // 15分钟后封盘
+                        $drawTime = $closeTime + 300;  // 封盘后5分钟开奖
+                    }
+                }
+            } else {
+                // 第一期,使用盘口配置的时间
+                trace("🔧 [创建期号] 第一期: 使用盘口配置时间", 'info');
+                $todayStr = date('Y-m-d');
+                $openTime = strtotime("$todayStr {$plateConfig['open_time']}:00");
+                $closeTime = strtotime("$todayStr {$plateConfig['close_time']}:00");
+                $drawTime = strtotime("$todayStr {$plateConfig['draw_time']}:00");
+
+                // 如果当前时间已经超过第一期开盘时间,则立即开盘
+                if ($now > $openTime) {
+                    trace("🔧 [创建期号] 当前时间超过配置开盘时间,立即开盘", 'info');
+                    $openTime = $now;
+                    $closeTime = $now + 900;  // 15分钟后封盘
+                    $drawTime = $closeTime + 300;  // 封盘后5分钟开奖
+                }
+            }
+
+            // 3. 判断当前状态
+            if ($now < $openTime) {
+                $status = 0;  // 待开盘
+            } elseif ($now >= $openTime && $now < $closeTime) {
+                $status = 1;  // 投注中
+            } elseif ($now >= $closeTime && $now < $drawTime) {
+                $status = 2;  // 已封盘
+            } else {
+                $status = 2;  // 超过开奖时间,但未开奖,设置为已封盘
+            }
+
+            // 4. 插入新期号
+            $issueData = [
+                'game_id' => $gameId,
+                'plate_code' => $plateCode,
+                'issue' => $newIssue,
+                'open_time' => $openTime,
+                'close_time' => $closeTime,
+                'draw_time' => $drawTime,
+                'status' => $status,
+                'result' => '',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+
+            try {
+                $insertId = Db::table('la_lottery_issue')->insertGetId($issueData);
+
+                if ($insertId) {
+                    // 返回新创建的期号信息
+                    $newIssue = Db::table('la_lottery_issue')
+                        ->where('id', $insertId)
+                        ->find();
+
+                    trace("✅ 成功创建新期号: " . $newIssue['issue'] . ", ID: " . $insertId, 'info');
+                    return $newIssue;
+                }
+
+                trace("❌ 创建期号失败: insertGetId返回空", 'error');
+                return null;
+
+            } catch (\think\db\exception\DbException $dbEx) {
+                // 数据库异常 - 输出详细信息
+                $errorMsg = "数据库错误: " . $dbEx->getMessage();
+                $errorData = $dbEx->getData();
+                trace("❌ 插入期号时数据库异常: $errorMsg", 'error');
+                trace("SQL错误详情: " . json_encode($errorData), 'error');
+                trace("插入数据: " . json_encode($issueData), 'error');
+                return null;
+            }
+
+        } catch (\Exception $e) {
+            // 记录日志
+            trace("❌ 自动创建期号异常: " . $e->getMessage(), 'error');
+            trace("异常类型: " . get_class($e), 'error');
+            trace("详细错误: " . $e->getTraceAsString(), 'error');
+            return null;
+        }
+    }
+
+
+    /**
+     * 获取期号的详细信息(包含倒计时)
+     *
+     * @param array $issue 期号数据
+     * @return array 包含倒计时的期号信息
+     */
+    public static function getIssueWithCountdown(array $issue): array
+    {
+        $now = time();
+        $openTime = $issue['open_time'];
+        $closeTime = $issue['close_time'];
+        $drawTime = $issue['draw_time'];
+
+        $result = [
+            'issue' => $issue['issue'],
+            'game_id' => $issue['game_id'],
+            'plate_code' => $issue['plate_code'],
+            'open_time' => date('Y-m-d H:i:s', $openTime),
+            'close_time' => date('Y-m-d H:i:s', $closeTime),
+            'draw_time' => date('Y-m-d H:i:s', $drawTime),
+            'seconds_to_open' => $openTime - $now,
+            'seconds_to_close' => $closeTime - $now,
+            'seconds_to_draw' => $drawTime - $now,
+            'status' => self::getStatusText($issue['status']),
+            'status_code' => $issue['status'],
+            'result' => $issue['result'] ?? '',
+        ];
+
+        // 添加调试日志
+        trace("🔍 [倒计时] plate_code={$issue['plate_code']}, issue={$issue['issue']}", 'info');
+        trace("🔍 [倒计时] openTime=$openTime (" . date('Y-m-d H:i:s', $openTime) . "), now=$now (" . date('Y-m-d H:i:s', $now) . ")", 'info');
+        trace("🔍 [倒计时] closeTime=$closeTime (" . date('Y-m-d H:i:s', $closeTime) . ")", 'info');
+        trace("🔍 [倒计时] drawTime=$drawTime (" . date('Y-m-d H:i:s', $drawTime) . ")", 'info');
+        trace("🔍 [倒计时] seconds_to_open=" . $result['seconds_to_open'], 'info');
+        trace("🔍 [倒计时] seconds_to_close=" . $result['seconds_to_close'], 'info');
+        trace("🔍 [倒计时] seconds_to_draw=" . $result['seconds_to_draw'], 'info');
+
+        return $result;
+    }
+
+
+    /**
+     * 获取状态文本
+     *
+     * @param int $statusCode 状态码
+     * @return string 状态文本
+     */
+    private static function getStatusText(int $statusCode): string
+    {
+        $statusMap = [
+            0 => 'before_open',  // 待开盘
+            1 => 'betting',      // 投注中
+            2 => 'closed',       // 已封盘
+            3 => 'settled',      // 已开奖
+        ];
+
+        return $statusMap[$statusCode] ?? 'unknown';
+    }
+}

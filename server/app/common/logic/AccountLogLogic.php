@@ -54,7 +54,9 @@ class AccountLogLogic extends BaseLogic
         switch ($changeObject) {
             // 用户余额
             case AccountLogEnum::UM:
-                $left_amount = $user->user_money;
+                // 从 la_user_account 表获取余额
+                $account = \think\facade\Db::name('user_account')->where('user_id', $userId)->find();
+                $left_amount = $account['balance'] ?? 0;
                 break;
             // 其他
         }

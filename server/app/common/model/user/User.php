@@ -19,7 +19,7 @@ namespace app\common\model\user;
 use app\common\enum\user\UserEnum;
 use app\common\model\BaseModel;
 use app\common\service\FileService;
-use think\model\concern\SoftDelete;
+// use think\model\concern\SoftDelete;  // 彩票系统不需要软删除，已注释
 
 /**
  * 用户模型
@@ -28,9 +28,9 @@ use think\model\concern\SoftDelete;
  */
 class User extends BaseModel
 {
-    use SoftDelete;
+    // use SoftDelete;  // 彩票系统不需要软删除，已注释
 
-    protected $deleteTime = 'delete_time';
+    // protected $deleteTime = 'delete_time';  // 彩票系统不需要软删除，已注释
 
 
     /**

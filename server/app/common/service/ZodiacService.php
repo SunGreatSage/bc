@@ -134,6 +134,37 @@ class ZodiacService
     }
 
     /**
+     * 将用户选择（可能是号码或生肖）统一转换为生肖数组
+     *
+     * @param array $selections 原始选择
+     * @param int $year 开奖年份
+     * @return array<string> 去重后的生肖列表
+     */
+    public static function normalizeZodiacSelections(array $selections, int $year): array
+    {
+        $numberMap = ZodiacYearService::getNumberMapByYear($year);
+        $normalized = [];
+
+        foreach ($selections as $selection) {
+            $selection = trim((string)$selection);
+            if ($selection === '') {
+                continue;
+            }
+
+            if (ctype_digit($selection)) {
+                $number = (int)$selection;
+                if (isset($numberMap[$number])) {
+                    $normalized[] = $numberMap[$number];
+                }
+            } else {
+                $normalized[] = $selection;
+            }
+        }
+
+        return array_values(array_unique($normalized));
+    }
+
+    /**
      * 判断多肖投注是否中奖
      *
      * 规则: 7个开奖号码中,只要有任意1个号码的生肖在用户选择的生肖中,就算中奖

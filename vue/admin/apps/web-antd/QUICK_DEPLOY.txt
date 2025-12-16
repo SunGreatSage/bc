@@ -1,0 +1,103 @@
+==================================================
+    控盘管理系统 - 快速部署指南
+==================================================
+
+📦 构建信息
+--------------
+✓ 项目已成功编译
+✓ API地址: http://156.245.144.78:66
+✓ 构建产物: dist.zip (1.2MB)
+
+🚀 三种部署方式
+--------------
+
+【方式1】自动部署脚本 ⭐推荐
+  1. 上传文件: dist.zip, nginx.conf, deploy.sh
+  2. chmod +x deploy.sh
+  3. sudo ./deploy.sh
+
+【方式2】手动部署
+  1. unzip dist.zip -d /usr/share/nginx/html/
+  2. cp nginx.conf /etc/nginx/conf.d/vben-admin.conf
+  3. nginx -t
+  4. systemctl restart nginx
+
+【方式3】Docker部署
+  1. docker build -t vben-admin .
+  2. docker run -d -p 80:80 vben-admin
+  # 或使用: docker-compose up -d
+
+📁 需要上传的文件
+--------------
+✓ dist.zip           (必需 - 前端文件)
+✓ nginx.conf         (必需 - Nginx配置)
+✓ deploy.sh          (可选 - 自动部署脚本)
+✓ Dockerfile         (可选 - Docker镜像)
+✓ docker-compose.yml (可选 - Docker Compose)
+
+🌐 访问地址
+--------------
+部署完成后访问:
+  http://localhost        (本地)
+  http://你的服务器IP      (服务器)
+  http://你的域名          (域名)
+
+🔍 验证部署
+--------------
+  1. curl http://localhost
+  2. 浏览器访问地址
+  3. 检查登录页面是否正常
+
+❗ 常见问题
+--------------
+Q: 404错误?
+A: 检查nginx配置，确认try_files指令正确
+
+Q: 接口跨域?
+A: 在nginx.conf添加CORS头或配置反向代理
+
+Q: 静态资源404?
+A: 检查dist目录是否完整上传
+
+📊 服务器要求
+--------------
+✓ 操作系统: Linux (Ubuntu/CentOS/Debian)
+✓ 内存: >= 512MB
+✓ 磁盘: >= 100MB
+✓ Nginx: >= 1.18.0
+✓ Docker: >= 20.10 (如使用Docker)
+
+🔧 配置修改
+--------------
+修改端口: 编辑nginx.conf中的 listen 80;
+修改域名: 编辑nginx.conf中的 server_name;
+启用HTTPS: 参考 DEPLOY.md 文档
+
+📞 查看日志
+--------------
+Nginx日志:
+  tail -f /var/log/nginx/error.log
+  tail -f /var/log/nginx/access.log
+
+Docker日志:
+  docker logs -f vben-admin
+
+🔄 服务管理
+--------------
+启动: systemctl start nginx
+停止: systemctl stop nginx
+重启: systemctl restart nginx
+重载: systemctl reload nginx
+状态: systemctl status nginx
+
+Docker服务:
+启动: docker-compose up -d
+停止: docker-compose down
+查看: docker ps
+日志: docker logs vben-admin
+
+==================================================
+详细文档请查看:
+  - README_DEPLOY.md (完整部署文档)
+  - DEPLOY.md (详细配置说明)
+==================================================

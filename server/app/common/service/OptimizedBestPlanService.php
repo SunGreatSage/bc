@@ -14,6 +14,12 @@ class OptimizedBestPlanService
     private const KEYWORDS_NORMAL_NUMBER = ['正码', '正碼', '平码', '平碼'];
     private const KEYWORDS_SPECIAL_ZODIAC = ['特肖', '特肖连', '平特肖'];
     private const KEYWORDS_MULTI_ZODIAC = ['三肖', '四肖', '五肖', '六肖'];
+    private const KEYWORDS_POSITIVE_ZODIAC = ['正肖'];
+    private const KEYWORDS_SPECIAL_ODD_EVEN = ['特码单双', '特碼單雙', '特碼单双'];
+    private const KEYWORDS_DIGIT_ODD_EVEN = ['合数单双', '合數單雙', '合數单双'];
+    private const KEYWORDS_TOTAL_ODD_EVEN = ['总和单双', '總和單雙', '總和单双'];
+    private const ODD_KEYWORDS = ['单', '單', '奇', 'odd', 'dan'];
+    private const EVEN_KEYWORDS = ['双', '雙', '偶', 'even', 'shuang'];
 
     private const SPECIAL_CANDIDATE_LIMIT = 6;
     private const NORMAL_POOL_LIMIT = 12;
@@ -40,6 +46,7 @@ class OptimizedBestPlanService
     protected array $specialNumberBets = [];
     protected array $normalNumberBets = [];
     protected array $specialZodiacBets = [];
+    protected array $positiveZodiacBets = [];
     protected array $multiZodiacBets = [];
     protected array $otherBets = [];
 
@@ -66,6 +73,7 @@ class OptimizedBestPlanService
         $this->specialNumberBets = [];
         $this->normalNumberBets = [];
         $this->specialZodiacBets = [];
+        $this->positiveZodiacBets = [];
         $this->multiZodiacBets = [];
         $this->otherBets = [];
 
@@ -111,6 +119,14 @@ class OptimizedBestPlanService
                 $zodiacs = ZodiacService::normalizeZodiacSelections($items, $this->year);
                 if (!empty($zodiacs)) {
                     $this->multiZodiacBets[] = $base + ['zodiacs' => $zodiacs];
+                }
+                continue;
+            }
+
+            if ($this->containsKeyword($methodName, self::KEYWORDS_POSITIVE_ZODIAC)) {
+                $zodiacs = ZodiacService::normalizeZodiacSelections($items, $this->year);
+                if (!empty($zodiacs)) {
+                    $this->positiveZodiacBets[] = $base + ['zodiacs' => $zodiacs];
                 }
                 continue;
             }
@@ -244,6 +260,15 @@ class OptimizedBestPlanService
                 foreach ($numbers as $num) {
                     $this->normalCodeWeights[$num] += $direction * $weightedAmount;
                 }
+                continue;
+            }
+
+            if ($this->containsKeyword($methodName, self::KEYWORDS_POSITIVE_ZODIAC)) {
+                $betZodiacs = ZodiacService::normalizeZodiacSelections($items, $this->year);
+                $numbers = $this->expandZodiacsToNumbers($betZodiacs);
+                foreach ($numbers as $num) {
+                    $this->normalCodeWeights[$num] += $direction * $weightedAmount;
+                }
             }
         }
     }
@@ -269,6 +294,9 @@ class OptimizedBestPlanService
         $specialCandidates = $this->getSortedNumbers($this->specialCodeWeights, $this->specialCandidateLimit);
         if (empty($specialCandidates)) {
             $specialCandidates = range(1, 49);
+        }
+        if (!in_array(49, $specialCandidates, true)) {
+            $specialCandidates[] = 49;
         }
 
         $normalSorted = $this->getSortedNumbers($this->normalCodeWeights, $this->normalPoolLimit);
@@ -389,11 +417,13 @@ class OptimizedBestPlanService
         }
 
         foreach ($this->specialZodiacBets as $bet) {
-            if ($isSpecial49) {
-                $this->accumulatePrize('draw', $bet['amount'], $bet['odds'], $totalPrize);
-                continue;
-            }
             $hit = $specialZodiac !== '' && in_array($specialZodiac, $bet['zodiacs'], true);
+            $result = $this->resolveResult($hit, $bet['bet_type']);
+            $this->accumulatePrize($result, $bet['amount'], $bet['odds'], $totalPrize);
+        }
+
+        foreach ($this->positiveZodiacBets as $bet) {
+            $hit = !empty(array_intersect($bet['zodiacs'], $all7Zodiacs));
             $result = $this->resolveResult($hit, $bet['bet_type']);
             $this->accumulatePrize($result, $bet['amount'], $bet['odds'], $totalPrize);
         }
@@ -450,9 +480,6 @@ class OptimizedBestPlanService
         }
 
         if ($this->containsKeyword($methodName, self::KEYWORDS_SPECIAL_ZODIAC)) {
-            if ($specialCode === 49) {
-                return 'draw';
-            }
             $betZodiacs = ZodiacService::normalizeZodiacSelections($rawItems, $this->year);
             if (empty($betZodiacs)) {
                 return 'lose';
@@ -461,16 +488,61 @@ class OptimizedBestPlanService
             return $this->resolveResult($hit, $betType);
         }
 
-        if ($this->containsKeyword($methodName, self::KEYWORDS_MULTI_ZODIAC)) {
+        if ($this->containsKeyword($methodName, self::KEYWORDS_SPECIAL_ODD_EVEN)) {
+            $selection = $this->normalizeOddEvenSelection($rawItems, $content);
+            if (!$selection) {
+                return 'lose';
+            }
             if ($specialCode === 49) {
                 return 'draw';
             }
+            $actual = ($specialCode % 2 === 0) ? 'even' : 'odd';
+            return $this->resolveResult($selection === $actual, $betType);
+        }
+
+        if ($this->containsKeyword($methodName, self::KEYWORDS_DIGIT_ODD_EVEN)) {
+            $selection = $this->normalizeOddEvenSelection($rawItems, $content);
+            if (!$selection) {
+                return 'lose';
+            }
+            if ($specialCode === 49) {
+                return 'draw';
+            }
+            $hesu = $this->calculateHesuValue($specialCode);
+            $actual = ($hesu % 2 === 0) ? 'even' : 'odd';
+            return $this->resolveResult($selection === $actual, $betType);
+        }
+
+        if ($this->containsKeyword($methodName, self::KEYWORDS_TOTAL_ODD_EVEN)) {
+            $selection = $this->normalizeOddEvenSelection($rawItems, $content);
+            if (!$selection) {
+                return 'lose';
+            }
+            $totalSum = array_sum($allNumbers);
+            $actual = ($totalSum % 2 === 0) ? 'even' : 'odd';
+            return $this->resolveResult($selection === $actual, $betType);
+        }
+
+        if ($this->containsKeyword($methodName, self::KEYWORDS_MULTI_ZODIAC)) {
             $betZodiacs = ZodiacService::normalizeZodiacSelections($rawItems, $this->year);
             if (empty($betZodiacs)) {
                 return 'lose';
             }
             $multiResult = ZodiacService::checkMultiZodiacWin($betZodiacs, $allNumbers, $this->year);
+            if ($specialCode === 49) {
+                return 'draw';
+            }
             return $this->resolveResult($multiResult['is_win'], $betType);
+        }
+
+        if ($this->containsKeyword($methodName, self::KEYWORDS_POSITIVE_ZODIAC)) {
+            $betZodiacs = ZodiacService::normalizeZodiacSelections($rawItems, $this->year);
+            if (empty($betZodiacs)) {
+                return 'lose';
+            }
+            $drawnZodiacs = ZodiacService::convertNumbersToZodiacsWithYear($allNumbers, $this->year);
+            $hit = !empty(array_intersect($betZodiacs, $drawnZodiacs));
+            return $this->resolveResult($hit, $betType);
         }
 
         return 'lose';
@@ -500,6 +572,38 @@ class OptimizedBestPlanService
             }
         }
         return false;
+    }
+
+    protected function normalizeOddEvenSelection(array $items, string $originalContent): ?string
+    {
+        $candidates = $items;
+        if (empty($candidates) && trim($originalContent) !== '') {
+            $candidates = [trim($originalContent)];
+        }
+
+        foreach ($candidates as $candidate) {
+            $candidate = trim($candidate);
+            if ($candidate === '') {
+                continue;
+            }
+            if ($this->containsKeyword($candidate, self::ODD_KEYWORDS)) {
+                return 'odd';
+            }
+            if ($this->containsKeyword($candidate, self::EVEN_KEYWORDS)) {
+                return 'even';
+            }
+        }
+
+        return null;
+    }
+
+    protected function calculateHesuValue(int $number): int
+    {
+        $hesu = intdiv($number, 10) + ($number % 10);
+        while ($hesu >= 10) {
+            $hesu = intdiv($hesu, 10) + ($hesu % 10);
+        }
+        return $hesu;
     }
 
     protected function getSortedNumbers(array $weights, int $limit = 0): array

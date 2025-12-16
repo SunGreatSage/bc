@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>盘口API测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button.danger {
+            background: #f44336;
+        }
+        button.danger:hover {
+            background: #da190b;
+        }
+        pre {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 400px;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.success {
+            background: #4CAF50;
+            color: white;
+        }
+        .status.error {
+            background: #f44336;
+            color: white;
+        }
+        .status.pending {
+            background: #ff9800;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 盘口API测试页面</h1>
+
+        <div class="test-section">
+            <h3>1. 检查后端服务状态</h3>
+            <button onclick="checkBackend()">🔍 检查后端</button>
+            <span id="backend-status"></span>
+            <pre id="backend-result"></pre>
+        </div>
+
+        <div class="test-section">
+            <h3>2. 测试盘口列表API (管理端)</h3>
+            <p>API: <code>GET /adminapi/best_plan/getPlateList?gid=200</code></p>
+            <button onclick="testAdminAPI()">📊 测试管理端API</button>
+            <span id="admin-status"></span>
+            <pre id="admin-result"></pre>
+        </div>
+
+        <div class="test-section">
+            <h3>3. 测试盘口列表API (用户端)</h3>
+            <p>API: <code>GET /api/lottery_bet/getCurrentQishu?gid=200</code></p>
+            <button onclick="testUserAPI()">👤 测试用户端API</button>
+            <span id="user-status"></span>
+            <pre id="user-result"></pre>
+        </div>
+
+        <div class="test-section">
+            <h3>4. 诊断信息</h3>
+            <button onclick="showDiagnostics()">🔧 显示诊断</button>
+            <pre id="diagnostics-result"></pre>
+        </div>
+    </div>
+
+    <script>
+        // 检查后端服务
+        async function checkBackend() {
+            const statusEl = document.getElementById('backend-status');
+            const resultEl = document.getElementById('backend-result');
+
+            statusEl.innerHTML = '<span class="status pending">检查中...</span>';
+
+            try {
+                const response = await fetch('http://localhost:8000/', {
+                    method: 'GET',
+                    mode: 'no-cors'  // 避免CORS错误影响测试
+                });
+
+                statusEl.innerHTML = '<span class="status success">✅ 后端服务运行中</span>';
+                resultEl.textContent = '后端服务在 http://localhost:8000 正常运行';
+            } catch (error) {
+                statusEl.innerHTML = '<span class="status error">❌ 后端服务未启动</span>';
+                resultEl.textContent = `错误: ${error.message}\n\n请启动后端服务:\ncd E:\\Code\\Php\\bc\\server\nphp think run -p 8000`;
+            }
+        }
+
+        // 测试管理端API
+        async function testAdminAPI() {
+            const statusEl = document.getElementById('admin-status');
+            const resultEl = document.getElementById('admin-result');
+
+            statusEl.innerHTML = '<span class="status pending">请求中...</span>';
+
+            try {
+                const token = localStorage.getItem('userToken');
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['token'] = token;
+                }
+
+                const response = await fetch('/adminapi/best_plan/getPlateList?gid=200', {
+                    method: 'GET',
+                    headers: headers
+                });
+
+                const data = await response.json();
+
+                if (data.code === 1) {
+                    statusEl.innerHTML = '<span class="status success">✅ 成功</span>';
+                    resultEl.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    statusEl.innerHTML = '<span class="status error">❌ 失败</span>';
+                    resultEl.textContent = `返回错误:\n${JSON.stringify(data, null, 2)}\n\n可能原因:\n1. 需要登录token\n2. 权限不足\n3. 后端服务未启动`;
+                }
+            } catch (error) {
+                statusEl.innerHTML = '<span class="status error">❌ 请求失败</span>';
+                resultEl.textContent = `网络错误: ${error.message}\n\n请检查:\n1. 后端服务是否启动 (http://localhost:8000)\n2. Vite代理配置是否正确`;
+            }
+        }
+
+        // 测试用户端API
+        async function testUserAPI() {
+            const statusEl = document.getElementById('user-status');
+            const resultEl = document.getElementById('user-result');
+
+            statusEl.innerHTML = '<span class="status pending">请求中...</span>';
+
+            try {
+                const response = await fetch('/api/lottery_bet/getCurrentQishu?gid=200', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.code === 1) {
+                    statusEl.innerHTML = '<span class="status success">✅ 成功</span>';
+                    resultEl.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    statusEl.innerHTML = '<span class="status error">❌ 失败</span>';
+                    resultEl.textContent = JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                statusEl.innerHTML = '<span class="status error">❌ 请求失败</span>';
+                resultEl.textContent = `网络错误: ${error.message}`;
+            }
+        }
+
+        // 显示诊断信息
+        function showDiagnostics() {
+            const resultEl = document.getElementById('diagnostics-result');
+
+            const diagnostics = {
+                '当前页面': window.location.href,
+                'localStorage.userToken': localStorage.getItem('userToken') ? '已设置' : '❌ 未设置',
+                '浏览器': navigator.userAgent,
+                '时间': new Date().toLocaleString('zh-CN')
+            };
+
+            resultEl.textContent = JSON.stringify(diagnostics, null, 2);
+        }
+
+        // 页面加载时自动检查
+        window.onload = function() {
+            console.log('🧪 盘口API测试页面已加载');
+            console.log('📍 当前地址:', window.location.href);
+            console.log('🔑 Token状态:', localStorage.getItem('userToken') ? '已登录' : '未登录');
+        };
+    </script>
+</body>
+</html>

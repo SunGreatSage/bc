@@ -56,6 +56,7 @@ class LotteryResultController extends BaseApiController
      * @param int gid 游戏ID(可选, 默认200=新澳门六合彩)
      * @param int page 页码(可选, 默认1)
      * @param int limit 每页数量(可选, 默认20, 最大100)
+     * @param string plate_code 盘口代码(可选, 如A、B、C)
      *
      * 响应示例:
      * {
@@ -100,6 +101,7 @@ class LotteryResultController extends BaseApiController
         $gid = $this->request->param('gid/d', 200);
         $page = $this->request->param('page/d', 1);
         $limit = $this->request->param('limit/d', 20);
+        $plateCode = $this->request->param('plate_code', '');  // 新增：盘口参数
 
         // 限制最大条数
         if ($limit > 100) {
@@ -109,13 +111,19 @@ class LotteryResultController extends BaseApiController
             $page = 1;
         }
 
-        // 查询已开奖的记录 (js=1 表示已结算)
-        $query = Db::table('x_kj')
-            ->where('gid', $gid)
-            ->where('js', 1)
-            ->where('m1', '<>', '')  // m1 不为空表示已开奖
-            ->order('dates', 'desc')
-            ->order('qishu', 'desc');
+        // 查询已开奖的记录 (status=3 表示已开奖)
+        $query = Db::table('la_lottery_issue')
+            ->where('game_id', $gid)
+            ->where('status', 3)  // 3=已开奖
+            ->where('result', '<>', '');  // result 不为空表示已开奖
+
+        // 新增：盘口筛选
+        if (!empty($plateCode)) {
+            $query->where('plate_code', $plateCode);
+        }
+
+        $query->order('draw_time', 'desc')
+            ->order('issue', 'desc');
 
         // 获取总数
         $total = $query->count();
@@ -137,6 +145,7 @@ class LotteryResultController extends BaseApiController
             'total' => $total,
             'page' => $page,
             'limit' => $limit,
+            'plate_code' => $plateCode,  // 新增：返回盘口信息
         ]);
     }
 
@@ -144,35 +153,34 @@ class LotteryResultController extends BaseApiController
     /**
      * 格式化开奖结果
      *
-     * @param array $kj 开奖记录
+     * @param array $kj 开奖记录（la_lottery_issue 表）
      * @return array 格式化后的结果
      */
     private function formatKjResult(array $kj): array
     {
-        // 提取开奖号码 (m1-m7, m7是特码)
+        // 从 result 字段解析开奖号码（逗号分隔，如 "1,11,12,2,17,13,3"）
         $numbers = [];
         $allNums = [];
 
-        for ($i = 1; $i <= 7; $i++) {
-            $num = $kj['m' . $i];
-            if (!empty($num)) {
-                $allNums[] = $num;
-            }
+        if (!empty($kj['result'])) {
+            $allNums = explode(',', $kj['result']);
+            $allNums = array_map('trim', $allNums);
+            $allNums = array_filter($allNums, fn($n) => $n !== '');
         }
 
         // 如果没有开奖号码，返回空结果
         if (empty($allNums)) {
             return [
-                'date' => $kj['dates'],
-                'qishu' => $kj['qishu'],
-                'date_display' => $kj['dates'] . ' (' . $kj['qishu'] . ')',
+                'date' => date('Y-m-d', $kj['draw_time']),
+                'qishu' => $kj['issue'],
+                'date_display' => date('Y-m-d', $kj['draw_time']) . ' (' . $kj['issue'] . ')',
                 'numbers' => [],
                 'has_result' => false,
             ];
         }
 
-        // 获取年份用于生肖计算
-        $year = (int)substr($kj['dates'], 0, 4);
+        // 获取年份用于生肖计算（从开奖时间提取）
+        $year = (int)date('Y', $kj['draw_time']);
 
         // 格式化号码和生肖
         foreach ($allNums as $index => $num) {
@@ -236,9 +244,9 @@ class LotteryResultController extends BaseApiController
         $wuxing = self::WUXING_MAP[str_pad($specialNum, 2, '0', STR_PAD_LEFT)] ?? '';
 
         return [
-            'date' => $kj['dates'],
-            'qishu' => (string)$kj['qishu'],
-            'date_display' => $kj['dates'] . ' (' . $kj['qishu'] . ')',
+            'date' => date('Y-m-d', $kj['draw_time']),
+            'qishu' => (string)$kj['issue'],
+            'date_display' => date('Y-m-d', $kj['draw_time']) . ' (' . $kj['issue'] . ')',
             'numbers' => $numbers,
             'has_result' => true,
             'total_score' => $totalScore,
