@@ -1,0 +1,17 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+._*
+.idea/
+.vscode/
+.claude/
+.git.bak/
+
+# Node
+node_modules/
+
+# Env (avoid committing secrets)
+.env
+
+# Large archives (keep repo slim)
+vue/admin/admin.zip
