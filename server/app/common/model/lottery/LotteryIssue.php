@@ -33,8 +33,21 @@ class LotteryIssue extends BaseModel
     public static function getPendingDrawIssues()
     {
         $now = time();
-        return self::where('status', 3) // 已封盘
-            ->where('draw_time', '<=', $now)
+        return self::where('draw_time', '<=', $now)
+            ->whereRaw('(is_settled IS NULL OR is_settled = 0)')
+            ->select();
+    }
+
+    /**
+     * 获取待预生成(封盘后未写入planned_result)的期次
+     */
+    public static function getPendingPlanIssues()
+    {
+        $now = time();
+        return self::where('close_time', '<=', $now)
+            ->where('draw_time', '>', $now)
+            ->whereRaw("(result IS NULL OR result = '')")
+            ->whereRaw("(planned_result IS NULL OR planned_result = '')")
             ->select();
     }
 

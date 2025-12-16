@@ -235,9 +235,16 @@ class BestPlanLogic extends BaseLogic
      * @author Claude
      * @date 2025/12/11
      */
-    public static function executeDrawing(int $gid, string $qishu, string $plateCode, array $bestNumbers, int $year)
+    public static function executeDrawing(
+        int $gid,
+        string $qishu,
+        string $plateCode,
+        array $bestNumbers,
+        int $year,
+        int $operatorId = 0
+    )
     {
-        return \app\api\logic\BestPlanLogic::executeDrawing($gid, $qishu, $plateCode, $bestNumbers, $year);
+        return \app\api\logic\BestPlanLogic::executeDrawing($gid, $qishu, $plateCode, $bestNumbers, $year, $operatorId);
     }
 
 

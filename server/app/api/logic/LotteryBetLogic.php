@@ -1025,20 +1025,33 @@ class LotteryBetLogic
                 $drawTimeTs = $kjTime ? (int)strtotime($kjTime) : 0;
             }
 
-            $numbers = [];
-            if (!empty($issue['result'])) {
-                $allNums = explode(',', (string)$issue['result']);
-                $allNums = array_map('trim', $allNums);
-                $allNums = array_filter($allNums, fn($n) => $n !== '');
+            $now = time();
+            $canReveal = $drawTimeTs > 0 ? ($now >= $drawTimeTs) : true;
 
+            $numbers = [];
+            // 安全策略：未到 draw_time 一律不返回号码（防止封盘阶段预写入/误写入导致提前开奖）
+            if ($canReveal && !empty($issue['result'])) {
+                $allNums = explode(',', (string)$issue['result']);
+                $allNums = array_values(array_filter(array_map('trim', $allNums), 'strlen'));
+
+                $rawNumbers = [];
                 foreach ($allNums as $num) {
                     $numInt = (int)$num;
-                    if ($numInt <= 0) continue;
-                    $numbers[] = str_pad((string)$numInt, 2, '0', STR_PAD_LEFT);
+                    if ($numInt < 1 || $numInt > 49) {
+                        continue;
+                    }
+                    $rawNumbers[] = $numInt;
+                }
+
+                // 只允许 7 码；数据异常(多码/少码/重复)一律按未开奖处理，避免前端展示异常
+                if (count($rawNumbers) === 7 && count(array_unique($rawNumbers)) === 7) {
+                    foreach ($rawNumbers as $numInt) {
+                        $numbers[] = str_pad((string)$numInt, 2, '0', STR_PAD_LEFT);
+                    }
                 }
             }
 
-            $hasResult = count($numbers) >= 7;
+            $hasResult = count($numbers) === 7;
 
             return [
                 'qishu' => (string)$issue['issue'],
@@ -1050,7 +1063,7 @@ class LotteryBetLogic
                 // 盘口信息(便于调试/兼容多盘)
                 'plate_code' => $issue['plate_code'] ?? (string)$plateCode,
                 // 附带倒计时，前端可选使用
-                'seconds_to_kj' => $drawTimeTs > 0 ? max(0, $drawTimeTs - time()) : 0,
+                'seconds_to_kj' => $drawTimeTs > 0 ? max(0, $drawTimeTs - $now) : 0,
                 // 原始期次状态
                 'issue_status' => isset($issue['status']) ? (int)$issue['status'] : 0,
             ];

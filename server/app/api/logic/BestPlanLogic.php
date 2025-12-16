@@ -33,7 +33,7 @@ class BestPlanLogic extends BaseLogic
             $year = $year ?? (int)date('Y');
 
             // 创建计算服务 - 使用优化版算法(统一"中"与"不中"投注)
-            $service = new \app\common\service\OptimizedBestPlanService($gid, $qishu, $year);
+            $service = new \app\common\service\OptimizedBestPlanService($gid, $qishu, $year, $plateCode);
 
             // 如果没有投注数据,生成随机号码并显示100%利润
             if ($service->getBetCount() === 0) {
@@ -122,7 +122,7 @@ class BestPlanLogic extends BaseLogic
             }
 
             // 获取最佳7个号码组合 - 使用优化版方法
-            $result = $service->findBest7Numbers($targetRate, $tolerance);
+            $result = $service->findBest7Numbers();
             $bestSolution = $result['best_solution'];
 
             // 获取摘要
@@ -223,7 +223,7 @@ class BestPlanLogic extends BaseLogic
             $year = $year ?? (int)date('Y');
 
             // 使用优化版算法(统一"中"与"不中"投注)
-            $service = new \app\common\service\OptimizedBestPlanService($gid, $qishu, $year);
+            $service = new \app\common\service\OptimizedBestPlanService($gid, $qishu, $year, $plateCode);
 
             // 如果没有投注数据,生成随机号码并显示100%利润
             if ($service->getBetCount() === 0) {
@@ -684,7 +684,14 @@ class BestPlanLogic extends BaseLogic
     /**
      * ????????????
      */
-    public static function executeDrawing(int $gid, string $qishu, string $plateCode, array $bestNumbers, int $year)
+    public static function executeDrawing(
+        int $gid,
+        string $qishu,
+        string $plateCode,
+        array $bestNumbers,
+        int $year,
+        int $operatorId = 0
+    )
     {
         try {
             Db::startTrans();
@@ -693,26 +700,53 @@ class BestPlanLogic extends BaseLogic
                 ->where('game_id', $gid)
                 ->where('issue', $qishu)
                 ->where('plate_code', $plateCode)
+                ->lock(true)
                 ->find();
 
             if (!$issue) {
-                self::setError('?????');
+                self::setError('期号不存在');
                 return false;
             }
 
-            if ($issue['status'] == 3) {
-                self::setError('????????????');
+            $closeTimeRaw = $issue['close_time'] ?? 0;
+            $closeTimeTs = is_numeric($closeTimeRaw) ? (int)$closeTimeRaw : (int)strtotime((string)$closeTimeRaw);
+            if ($closeTimeTs > 0 && time() < $closeTimeTs) {
+                self::setError('未到封盘时间，不能提交计划');
                 return false;
             }
 
-            $m1_m6 = array_slice($bestNumbers, 0, 6);
-            $m7 = $bestNumbers[6];
+            if (!empty($issue['result'])) {
+                self::setError('本期已开奖，不能重复提交计划');
+                return false;
+            }
+
+            if (!empty($issue['is_settled'])) {
+                self::setError('本期已结算，不能重复提交计划');
+                return false;
+            }
+
+            $numbers = array_values(array_map('intval', $bestNumbers));
+            if (count($numbers) !== 7) {
+                self::setError('必须提交7个开奖号码');
+                return false;
+            }
+            foreach ($numbers as $num) {
+                if ($num < 1 || $num > 49) {
+                    self::setError('号码范围必须在1-49之间');
+                    return false;
+                }
+            }
+
+            $m1_m6 = array_slice($numbers, 0, 6);
+            $m7 = $numbers[6];
 
             Db::table('la_lottery_issue')
                 ->where('id', $issue['id'])
                 ->update([
-                    'result' => implode(',', $bestNumbers),
-                    'status' => 3,
+                    'planned_result' => implode(',', $numbers),
+                    'planned_at' => time(),
+                    'planned_source' => 1,
+                    'planned_operator_id' => max(0, (int)$operatorId),
                     'updated_at' => time(),
                 ]);
 
@@ -737,101 +771,24 @@ class BestPlanLogic extends BaseLogic
                 $isWin = $resultType === 'win';
                 $isDraw = $resultType === 'draw';
                 $winAmount = $isWin ? $order['total_amount'] * $order['odds'] : ($isDraw ? $order['total_amount'] : 0);
-                $status = $isWin ? 1 : ($isDraw ? 4 : 2);
-
-                Db::table('la_betting_record')
-                    ->where('id', $order['id'])
-                    ->update([
-                        'status' => $status,
-                        'prize_amount' => $winAmount,
-                        'is_settled' => 1,
-                        'settled_at' => time(),
-                    ]);
-
-                $user = Db::table('la_user')
-                    ->where('id', $order['user_id'])
-                    ->find();
-
-                if (!$user) {
-                    throw new \Exception("??ID {$order['user_id']} ???");
-                }
-
-                if (isset($user['user_money'])) {
-                    $balanceField = 'user_money';
-                    $balanceBefore = $user['user_money'];
-                } elseif (isset($user['balance'])) {
-                    $balanceField = 'balance';
-                    $balanceBefore = $user['balance'];
-                } else {
-                    $userFields = implode(', ', array_keys($user));
-                    throw new \Exception("la_user????????ID: {$order['user_id']}???: {$userFields}");
-                }
 
                 if ($isWin) {
-                    $balanceAfter = $balanceBefore + $winAmount;
-
-                    Db::table('la_user')
-                        ->where('id', $order['user_id'])
-                        ->update([$balanceField => $balanceAfter]);
-
-                    Db::table('la_account_log')->insert([
-                        'sn' => 'WIN' . date('YmdHis') . str_pad((string)$order['id'], 8, '0', STR_PAD_LEFT),
-                        'user_id' => $order['user_id'],
-                        'change_type' => 4,
-                        'change_amount' => $winAmount,
-                        'balance_before' => $balanceBefore,
-                        'balance_after' => $balanceAfter,
-                        'frozen_before' => 0,
-                        'frozen_after' => 0,
-                        'related_sn' => $order['sn'],
-                        'related_type' => 1,
-                        'remark' => "?? {$qishu} ????",
-                        'operator_id' => 0,
-                        'ip' => '',
-                        'created_at' => time(),
-                    ]);
-
                     $winCount++;
                     $totalWinAmount += $winAmount;
                 } elseif ($isDraw) {
-                    $balanceAfter = $balanceBefore + $order['total_amount'];
-
-                    Db::table('la_user')
-                        ->where('id', $order['user_id'])
-                        ->update([$balanceField => $balanceAfter]);
-
-                    Db::table('la_account_log')->insert([
-                        'sn' => 'REF' . date('YmdHis') . str_pad((string)$order['id'], 8, '0', STR_PAD_LEFT),
-                        'user_id' => $order['user_id'],
-                        'change_type' => 5,
-                        'change_amount' => $order['total_amount'],
-                        'balance_before' => $balanceBefore,
-                        'balance_after' => $balanceAfter,
-                        'frozen_before' => 0,
-                        'frozen_after' => 0,
-                        'related_sn' => $order['sn'],
-                        'related_type' => 1,
-                        'remark' => "?? {$qishu} 49?????",
-                        'operator_id' => 0,
-                        'ip' => '',
-                        'created_at' => time(),
-                    ]);
-
-                    $totalWinAmount += $order['total_amount'];
                     $drawCount++;
+                    $totalWinAmount += (float)$order['total_amount'];
                 } else {
                     $loseCount++;
                 }
             }
-
-            self::updateActualResult($gid, $qishu, $m7);
 
             Db::commit();
 
             return [
                 'issue' => $qishu,
                 'plate_code' => $plateCode,
-                'numbers' => $bestNumbers,
+                'numbers' => $numbers,
                 'win_count' => $winCount,
                 'lose_count' => $loseCount,
                 'draw_count' => $drawCount,
@@ -839,6 +796,7 @@ class BestPlanLogic extends BaseLogic
                 'total_bet_amount' => round($totalBetAmount, 2),
                 'total_payout' => round($totalWinAmount, 2),
                 'platform_profit' => round($totalBetAmount - $totalWinAmount, 2),
+                'planned_at' => time(),
             ];
 
         } catch (\Exception $e) {

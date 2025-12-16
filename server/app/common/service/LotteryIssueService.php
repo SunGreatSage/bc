@@ -332,6 +332,21 @@ class LotteryIssueService
                 return null;
 
             } catch (\think\db\exception\DbException $dbEx) {
+                $message = $dbEx->getMessage();
+
+                // 命中唯一键：说明期号已存在(并发/重复调用)，直接返回已有记录
+                if (stripos($message, 'Duplicate entry') !== false) {
+                    $existing = Db::table('la_lottery_issue')
+                        ->where('game_id', $issueData['game_id'])
+                        ->where('plate_code', $issueData['plate_code'])
+                        ->where('issue', $issueData['issue'])
+                        ->find();
+
+                    if ($existing) {
+                        trace("⚠️ 期号已存在(uk_game_plate_issue)，返回已有期号: " . $existing['issue'] . ", ID: " . $existing['id'], 'warning');
+                        return $existing;
+                    }
+                }
                 // 数据库异常 - 输出详细信息
                 $errorMsg = "数据库错误: " . $dbEx->getMessage();
                 $errorData = $dbEx->getData();

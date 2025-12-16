@@ -29,6 +29,7 @@ class OptimizedBestPlanService
     protected int $gid;
     protected string $qishu;
     protected int $year;
+    protected string $plateCode = '';
     protected array $allBets = [];
     protected float $totalBetAmount = 0.0;
     protected array $zodiacMap = [];
@@ -50,11 +51,12 @@ class OptimizedBestPlanService
     protected array $multiZodiacBets = [];
     protected array $otherBets = [];
 
-    public function __construct(int $gid, string $qishu, int $year)
+    public function __construct(int $gid, string $qishu, int $year, string $plateCode = '')
     {
         $this->gid = $gid;
         $this->qishu = $qishu;
         $this->year = $year;
+        $this->plateCode = $plateCode;
 
         $this->loadAllBets();
         $this->loadZodiacMap();
@@ -163,7 +165,7 @@ class OptimizedBestPlanService
 
     protected function loadAllBets(): void
     {
-        $this->allBets = Db::table('la_betting_record')
+        $query = Db::table('la_betting_record')
             ->alias('b')
             ->field('b.id as tid, b.user_id as userid, b.total_amount as je,
                      b.bet_content as content, b.method_id as bid,
@@ -171,8 +173,13 @@ class OptimizedBestPlanService
             ->where('b.game_id', $this->gid)
             ->where('b.issue', $this->qishu)
             ->where('b.status', 0)
-            ->select()
-            ->toArray();
+        ;
+
+        if ($this->plateCode !== '') {
+            $query->where('b.plate_code', $this->plateCode);
+        }
+
+        $this->allBets = $query->select()->toArray();
 
         $this->totalBetAmount = array_sum(array_column($this->allBets, 'je'));
     }

@@ -393,7 +393,7 @@ class BestPlanController extends BaseAdminController
 
 
     /**
-     * @notes 用最佳方案执行开奖
+     * @notes 提交开奖计划（封盘后写入 planned_result，不公布、不结算）
      * @return Json
      * @author Claude
      * @date 2025/12/11
@@ -406,12 +406,10 @@ class BestPlanController extends BaseAdminController
      * @param int year 年份（可选）
      *
      * 流程：
-     * 1. 验证期号状态（必须是投注中或已封盘）
-     * 2. 设置开奖号码到 la_lottery_issue 表
-     * 3. 遍历所有投注订单判断中奖
-     * 4. 中奖订单：派奖（增加用户余额）
-     * 5. 未中奖订单：更新状态为已结算
-     * 6. 更新期号状态为已开奖
+     * 1. 校验已封盘（close_time 到达）
+     * 2. 写入 la_lottery_issue.planned_result（仅后台可见）
+     * 3. 不触发对外开奖展示、不做结算/派奖/分成
+     * 4. 到 draw_time 由定时任务发布 result 并结算
      */
     public function executeDrawing(): Json
     {
@@ -450,14 +448,14 @@ class BestPlanController extends BaseAdminController
 
         $year = $year ? (int)$year : (int)date('Y');
 
-        // 执行开奖
-        $result = BestPlanLogic::executeDrawing($gid, $qishu, $plateCode, $bestNumbers, $year);
+        // 提交计划（记录操作员ID，便于审计）
+        $result = BestPlanLogic::executeDrawing($gid, $qishu, $plateCode, $bestNumbers, $year, $this->adminId);
 
         if ($result === false) {
             return $this->fail(BestPlanLogic::getError());
         }
 
-        return $this->success('开奖成功', $result);
+        return $this->success('提交计划成功', $result);
     }
 
 

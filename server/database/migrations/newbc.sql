@@ -894,7 +894,11 @@ CREATE TABLE `la_lottery_issue`  (
   `plate_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '盘口ID',
   `plate_code` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '盘口代码',
   `issue` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '期号',
-  `result` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '' COMMENT '开奖结果',
+  `result` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '' COMMENT '开奖结果(已公开)',
+  `planned_result` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '封盘后预生成开奖号码(未公开)',
+  `planned_at` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '预生成时间',
+  `planned_source` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '0=auto,1=admin',
+  `planned_operator_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '预生成操作员ID(0=系统)',
   `status` tinyint(2) UNSIGNED NULL DEFAULT 1 COMMENT '状态: 1=待开盘, 2=投注中, 3=已封盘, 4=已开奖, 5=已结算',
   `open_time` int(10) UNSIGNED NULL DEFAULT 0 COMMENT '开盘时间',
   `close_time` int(10) UNSIGNED NULL DEFAULT 0 COMMENT '封盘时间',
@@ -906,6 +910,7 @@ CREATE TABLE `la_lottery_issue`  (
   `created_at` int(10) UNSIGNED NOT NULL COMMENT '创建时间',
   `updated_at` int(10) UNSIGNED NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_game_plate_issue`(`game_id`, `plate_code`, `issue`) USING BTREE,
   INDEX `idx_plate_status`(`plate_id`, `status`) USING BTREE,
   INDEX `idx_draw_time`(`draw_time`) USING BTREE,
   INDEX `idx_status`(`status`) USING BTREE
@@ -914,13 +919,13 @@ CREATE TABLE `la_lottery_issue`  (
 -- ----------------------------
 -- Records of la_lottery_issue
 -- ----------------------------
-INSERT INTO `la_lottery_issue` VALUES (1, 200, 1, 'A', '2025121101', '1,11,12,2,17,13,3', 3, 1765443600, 1765453800, 1765462763, 0, 0, 133.00, 0.00, 1765445168, 1765450155);
-INSERT INTO `la_lottery_issue` VALUES (13, 200, 1, 'A', '2025121102', '1,2,3,4,5,6,7', 3, 1765471800, 1765476000, 1765529354, 0, 0, 160.00, 0.00, 1765471359, 1765472791);
-INSERT INTO `la_lottery_issue` VALUES (16, 200, 0, 'A', '2025121201', '14,16,18,21,22,38,44', 3, 1765529654, 1765530554, 1765530854, 0, 0, 0.00, 0.00, 1765529493, 1765531518);
-INSERT INTO `la_lottery_issue` VALUES (32, 200, 0, 'A', '2025121202', '3,6,10,13,21,22,41', 3, 1765531154, 1765532054, 1765532354, 0, 0, 0.00, 0.00, 1765531545, 1765532672);
-INSERT INTO `la_lottery_issue` VALUES (36, 200, 0, 'A', '2025121203', '', 2, 1765532654, 1765533554, 1765533854, 0, 0, 0.00, 0.00, 1765532673, 1765532673);
-INSERT INTO `la_lottery_issue` VALUES (41, 200, 0, 'B', '2025121201', '', 0, 1765537200, 1765546200, 1765551000, 0, 0, 0.00, 0.00, 1765533040, 1765533040);
-INSERT INTO `la_lottery_issue` VALUES (42, 200, 0, 'C', '2025121201', '', 1, 1765533600, 1765542780, 1765554600, 0, 0, 0.00, 0.00, 1765533044, 1765533044);
+INSERT INTO `la_lottery_issue` VALUES (1, 200, 1, 'A', '2025121101', '1,11,12,2,17,13,3', '', 0, 0, 0, 3, 1765443600, 1765453800, 1765462763, 0, 0, 133.00, 0.00, 1765445168, 1765450155);
+INSERT INTO `la_lottery_issue` VALUES (13, 200, 1, 'A', '2025121102', '1,2,3,4,5,6,7', '', 0, 0, 0, 3, 1765471800, 1765476000, 1765529354, 0, 0, 160.00, 0.00, 1765471359, 1765472791);
+INSERT INTO `la_lottery_issue` VALUES (16, 200, 0, 'A', '2025121201', '14,16,18,21,22,38,44', '', 0, 0, 0, 3, 1765529654, 1765530554, 1765530854, 0, 0, 0.00, 0.00, 1765529493, 1765531518);
+INSERT INTO `la_lottery_issue` VALUES (32, 200, 0, 'A', '2025121202', '3,6,10,13,21,22,41', '', 0, 0, 0, 3, 1765531154, 1765532054, 1765532354, 0, 0, 0.00, 0.00, 1765531545, 1765532672);
+INSERT INTO `la_lottery_issue` VALUES (36, 200, 0, 'A', '2025121203', '', '', 0, 0, 0, 2, 1765532654, 1765533554, 1765533854, 0, 0, 0.00, 0.00, 1765532673, 1765532673);
+INSERT INTO `la_lottery_issue` VALUES (41, 200, 0, 'B', '2025121201', '', '', 0, 0, 0, 0, 1765537200, 1765546200, 1765551000, 0, 0, 0.00, 0.00, 1765533040, 1765533040);
+INSERT INTO `la_lottery_issue` VALUES (42, 200, 0, 'C', '2025121201', '', '', 0, 0, 0, 1, 1765533600, 1765542780, 1765554600, 0, 0, 0.00, 0.00, 1765533044, 1765533044);
 
 -- ----------------------------
 -- Table structure for la_notice_record

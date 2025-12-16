@@ -8,6 +8,7 @@ use think\console\Output;
 use app\common\model\lottery\{LotteryIssue, BettingRecord, UserAccount, WinningRecord, AccountLog, AgentCommission, UserExtend};
 use app\common\service\ZodiacService;
 use app\common\service\ZodiacYearService;
+use app\common\service\OptimizedBestPlanService;
 use think\facade\Db;
 use think\facade\Log;
 
@@ -27,6 +28,106 @@ class DrawLottery extends Command
     {
         $output->writeln('Start lottery draw task...');
 
+        $this->planClosedIssues($output);
+        $this->publishAndSettleDueIssues($output);
+
+        $output->writeln('Lottery draw task completed');
+    }
+
+    /**
+     * 兜底生成7个不重复号码
+     */
+    private function generateFallbackResult(): array
+    {
+        $numbers = range(1, 49);
+        shuffle($numbers);
+        return array_slice($numbers, 0, 7);
+    }
+
+    private function parseNumbersString($value): array
+    {
+        $text = trim((string)$value);
+        if ($text === '') {
+            return [];
+        }
+        $parts = array_values(array_filter(array_map('trim', explode(',', $text)), 'strlen'));
+
+        $numbers = [];
+        foreach ($parts as $part) {
+            $num = (int)$part;
+            if ($num < 1 || $num > 49) {
+                continue;
+            }
+            $numbers[] = $num;
+        }
+
+        if (count($numbers) !== 7) {
+            return [];
+        }
+
+        if (count(array_unique($numbers)) !== 7) {
+            return [];
+        }
+
+        return $numbers;
+    }
+
+    private function getIssueYear($issue): int
+    {
+        $raw = (string)($issue->issue ?? '');
+        $year = (int)substr($raw, 0, 4);
+        return $year > 0 ? $year : (int)date('Y');
+    }
+
+    /**
+     * 封盘后预生成 planned_result（不公开、不结算）
+     */
+    private function planClosedIssues(Output $output): void
+    {
+        $issues = LotteryIssue::getPendingPlanIssues();
+        if ($issues->isEmpty()) {
+            return;
+        }
+
+        foreach ($issues as $issue) {
+            $output->writeln("Planning issue {$issue->plate_code}-{$issue->issue}");
+
+            try {
+                $year = $this->getIssueYear($issue);
+                $service = new OptimizedBestPlanService((int)$issue->game_id, (string)$issue->issue, $year, (string)$issue->plate_code);
+                $plan = $service->findBest7Numbers();
+
+                $best = $plan['best_solution'] ?? null;
+                $numbers = $best ? array_merge($best['m1_m6'], [$best['m7']]) : [];
+                $numbers = array_values(array_filter(array_map('intval', $numbers), fn($n) => $n >= 1 && $n <= 49));
+                $numbers = array_values(array_unique($numbers));
+
+                if (count($numbers) !== 7) {
+                    $numbers = $this->generateFallbackResult();
+                }
+
+                $issue->planned_result = implode(',', $numbers);
+                $issue->planned_at = time();
+                $issue->planned_source = 0;
+                $issue->planned_operator_id = 0;
+                $issue->save();
+
+                $output->writeln('Planned result ' . $issue->planned_result);
+            } catch (\Exception $e) {
+                $output->writeln('Plan failed ' . $e->getMessage());
+                Log::error('plan_failed', [
+                    'issue_id' => $issue->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * 到 draw_time：发布 result 并结算
+     */
+    private function publishAndSettleDueIssues(Output $output): void
+    {
         $issues = LotteryIssue::getPendingDrawIssues();
         if ($issues->isEmpty()) {
             $output->writeln('No pending issues');
@@ -37,10 +138,18 @@ class DrawLottery extends Command
             $output->writeln("Processing issue {$issue->plate_code}-{$issue->issue}");
 
             try {
-                $result = $this->generateResult($issue);
+                $result = $this->parseNumbersString($issue->result);
+
+                if (count($result) !== 7) {
+                    $result = $this->parseNumbersString($issue->planned_result);
+                }
+
+                if (count($result) !== 7) {
+                    $result = $this->generateFallbackResult();
+                }
 
                 $issue->result = implode(',', $result);
-                $issue->status = 4;
+                $issue->status = 3;
                 $issue->save();
 
                 $output->writeln('Draw result ' . $issue->result);
@@ -54,18 +163,6 @@ class DrawLottery extends Command
                 ]);
             }
         }
-
-        $output->writeln('Lottery draw task completed');
-    }
-
-    /**
-     * Generate eight unique numbers
-     */
-    private function generateResult($issue)
-    {
-        $numbers = range(1, 49);
-        shuffle($numbers);
-        return array_slice($numbers, 0, 8);
     }
 
     /**
@@ -98,7 +195,7 @@ class DrawLottery extends Command
             $page++;
         }
 
-        $issue->status = 5;
+        $issue->status = 3;
         $issue->is_settled = 1;
         $issue->settled_at = time();
         $issue->save();
@@ -160,9 +257,7 @@ class DrawLottery extends Command
                 'created_at' => time(),
             ]);
 
-            if ($betting->ancestor_ids) {
-                $this->calculateCommission($betting);
-            }
+            // 代理分成：按你的要求暂不在本轮实现（后续按下注金额百分比规划）
 
             Db::commit();
         } catch (\Exception $e) {
@@ -178,8 +273,7 @@ class DrawLottery extends Command
     {
         $betType = $betting->bet_type ?? 'win';
         $year = (int)substr($betting->issue, 0, 4);
-        $special = $result[7] ?? $result[6];
-        $specialNumber = (int)$special;
+        $specialNumber = (int)($result[6] ?? 0);
         $regularNumbers = array_map('intval', array_slice($result, 0, 6));
         $allNumbers = $regularNumbers;
         if ($specialNumber > 0 && !in_array($specialNumber, $allNumbers, true)) {
