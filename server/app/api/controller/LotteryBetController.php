@@ -373,7 +373,7 @@ class LotteryBetController extends BaseApiController
 
         // 游戏名称映射
         $gameNames = [
-            200 => '新澳门六合彩',
+            200 => '马来六合彩',
         ];
 
         return $this->success('获取成功', [
