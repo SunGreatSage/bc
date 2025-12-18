@@ -11,6 +11,13 @@ class UserAccount extends BaseModel
 {
     protected $name = 'user_account';
 
+    // 开启自动时间戳
+    protected $autoWriteTimestamp = true;
+
+    // 定义时间戳字段名
+    protected $createTime = 'created_at';
+    protected $updateTime = 'updated_at';
+
     /**
      * 获取用户账户(带锁)
      */
