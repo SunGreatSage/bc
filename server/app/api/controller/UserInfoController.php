@@ -59,7 +59,7 @@ class UserInfoController extends BaseApiController
      *   }
      * }
      */
-    public function getUserInfo()
+   public function getUserInfo()
     {
         try {
             // 获取用户ID
@@ -86,23 +86,43 @@ class UserInfoController extends BaseApiController
             trace("🎯 [UserInfo] 开始获取期号(只读): gid=$gid, plate_code=$plateCode", 'info');
             $currentIssue = LotteryIssueService::getCurrentIssueReadOnly($gid, $plateCode);
 
+            // 初始化期号相关变量
+            $timeInfo = null;
+            $periodBetAmount = 0;
+
             if (!$currentIssue) {
-                trace("❌ [UserInfo] 暂无可用期号,等待开奖后自动创建", 'warning');
-                return $this->fail('当前暂无可投注期号,请等待开奖后再试');
+                // 没有可用期号时,返回空的时间信息,但仍然返回余额数据
+                trace("⚠️ [UserInfo] 暂无可用期号,返回余额数据(时间信息为空)", 'warning');
+                $timeInfo = [
+                    'issue' => '',
+                    'game_id' => $gid,
+                    'plate_code' => $plateCode,
+                    'open_time' => '',
+                    'close_time' => '',
+                    'draw_time' => '',
+                    'seconds_to_open' => 0,
+                    'seconds_to_close' => 0,
+                    'seconds_to_draw' => 0,
+                    'status' => 'waiting',
+                    'status_code' => 0,
+                    'result' => '',
+                    'message' => '暂无可投注期号,请等待开奖后自动创建'
+                ];
+            } else {
+                // 有可用期号时,正常处理
+                trace("✅ [UserInfo] 获取期号成功: issue={$currentIssue['issue']}, status={$currentIssue['status']}, result=" . ($currentIssue['result'] ?: '空'), 'info');
+
+                // 3. 获取期号详情(包含倒计时)
+                $timeInfo = LotteryIssueService::getIssueWithCountdown($currentIssue);
+
+                // 4. 查询用户当期下注金额
+                $periodBetAmount = Db::table('la_betting_record')
+                    ->where('user_id', $userId)
+                    ->where('game_id', $gid)
+                    ->where('issue_id', $currentIssue['id'])
+                    ->where('status', '<>', 3)  // 排除已撤单
+                    ->sum('total_amount');
             }
-
-            trace("✅ [UserInfo] 获取期号成功: issue={$currentIssue['issue']}, status={$currentIssue['status']}, result=" . ($currentIssue['result'] ?: '空'), 'info');
-
-            // 3. 获取期号详情(包含倒计时)
-            $timeInfo = LotteryIssueService::getIssueWithCountdown($currentIssue);
-
-            // 4. 查询用户当期下注金额
-            $periodBetAmount = Db::table('la_betting_record')
-                ->where('user_id', $userId)
-                ->where('game_id', $gid)
-                ->where('issue_id', $currentIssue['id'])
-                ->where('status', '<>', 3)  // 排除已撤单
-                ->sum('total_amount');
 
             // 5. 组装返回数据
             $result = [
