@@ -21,10 +21,14 @@ class OptimizedBestPlanService
     private const ODD_KEYWORDS = ['单', '單', '奇', 'odd', 'dan'];
     private const EVEN_KEYWORDS = ['双', '雙', '偶', 'even', 'shuang'];
 
-    private const SPECIAL_CANDIDATE_LIMIT = 6;
-    private const NORMAL_POOL_LIMIT = 12;
-    private const MAX_COMBOS_PER_SPECIAL = 120;
-    private const TOP_SOLUTION_LIMIT = 10;
+    private const SPECIAL_CANDIDATE_LIMIT = 20;
+    private const NORMAL_POOL_LIMIT = 30;
+    private const MAX_COMBOS_PER_SPECIAL = 800;
+    private const TOP_SOLUTION_LIMIT = 100;
+
+    // 随机采样参数
+    private const RANDOM_SAMPLE_COUNT = 200;
+    private const LAYERED_SAMPLE_PER_TIER = 50;
 
     protected int $gid;
     protected string $qishu;
@@ -145,17 +149,17 @@ class OptimizedBestPlanService
         $betCount = $this->getBetCount();
 
         if ($betCount > 1000) {
-            $this->specialCandidateLimit = 3;
-            $this->normalPoolLimit = 8;
-            $this->maxCombosPerSpecial = 20;
+            $this->specialCandidateLimit = 10;
+            $this->normalPoolLimit = 20;
+            $this->maxCombosPerSpecial = 200;
         } elseif ($betCount > 500) {
-            $this->specialCandidateLimit = 4;
-            $this->normalPoolLimit = 10;
-            $this->maxCombosPerSpecial = 30;
+            $this->specialCandidateLimit = 15;
+            $this->normalPoolLimit = 25;
+            $this->maxCombosPerSpecial = 400;
         } elseif ($betCount > 200) {
-            $this->specialCandidateLimit = 5;
-            $this->normalPoolLimit = 12;
-            $this->maxCombosPerSpecial = 60;
+            $this->specialCandidateLimit = 18;
+            $this->normalPoolLimit = 28;
+            $this->maxCombosPerSpecial = 600;
         } else {
             $this->specialCandidateLimit = self::SPECIAL_CANDIDATE_LIMIT;
             $this->normalPoolLimit = self::NORMAL_POOL_LIMIT;
@@ -789,5 +793,284 @@ class OptimizedBestPlanService
                 'top_10_worst' => array_slice(array_reverse($normalSorted, true), 0, 10, true),
             ],
         ];
+    }
+
+    /**
+     * 区间筛选模式：查找利润率在指定范围内的所有方案
+     * 结合扩大采样策略，包含权重排序 + 分层随机 + 纯随机采样
+     *
+     * @param float|null $minRate 最小利润率（百分比），null表示不限
+     * @param float|null $maxRate 最大利润率（百分比），null表示不限
+     * @return array
+     */
+    public function findByProfitRange(?float $minRate = null, ?float $maxRate = null): array
+    {
+        if (empty($this->allBets)) {
+            return [
+                'matched_solutions' => [],
+                'total_evaluated' => 0,
+                'total_bets' => 0,
+                'total_orders' => 0,
+                'filter_criteria' => ['min_rate' => $minRate, 'max_rate' => $maxRate],
+                'recommendations' => ['no_bets' => true, 'message' => 'No betting data available'],
+            ];
+        }
+
+        $specialCandidates = $this->getSortedNumbers($this->specialCodeWeights, $this->specialCandidateLimit);
+        if (empty($specialCandidates)) {
+            $specialCandidates = range(1, 49);
+        }
+        if (!in_array(49, $specialCandidates, true)) {
+            $specialCandidates[] = 49;
+        }
+
+        $normalSorted = $this->getSortedNumbers($this->normalCodeWeights, $this->normalPoolLimit);
+        if (empty($normalSorted)) {
+            $normalSorted = range(1, 49);
+        }
+
+        $allSolutions = [];
+        $seen = [];
+
+        // Phase 1: Weight-based systematic search
+        foreach ($specialCandidates as $specialCode) {
+            $normalPool = array_values(array_filter($normalSorted, fn($num) => $num !== $specialCode));
+            $normalPool = $this->ensureNormalPool($normalPool, $specialCode);
+            if (count($normalPool) < 6) {
+                continue;
+            }
+
+            $combinations = $this->generateCombinationsLimited($normalPool, 6, $this->maxCombosPerSpecial);
+            foreach ($combinations as $combo) {
+                $solution = $this->evaluateSolutionWithRange($combo, $specialCode, $minRate, $maxRate, $seen);
+                if ($solution !== null) {
+                    $allSolutions[] = $solution;
+                }
+            }
+        }
+
+        // Phase 2: Layered random sampling (by risk tier)
+        $this->addLayeredSamples($allSolutions, $seen, $minRate, $maxRate);
+
+        // Phase 3: Pure random sampling
+        $this->addRandomSamples($allSolutions, $seen, $minRate, $maxRate);
+
+        // Sort by distance to target range center
+        $targetCenter = null;
+        if ($minRate !== null && $maxRate !== null) {
+            $targetCenter = ($minRate + $maxRate) / 2;
+        } elseif ($minRate !== null) {
+            $targetCenter = $minRate + 10;
+        } elseif ($maxRate !== null) {
+            $targetCenter = $maxRate - 10;
+        }
+
+        if ($targetCenter !== null) {
+            usort($allSolutions, function ($a, $b) use ($targetCenter) {
+                $distA = abs($a['profit_rate'] - $targetCenter);
+                $distB = abs($b['profit_rate'] - $targetCenter);
+                if ($distA === $distB) {
+                    return $b['total_profit'] <=> $a['total_profit'];
+                }
+                return $distA <=> $distB;
+            });
+        } else {
+            usort($allSolutions, fn($a, $b) => $b['total_profit'] <=> $a['total_profit']);
+        }
+
+        $matchedSolutions = array_filter($allSolutions, function ($sol) use ($minRate, $maxRate) {
+            $rate = $sol['profit_rate'];
+            if ($minRate !== null && $rate < $minRate) {
+                return false;
+            }
+            if ($maxRate !== null && $rate > $maxRate) {
+                return false;
+            }
+            return true;
+        });
+
+        $matchedSolutions = array_values($matchedSolutions);
+        $recommendations = $this->buildRecommendationsWithRange($matchedSolutions, $minRate, $maxRate, count($allSolutions));
+
+        return [
+            'matched_solutions' => array_slice($matchedSolutions, 0, self::TOP_SOLUTION_LIMIT),
+            'total_matched' => count($matchedSolutions),
+            'total_evaluated' => count($allSolutions),
+            'total_bets' => $this->totalBetAmount,
+            'total_orders' => count($this->allBets),
+            'filter_criteria' => ['min_rate' => $minRate, 'max_rate' => $maxRate],
+            'best_in_range' => $matchedSolutions[0] ?? null,
+            'recommendations' => $recommendations,
+        ];
+    }
+
+    /**
+     * Evaluate a solution and check if it falls within range
+     */
+    protected function evaluateSolutionWithRange(
+        array $combo,
+        int $specialCode,
+        ?float $minRate,
+        ?float $maxRate,
+        array &$seen
+    ): ?array {
+        sort($combo);
+        $key = implode('-', $combo) . '-' . $specialCode;
+        if (isset($seen[$key])) {
+            return null;
+        }
+        $seen[$key] = true;
+
+        $combined = $this->calculateCombinedProfit($combo, $specialCode);
+        $profit = $combined['total_profit'];
+        $profitRate = $this->totalBetAmount > 0
+            ? round(($profit / $this->totalBetAmount) * 100, 2)
+            : 0.0;
+
+        return [
+            'm1_m6' => $combo,
+            'm7' => $specialCode,
+            'total_profit' => round($profit, 2),
+            'total_prize' => round($combined['total_prize'], 2),
+            'bet_amount' => $this->totalBetAmount,
+            'profit_rate' => $profitRate,
+            'special_weight' => $this->specialCodeWeights[$specialCode] ?? 0,
+            'normal_weights' => array_sum(array_map(fn($n) => $this->normalCodeWeights[$n] ?? 0, $combo)),
+            'in_range' => ($minRate === null || $profitRate >= $minRate) && ($maxRate === null || $profitRate <= $maxRate),
+        ];
+    }
+
+    /**
+     * Add layered random samples based on risk tiers
+     */
+    protected function addLayeredSamples(array &$solutions, array &$seen, ?float $minRate, ?float $maxRate): void
+    {
+        $specialWeightsSorted = $this->specialCodeWeights;
+        asort($specialWeightsSorted);
+        $sortedKeys = array_keys($specialWeightsSorted);
+
+        $tiers = [
+            'low' => array_slice($sortedKeys, 0, 16),
+            'medium' => array_slice($sortedKeys, 16, 17),
+            'high' => array_slice($sortedKeys, 33, 16),
+        ];
+
+        foreach ($tiers as $tierName => $tierNumbers) {
+            for ($i = 0; $i < self::LAYERED_SAMPLE_PER_TIER; $i++) {
+                if (empty($tierNumbers)) {
+                    continue;
+                }
+                $specialCode = $tierNumbers[array_rand($tierNumbers)];
+                $combo = $this->generateRandomCombo($specialCode);
+                if ($combo === null) {
+                    continue;
+                }
+
+                $solution = $this->evaluateSolutionWithRange($combo, $specialCode, $minRate, $maxRate, $seen);
+                if ($solution !== null) {
+                    $solution['sample_tier'] = $tierName;
+                    $solutions[] = $solution;
+                }
+            }
+        }
+    }
+
+    /**
+     * Add pure random samples
+     */
+    protected function addRandomSamples(array &$solutions, array &$seen, ?float $minRate, ?float $maxRate): void
+    {
+        for ($i = 0; $i < self::RANDOM_SAMPLE_COUNT; $i++) {
+            $specialCode = mt_rand(1, 49);
+            $combo = $this->generateRandomCombo($specialCode);
+            if ($combo === null) {
+                continue;
+            }
+
+            $solution = $this->evaluateSolutionWithRange($combo, $specialCode, $minRate, $maxRate, $seen);
+            if ($solution !== null) {
+                $solution['sample_tier'] = 'random';
+                $solutions[] = $solution;
+            }
+        }
+    }
+
+    /**
+     * Generate a random 6-number combination excluding the special code
+     */
+    protected function generateRandomCombo(int $specialCode): ?array
+    {
+        $pool = range(1, 49);
+        $pool = array_values(array_filter($pool, fn($n) => $n !== $specialCode));
+
+        if (count($pool) < 6) {
+            return null;
+        }
+
+        shuffle($pool);
+        $combo = array_slice($pool, 0, 6);
+        sort($combo);
+
+        return $combo;
+    }
+
+    /**
+     * Build recommendations for range-based filtering
+     */
+    protected function buildRecommendationsWithRange(array $matched, ?float $minRate, ?float $maxRate, int $totalEvaluated): array
+    {
+        $recommendations = [];
+
+        if (empty($matched)) {
+            $recommendations[] = [
+                'type' => 'no_match',
+                'message' => "No solutions found within range [{$minRate}% - {$maxRate}%]",
+                'suggestion' => 'Consider widening the profit rate range or adjusting odds',
+            ];
+
+            if ($minRate !== null && $minRate > 50) {
+                $recommendations[] = [
+                    'type' => 'high_target',
+                    'message' => 'Target profit rate is very high',
+                    'suggestion' => 'Current betting distribution may not support such high profit rates',
+                ];
+            }
+
+            return $recommendations;
+        }
+
+        $bestMatch = $matched[0];
+        $avgRate = count($matched) > 0
+            ? array_sum(array_column($matched, 'profit_rate')) / count($matched)
+            : 0;
+
+        $recommendations[] = [
+            'type' => 'summary',
+            'matched_count' => count($matched),
+            'total_evaluated' => $totalEvaluated,
+            'best_rate' => $bestMatch['profit_rate'],
+            'average_rate' => round($avgRate, 2),
+        ];
+
+        if ($bestMatch['profit_rate'] < 0) {
+            $recommendations[] = [
+                'type' => 'warning',
+                'message' => 'Best matching solution still results in loss',
+                'suggestion' => 'Review betting patterns or adjust odds',
+            ];
+        } elseif ($bestMatch['profit_rate'] < 10) {
+            $recommendations[] = [
+                'type' => 'caution',
+                'message' => 'Profit rate is relatively low',
+                'suggestion' => 'Consider if this meets business requirements',
+            ];
+        } else {
+            $recommendations[] = [
+                'type' => 'ok',
+                'message' => 'Solution within acceptable profit range',
+            ];
+        }
+
+        return $recommendations;
     }
 }
