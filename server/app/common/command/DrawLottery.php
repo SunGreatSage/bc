@@ -282,19 +282,22 @@ class DrawLottery extends Command
         $allNumbers = array_values(array_unique($allNumbers));
 
         switch ($betting->method_name) {
-            case '??':
+            case '特码':
+            case '特碼':
                 $hit = (int)$betting->bet_content === $specialNumber;
                 return $this->resolveBetResult($hit, $betType);
 
-            case '??':
+            case '正码':
+            case '正碼':
                 $hit = in_array((int)$betting->bet_content, $regularNumbers, true);
                 return $this->resolveBetResult($hit, $betType);
 
-            case '??':
+            case '平码':
+            case '平碼':
                 $hit = in_array((int)$betting->bet_content, $allNumbers, true);
                 return $this->resolveBetResult($hit, $betType);
 
-            case '??':
+            case '特肖':
                 $specialZodiac = ZodiacYearService::getZodiacByNumberAndYear($specialNumber, $year);
                 $betZodiacs = ZodiacService::normalizeZodiacSelections(explode(',', $betting->bet_content), $year);
                 if (empty($betZodiacs)) {
@@ -303,7 +306,7 @@ class DrawLottery extends Command
                 $hit = in_array($specialZodiac, $betZodiacs, true);
                 return $this->resolveBetResult($hit, $betType);
 
-            case '??':
+            case '正肖':
                 $betZodiacs = ZodiacService::normalizeZodiacSelections(explode(',', $betting->bet_content), $year);
                 if (empty($betZodiacs)) {
                     return 'lose';
@@ -312,10 +315,10 @@ class DrawLottery extends Command
                 $hit = count(array_intersect($betZodiacs, $drawnZodiacs)) > 0;
                 return $this->resolveBetResult($hit, $betType);
 
-            case '??':
-            case '??':
-            case '??':
-            case '??':
+            case '三肖':
+            case '四肖':
+            case '五肖':
+            case '六肖':
                 $userZodiacs = ZodiacService::normalizeZodiacSelections(explode(',', $betting->bet_content), $year);
                 if (empty($userZodiacs)) {
                     return 'lose';
@@ -327,6 +330,7 @@ class DrawLottery extends Command
                 return $this->resolveBetResult($checkResult['is_win'], $betType);
 
             default:
+                Log::warning('unknown_method_name', ['method_name' => $betting->method_name, 'betting_id' => $betting->id]);
                 return 'lose';
         }
     }
