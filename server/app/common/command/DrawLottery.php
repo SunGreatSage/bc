@@ -81,6 +81,10 @@ class DrawLottery extends Command
 
     /**
      * 封盘后预生成 planned_result（不公开、不结算）
+     *
+     * 优先级：
+     * 1. 后台手动设置的 planned_result（planned_source=1）不会被覆盖
+     * 2. 只有未设置 planned_result 的期次才会自动计算
      */
     private function planClosedIssues(Output $output): void
     {
@@ -90,6 +94,13 @@ class DrawLottery extends Command
         }
 
         foreach ($issues as $issue) {
+            // 检查是否已有后台手动设置的计划（planned_source=1 表示后台手动设置）
+            $existingPlanned = $this->parseNumbersString($issue->planned_result);
+            if (count($existingPlanned) === 7 && $issue->planned_source == 1) {
+                $output->writeln("Skip {$issue->plate_code}-{$issue->issue}: already has manual planned_result");
+                continue;
+            }
+
             $output->writeln("Planning issue {$issue->plate_code}-{$issue->issue}");
 
             try {
@@ -108,11 +119,11 @@ class DrawLottery extends Command
 
                 $issue->planned_result = implode(',', $numbers);
                 $issue->planned_at = time();
-                $issue->planned_source = 0;
+                $issue->planned_source = 0;  // 0=自动计算
                 $issue->planned_operator_id = 0;
                 $issue->save();
 
-                $output->writeln('Planned result ' . $issue->planned_result);
+                $output->writeln('Auto planned result ' . $issue->planned_result);
             } catch (\Exception $e) {
                 $output->writeln('Plan failed ' . $e->getMessage());
                 Log::error('plan_failed', [
@@ -125,6 +136,11 @@ class DrawLottery extends Command
 
     /**
      * 到 draw_time：发布 result 并结算
+     *
+     * 开奖号码优先级：
+     * 1. result 字段（如果已有值）
+     * 2. planned_result 字段（后台手动设置或自动计算）
+     * 3. 随机生成（兜底）
      */
     private function publishAndSettleDueIssues(Output $output): void
     {
@@ -138,21 +154,33 @@ class DrawLottery extends Command
             $output->writeln("Processing issue {$issue->plate_code}-{$issue->issue}");
 
             try {
-                $result = $this->parseNumbersString($issue->result);
+                $resultSource = 'unknown';
 
-                if (count($result) !== 7) {
-                    $result = $this->parseNumbersString($issue->planned_result);
+                // 优先级1: 使用已有的 result
+                $result = $this->parseNumbersString($issue->result);
+                if (count($result) === 7) {
+                    $resultSource = 'existing_result';
                 }
 
+                // 优先级2: 使用 planned_result（后台手动或自动计算）
+                if (count($result) !== 7) {
+                    $result = $this->parseNumbersString($issue->planned_result);
+                    if (count($result) === 7) {
+                        $resultSource = $issue->planned_source == 1 ? 'manual_planned' : 'auto_planned';
+                    }
+                }
+
+                // 优先级3: 兜底随机生成
                 if (count($result) !== 7) {
                     $result = $this->generateFallbackResult();
+                    $resultSource = 'fallback_random';
                 }
 
                 $issue->result = implode(',', $result);
                 $issue->status = 3;
                 $issue->save();
 
-                $output->writeln('Draw result ' . $issue->result);
+                $output->writeln("Draw result: {$issue->result} (source: {$resultSource})");
 
                 $this->settleBetting($issue, $result, $output);
             } catch (\Exception $e) {
