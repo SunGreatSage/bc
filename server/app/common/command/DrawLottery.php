@@ -9,6 +9,7 @@ use app\common\model\lottery\{LotteryIssue, BettingRecord, UserAccount, WinningR
 use app\common\service\ZodiacService;
 use app\common\service\ZodiacYearService;
 use app\common\service\OptimizedBestPlanService;
+use app\common\service\LotteryIssueService;
 use think\facade\Db;
 use think\facade\Log;
 
@@ -198,29 +199,46 @@ class DrawLottery extends Command
      */
     private function settleBetting($issue, $result, $output)
     {
-        $page = 1;
+        $lastId = 0;
         $pageSize = 1000;
         $totalSettled = 0;
 
         while (true) {
-            $bettings = BettingRecord::getIssueBettings($issue->id, $page, $pageSize);
+            $bettings = BettingRecord::getIssueBettings($issue->id, $lastId, $pageSize);
+            $output->writeln("  Batch after id {$lastId}: found " . count($bettings) . " bettings for issue_id={$issue->id}");
             if ($bettings->isEmpty()) {
                 break;
             }
 
             foreach ($bettings as $betting) {
+                $lastId = $betting->id;
                 try {
                     $this->settleSingleBetting($betting, $result);
                     $totalSettled++;
+                    $output->writeln("  Settled betting #{$betting->id}, user_id: {$betting->user_id}");
                 } catch (\Exception $e) {
+                    $output->writeln("  <error>Failed betting #{$betting->id}: {$e->getMessage()}</error>");
                     Log::error('single_settle_failed', [
                         'betting_id' => $betting->id,
+                        'user_id' => $betting->user_id,
                         'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
                     ]);
                 }
             }
+        }
 
-            $page++;
+        $pendingCount = BettingRecord::where([
+            'issue_id' => $issue->id,
+            'status' => 0,
+        ])->count();
+        if ($pendingCount > 0) {
+            $output->writeln("Settlement incomplete, settled {$totalSettled}, pending {$pendingCount} for issue_id={$issue->id}");
+            Log::warning('issue_settle_incomplete', [
+                'issue_id' => $issue->id,
+                'pending_count' => $pendingCount,
+            ]);
+            return;
         }
 
         $issue->status = 3;
@@ -244,11 +262,28 @@ class DrawLottery extends Command
             $prizeAmount = $isWin ? $betting->total_amount * $betting->odds : ($isDraw ? $betting->total_amount : 0);
 
             $account = UserAccount::getAccountWithLock($betting->user_id);
+            if (!$account) {
+                throw new \Exception("User account not found for user_id: {$betting->user_id}");
+            }
             $balanceBefore = $account->balance;
             $frozenBefore = $account->frozen_amount;
 
             if ($isWin) {
-                $account->unfreezeAndPrize($betting->total_amount, $prizeAmount);
+                Log::info('settle_win_before', [
+                    'betting_id' => $betting->id,
+                    'user_id' => $betting->user_id,
+                    'balance_before' => $balanceBefore,
+                    'frozen_before' => $frozenBefore,
+                    'total_amount' => $betting->total_amount,
+                    'prize_amount' => $prizeAmount,
+                ]);
+                $saveResult = $account->unfreezeAndPrize($betting->total_amount, $prizeAmount);
+                Log::info('settle_win_after', [
+                    'betting_id' => $betting->id,
+                    'save_result' => $saveResult,
+                    'balance_after' => $account->balance,
+                    'frozen_after' => $account->frozen_amount,
+                ]);
             } elseif ($isDraw) {
                 $account->frozen_amount -= $betting->total_amount;
                 $account->balance += $betting->total_amount;

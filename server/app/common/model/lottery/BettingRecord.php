@@ -38,13 +38,15 @@ class BettingRecord extends BaseModel
     /**
      * 获取期次投注记录(分批)
      */
-    public static function getIssueBettings($issueId, $page = 1, $pageSize = 1000)
+    public static function getIssueBettings($issueId, $lastId = 0, $pageSize = 1000)
     {
         return self::where([
             'issue_id' => $issueId,
             'status' => 0 // 待开奖
         ])
-        ->page($page, $pageSize)
+        ->where('id', '>', $lastId)
+        ->order('id', 'asc')
+        ->limit($pageSize)
         ->select();
     }
 }
