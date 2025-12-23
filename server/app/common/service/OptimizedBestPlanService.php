@@ -287,20 +287,25 @@ class OptimizedBestPlanService
     /**
      * 寻找最佳开奖组合
      */
-    public function findBest7Numbers(?float $targetRate = null, float $tolerance = 5.0): array
+    public function findBest7Numbers(?float $targetRate = null, float $tolerance = 5.0, bool $includeAllSolutions = false): array
     {
         if (empty($this->allBets)) {
-            return [
+            $result = [
                 'best_solution' => null,
                 'top_solutions' => [],
                 'total_bets' => 0,
                 'total_orders' => 0,
                 'risk_warning' => null,
                 'risk_assessment' => null,
-                'recommendations' => ['该期暂无投注数据,管理员可以任意开奖'],
+                'recommendations' => ['暂无投注数据,可任意开奖'],
                 'strategy_used' => 'none',
             ];
+            if ($includeAllSolutions) {
+                $result['all_solutions'] = [];
+            }
+            return $result;
         }
+
 
         $specialCandidates = $this->getSortedNumbers($this->specialCodeWeights, $this->specialCandidateLimit);
         if (empty($specialCandidates)) {
@@ -395,7 +400,7 @@ class OptimizedBestPlanService
         $riskWarning = $this->buildRiskWarning($bestSolution);
         $recommendations = $this->buildRecommendations($bestSolution);
 
-        return [
+        $result = [
             'best_solution' => $bestSolution,
             'top_solutions' => array_slice($solutions, 0, self::TOP_SOLUTION_LIMIT),
             'total_bets' => $this->totalBetAmount,
@@ -405,6 +410,10 @@ class OptimizedBestPlanService
             'recommendations' => $recommendations,
             'strategy_used' => $targetRate !== null ? 'target_rate' : 'max_profit',
         ];
+        if ($includeAllSolutions) {
+            $result['all_solutions'] = $solutions;
+        }
+        return $result;
     }
 
     protected function calculateCombinedProfit(array $normalCodes, int $specialCode): array

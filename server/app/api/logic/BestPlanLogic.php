@@ -122,7 +122,8 @@ class BestPlanLogic extends BaseLogic
             }
 
             // 获取最佳7个号码组合 - 使用优化版方法
-            $result = $service->findBest7Numbers();
+            $result = $service->findBest7Numbers(null, 5.0, true);
+            $rateBuckets = self::buildRateBuckets($result['all_solutions'] ?? $result['top_solutions'], $year);
             $bestSolution = $result['best_solution'];
 
             // 获取摘要
@@ -264,12 +265,14 @@ class BestPlanLogic extends BaseLogic
                     ],
                     'recommendations' => ['该期暂无投注数据,已生成随机号码供开奖使用'],
                     'strategy_used' => 'random',
+                    'rate_buckets' => self::buildRateBuckets([], $year),
                     'message' => '该期暂无投注数据,已生成随机开奖号码',
                 ];
             }
 
             // ✅ 获取最佳7个号码组合
-            $result = $service->findBest7Numbers();
+            $result = $service->findBest7Numbers(null, 5.0, true);
+            $rateBuckets = self::buildRateBuckets($result['all_solutions'] ?? $result['top_solutions'], $year);
 
             // ✅ 如果指定了目标利润率,尝试找到符合条件的号码组合
             if ($targetRate !== null && !empty($result['top_solutions'])) {
@@ -376,6 +379,7 @@ class BestPlanLogic extends BaseLogic
                 'summary' => $summary,
                 'best_solution' => $bestSolution,
                 'top_solutions' => $result['top_solutions'],
+                'rate_buckets' => $rateBuckets,
                 'risk_assessment' => $result['risk_assessment'] ?? null,
                 'recommendations' => $result['recommendations'] ?? [],
                 'strategy_used' => $targetRate !== null ? 'target_rate' : 'balanced',  // 标记使用的策略
@@ -391,6 +395,500 @@ class BestPlanLogic extends BaseLogic
             self::setError($e->getMessage());
             return false;
         }
+    }
+
+    private static function buildRateBuckets(array $solutions, int $year): array
+    {
+        $normalized = self::normalizeBucketSolutions($solutions, $year);
+
+        if (empty($normalized)) {
+            $normalized = self::normalizeBucketSolutions(self::generateRandomSolutions(160), $year);
+        }
+        if (empty($normalized)) {
+            $normalized = self::normalizeBucketSolutions([[
+                'm1_m6' => [1, 2, 3, 4, 5, 6],
+                'm7' => 7,
+                'profit_rate' => 100.0,
+                'total_profit' => 0.0,
+                'total_prize' => 0.0,
+                'bet_amount' => 0.0,
+            ]], $year);
+        }
+
+        $rates = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10];
+        $totalNeeded = count($rates) * 10;
+        $allowDuplicates = count($normalized) < $totalNeeded;
+        $usedCounts = [];
+        $buckets = [];
+
+        foreach ($rates as $rate) {
+            $baseRange = self::getRateRange($rate);
+            $inRange = array_values(array_filter($normalized, function ($solution) use ($baseRange) {
+                return self::isRateInRange($solution['profit_rate_rounded'], $baseRange);
+            }));
+            $inRangeCount = count($inRange);
+
+            $selected = [];
+            $selectedKeys = [];
+
+            self::appendCandidates($inRange, 10, $selected, $selectedKeys, $usedCounts, $allowDuplicates);
+
+            $effectiveRange = $baseRange;
+            $usedExpansion = false;
+            $usedNearest = false;
+            $usedDuplicate = false;
+
+            if (count($selected) < 10) {
+                $usedExpansion = true;
+                $step = 2.0;
+                $range = $effectiveRange;
+
+                while (count($selected) < 10) {
+                    $expanded = self::expandRange($rate, $range, $step);
+                    if ($expanded['min'] == $range['min'] && $expanded['max'] == $range['max']) {
+                        break;
+                    }
+                    $range = $expanded;
+
+                    $candidates = array_values(array_filter($normalized, function ($solution) use ($range) {
+                        return self::isRateInRange($solution['profit_rate_rounded'], $range);
+                    }));
+                    self::appendCandidates($candidates, 10, $selected, $selectedKeys, $usedCounts, $allowDuplicates);
+
+                    if ($range['min'] <= 10.0 && $range['max'] >= 100.0) {
+                        break;
+                    }
+                }
+
+                $effectiveRange = $range;
+            }
+
+            if (count($selected) < 10) {
+                $usedNearest = true;
+                $center = $rate === 100 ? 100.0 : $rate + 5.0;
+                self::appendNearestCandidates($normalized, $center, 10, $selected, $selectedKeys, $usedCounts, $allowDuplicates);
+            }
+
+            if (count($selected) < 10 && $allowDuplicates && !empty($selected)) {
+                $usedDuplicate = true;
+                $idx = 0;
+                while (count($selected) < 10) {
+                    $dup = $selected[$idx % count($selected)];
+                    $dup['duplicate'] = true;
+                    $selected[] = $dup;
+                    $idx++;
+                }
+            }
+
+            $bucket = [
+                'rate' => $rate,
+                'range' => self::formatRateRange($baseRange),
+                'effective_range' => self::formatRateRange($effectiveRange),
+                'in_range_count' => $inRangeCount,
+                'count' => count($selected),
+                'filled' => ($inRangeCount < 10) || $usedExpansion || $usedNearest || $usedDuplicate,
+                'solutions' => self::formatBucketSolutions($selected),
+            ];
+
+            if ($bucket['filled']) {
+                if ($usedNearest) {
+                    $bucket['fill_reason'] = 'nearest_profit_rate';
+                } elseif ($usedExpansion) {
+                    $bucket['fill_reason'] = 'expanded_range';
+                } elseif ($usedDuplicate) {
+                    $bucket['fill_reason'] = 'duplicate_fill';
+                }
+            }
+
+            usort($bucket['solutions'], function ($a, $b) {
+                if ($a['profit_rate'] == $b['profit_rate']) {
+                    return $b['total_profit'] <=> $a['total_profit'];
+                }
+                return $b['profit_rate'] <=> $a['profit_rate'];
+            });
+
+            $buckets[] = $bucket;
+        }
+
+        return $buckets;
+    }
+
+    private static function normalizeBucketSolutions(array $solutions, int $year): array
+    {
+        if (empty($solutions)) {
+            return [];
+        }
+
+        $zodiacMap = ZodiacYearService::getNumberMapByYear($year);
+        $normalized = [];
+
+        foreach ($solutions as $solution) {
+            $m1_m6 = $solution['m1_m6'] ?? [];
+            $m7 = $solution['m7'] ?? null;
+            if (!is_array($m1_m6) || $m7 === null) {
+                continue;
+            }
+
+            $m1_m6 = array_values(array_unique(array_map('intval', $m1_m6)));
+            if (count($m1_m6) !== 6) {
+                continue;
+            }
+            $m7 = (int)$m7;
+            if ($m7 < 1 || $m7 > 49) {
+                continue;
+            }
+            if (in_array($m7, $m1_m6, true)) {
+                continue;
+            }
+
+            sort($m1_m6);
+            if (!self::isZodiacValid($m1_m6, $zodiacMap)) {
+                continue;
+            }
+
+            $profitRate = isset($solution['profit_rate']) ? (float)$solution['profit_rate'] : 0.0;
+            $profitRateRounded = round($profitRate, 2);
+            $key = self::buildSolutionKey($m1_m6, $m7);
+            $maxConsecutive = self::getMaxConsecutive($m1_m6);
+
+            $normalized[$key] = [
+                'm1_m6' => $m1_m6,
+                'm7' => $m7,
+                'numbers' => array_merge($m1_m6, [$m7]),
+                'profit_rate' => $profitRate,
+                'profit_rate_rounded' => $profitRateRounded,
+                'total_profit' => isset($solution['total_profit']) ? (float)$solution['total_profit'] : 0.0,
+                'total_prize' => isset($solution['total_prize']) ? (float)$solution['total_prize'] : (float)($solution['prize_amount'] ?? 0),
+                'bet_amount' => isset($solution['bet_amount']) ? (float)$solution['bet_amount'] : (float)($solution['total_bets'] ?? 0),
+                'solution_key' => $key,
+                'diversity_score' => self::calculateDiversityScore($m1_m6, $maxConsecutive),
+                'is_sequential' => $maxConsecutive >= 5,
+            ];
+        }
+
+        return array_values($normalized);
+    }
+
+    private static function isZodiacValid(array $m1_m6, array $zodiacMap): bool
+    {
+        $counts = [];
+        foreach ($m1_m6 as $num) {
+            $zodiac = $zodiacMap[$num] ?? '';
+            if ($zodiac === '') {
+                continue;
+            }
+            $counts[$zodiac] = ($counts[$zodiac] ?? 0) + 1;
+            if ($counts[$zodiac] > 2) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static function buildSolutionKey(array $m1_m6, int $m7): string
+    {
+        return implode('-', $m1_m6) . '-' . $m7;
+    }
+
+    private static function getRateRange(int $rate): array
+    {
+        if ($rate >= 100) {
+            return [
+                'min' => 100.0,
+                'max' => 100.0,
+                'max_inclusive' => true,
+                'exact' => true,
+            ];
+        }
+
+        return [
+            'min' => (float)$rate,
+            'max' => (float)($rate + 10),
+            'max_inclusive' => false,
+            'exact' => false,
+        ];
+    }
+
+    private static function expandRange(int $rate, array $range, float $step): array
+    {
+        if ($rate >= 100) {
+            $min = max(10.0, $range['min'] - $step);
+            $max = 100.0;
+        } else {
+            $min = max(10.0, $range['min'] - $step);
+            $max = min(100.0, $range['max'] + $step);
+        }
+
+        return [
+            'min' => $min,
+            'max' => $max,
+            'max_inclusive' => $max >= 100.0,
+            'exact' => $min == $max,
+        ];
+    }
+
+    private static function isRateInRange(float $rate, array $range): bool
+    {
+        if ($range['exact']) {
+            return abs($rate - $range['min']) < 0.005;
+        }
+        if ($range['max_inclusive']) {
+            return $rate >= $range['min'] && $rate <= $range['max'];
+        }
+        return $rate >= $range['min'] && $rate < $range['max'];
+    }
+
+    private static function formatRateRange(array $range): string
+    {
+        if ($range['exact']) {
+            return sprintf('=%.2f', $range['min']);
+        }
+        $symbol = $range['max_inclusive'] ? '<=' : '<';
+        return sprintf('%.2f <= profit_rate_rounded %s %.2f', $range['min'], $symbol, $range['max']);
+    }
+
+    private static function appendCandidates(
+        array $candidates,
+        int $limit,
+        array &$selected,
+        array &$selectedKeys,
+        array &$usedCounts,
+        bool $allowDuplicates
+    ): void {
+        usort($candidates, function ($a, $b) use ($usedCounts) {
+            $usedA = $usedCounts[$a['solution_key']] ?? 0;
+            $usedB = $usedCounts[$b['solution_key']] ?? 0;
+            if ($usedA !== $usedB) {
+                return $usedA <=> $usedB;
+            }
+            if ($a['is_sequential'] !== $b['is_sequential']) {
+                return (int)$a['is_sequential'] <=> (int)$b['is_sequential'];
+            }
+            if ($a['diversity_score'] !== $b['diversity_score']) {
+                return $b['diversity_score'] <=> $a['diversity_score'];
+            }
+            if ($a['profit_rate'] !== $b['profit_rate']) {
+                return $b['profit_rate'] <=> $a['profit_rate'];
+            }
+            return $b['total_profit'] <=> $a['total_profit'];
+        });
+
+        foreach ($candidates as $candidate) {
+            if (count($selected) >= $limit) {
+                break;
+            }
+
+            $key = $candidate['solution_key'];
+            if (isset($selectedKeys[$key])) {
+                continue;
+            }
+            $usedCount = $usedCounts[$key] ?? 0;
+            if (!$allowDuplicates && $usedCount > 0) {
+                continue;
+            }
+
+            $item = $candidate;
+            if ($usedCount > 0) {
+                $item['duplicate'] = true;
+            }
+
+            $selected[] = $item;
+            $selectedKeys[$key] = true;
+            $usedCounts[$key] = $usedCount + 1;
+        }
+    }
+
+    private static function appendNearestCandidates(
+        array $candidates,
+        float $center,
+        int $limit,
+        array &$selected,
+        array &$selectedKeys,
+        array &$usedCounts,
+        bool $allowDuplicates
+    ): void {
+        usort($candidates, function ($a, $b) use ($center, $usedCounts) {
+            $distA = abs($a['profit_rate'] - $center);
+            $distB = abs($b['profit_rate'] - $center);
+            if ($distA < $distB) {
+                return -1;
+            }
+            if ($distA > $distB) {
+                return 1;
+            }
+            $usedA = $usedCounts[$a['solution_key']] ?? 0;
+            $usedB = $usedCounts[$b['solution_key']] ?? 0;
+            if ($usedA !== $usedB) {
+                return $usedA <=> $usedB;
+            }
+            if ($a['is_sequential'] !== $b['is_sequential']) {
+                return (int)$a['is_sequential'] <=> (int)$b['is_sequential'];
+            }
+            if ($a['diversity_score'] !== $b['diversity_score']) {
+                return $b['diversity_score'] <=> $a['diversity_score'];
+            }
+            if ($a['profit_rate'] !== $b['profit_rate']) {
+                return $b['profit_rate'] <=> $a['profit_rate'];
+            }
+            return $b['total_profit'] <=> $a['total_profit'];
+        });
+
+        foreach ($candidates as $candidate) {
+            if (count($selected) >= $limit) {
+                break;
+            }
+
+            $key = $candidate['solution_key'];
+            if (isset($selectedKeys[$key])) {
+                continue;
+            }
+            $usedCount = $usedCounts[$key] ?? 0;
+            if (!$allowDuplicates && $usedCount > 0) {
+                continue;
+            }
+
+            $item = $candidate;
+            if ($usedCount > 0) {
+                $item['duplicate'] = true;
+            }
+
+            $selected[] = $item;
+            $selectedKeys[$key] = true;
+            $usedCounts[$key] = $usedCount + 1;
+        }
+    }
+
+    private static function formatBucketSolutions(array $solutions): array
+    {
+        $formatted = [];
+        foreach ($solutions as $solution) {
+            $item = [
+                'numbers' => $solution['numbers'] ?? [],
+                'm1_m6' => $solution['m1_m6'] ?? [],
+                'm7' => $solution['m7'] ?? 0,
+                'profit_rate' => round((float)($solution['profit_rate'] ?? 0), 2),
+                'total_profit' => (float)($solution['total_profit'] ?? 0),
+                'total_prize' => (float)($solution['total_prize'] ?? 0),
+                'bet_amount' => (float)($solution['bet_amount'] ?? 0),
+            ];
+            if (!empty($solution['duplicate'])) {
+                $item['duplicate'] = true;
+            }
+            $formatted[] = $item;
+        }
+        return $formatted;
+    }
+
+    private static function calculateDiversityScore(array $numbers, int $maxConsecutive): int
+    {
+        if (empty($numbers)) {
+            return 0;
+        }
+
+        $oddCount = 0;
+        foreach ($numbers as $num) {
+            if ($num % 2 !== 0) {
+                $oddCount++;
+            }
+        }
+
+        $score = 0;
+        if ($oddCount >= 2 && $oddCount <= 4) {
+            $score += 2;
+        } elseif ($oddCount === 1 || $oddCount === 5) {
+            $score += 1;
+        }
+
+        $min = min($numbers);
+        $max = max($numbers);
+        $spread = $max - $min;
+        if ($spread >= 20) {
+            $score += 2;
+        } elseif ($spread >= 12) {
+            $score += 1;
+        }
+
+        $segments = [0, 0, 0];
+        foreach ($numbers as $num) {
+            if ($num <= 16) {
+                $segments[0] = 1;
+            } elseif ($num <= 33) {
+                $segments[1] = 1;
+            } else {
+                $segments[2] = 1;
+            }
+        }
+        $score += array_sum($segments);
+
+        if ($maxConsecutive <= 3) {
+            $score += 1;
+        } elseif ($maxConsecutive >= 5) {
+            $score -= 1;
+        }
+
+        return $score;
+    }
+
+    private static function getMaxConsecutive(array $numbers): int
+    {
+        if (empty($numbers)) {
+            return 0;
+        }
+
+        sort($numbers);
+        $max = 1;
+        $current = 1;
+        $count = count($numbers);
+        for ($i = 1; $i < $count; $i++) {
+            if ($numbers[$i] === $numbers[$i - 1] + 1) {
+                $current++;
+            } else {
+                $current = 1;
+            }
+            if ($current > $max) {
+                $max = $current;
+            }
+        }
+        return $max;
+    }
+
+    private static function generateRandomSolutions(int $count): array
+    {
+        $solutions = [];
+        $used = [];
+        $attempts = 0;
+        $maxAttempts = $count * 12;
+
+        while (count($solutions) < $count && $attempts < $maxAttempts) {
+            $pool = range(1, 49);
+            shuffle($pool);
+            $numbers = array_slice($pool, 0, 7);
+            $m7Index = array_rand($numbers);
+            $m7 = $numbers[$m7Index];
+            unset($numbers[$m7Index]);
+            $m1_m6 = array_values($numbers);
+            sort($m1_m6);
+
+            $key = self::buildSolutionKey($m1_m6, $m7);
+            if (isset($used[$key])) {
+                $attempts++;
+                continue;
+            }
+
+            $used[$key] = true;
+            $solutions[] = [
+                'm1_m6' => $m1_m6,
+                'm7' => $m7,
+                'profit_rate' => 100.0,
+                'total_profit' => 0.0,
+                'total_prize' => 0.0,
+                'bet_amount' => 0.0,
+            ];
+
+            $attempts++;
+        }
+
+        return $solutions;
     }
 
     /**
