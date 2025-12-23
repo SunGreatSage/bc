@@ -113,6 +113,7 @@ class LotteryBetLogic
             Db::name('betting_record')->where('id', $bet['id'])->update([
                 'status' => $status,
                 'prize_amount' => $prizeAmount,
+                'is_settled' => 1,
                 'settled_at' => time()
             ]);
 
@@ -177,7 +178,7 @@ class LotteryBetLogic
      *                        - 'not_win': 号码未命中即中奖(历史遗留,不再使用)
      * @return string win|lose|draw
      */
-    private static function checkWin($methodName, $betContent, $drawnNumbers, $year, $betType = 'win')
+    public static function checkWin($methodName, $betContent, $drawnNumbers, $year, $betType = 'win')
     {
         $special = $drawnNumbers[7] ?? $drawnNumbers[6]; // ??(?8???7?)
         $specialNumber = (int)$special;
@@ -937,6 +938,7 @@ class LotteryBetLogic
                 1 => '已中奖',
                 2 => '未中奖',
                 3 => '已撤单',
+                4 => '和局',
             ];
             $item['status_text'] = $statusMap[$item['status']] ?? '未知';
 

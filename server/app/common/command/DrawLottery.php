@@ -5,11 +5,9 @@ namespace app\common\command;
 use think\console\Command;
 use think\console\Input;
 use think\console\Output;
+use app\api\logic\LotteryBetLogic;
 use app\common\model\lottery\{LotteryIssue, BettingRecord, UserAccount, WinningRecord, AccountLog, AgentCommission, UserExtend};
-use app\common\service\ZodiacService;
-use app\common\service\ZodiacYearService;
 use app\common\service\OptimizedBestPlanService;
-use app\common\service\LotteryIssueService;
 use think\facade\Db;
 use think\facade\Log;
 
@@ -256,7 +254,15 @@ class DrawLottery extends Command
     {
         Db::startTrans();
         try {
-            $resultType = $this->checkWin($betting, $result);
+            $betType = $betting->bet_type ?? 'win';
+            $year = (int)substr((string)$betting->issue, 0, 4);
+            $resultType = LotteryBetLogic::checkWin(
+                (string)$betting->method_name,
+                (string)$betting->bet_content,
+                $result,
+                $year,
+                $betType
+            );
             $isWin = $resultType === 'win';
             $isDraw = $resultType === 'draw';
             $prizeAmount = $isWin ? $betting->total_amount * $betting->odds : ($isDraw ? $betting->total_amount : 0);
@@ -306,7 +312,7 @@ class DrawLottery extends Command
             AccountLog::create([
                 'sn' => 'LOG' . date('YmdHis') . rand(1000, 9999),
                 'user_id' => $betting->user_id,
-                'change_type' => $isWin ? 4 : 9,
+                'change_type' => $isWin ? 4 : ($isDraw ? 5 : 9),
                 'change_amount' => $isWin ? $prizeAmount : ($isDraw ? $betting->total_amount : 0),
                 'balance_before' => $balanceBefore,
                 'balance_after' => $account->balance,
@@ -327,83 +333,6 @@ class DrawLottery extends Command
             Db::rollback();
             throw $e;
         }
-    }
-
-    /**
-     * Determine win/lose/draw
-     */
-    private function checkWin($betting, $result)
-    {
-        $betType = $betting->bet_type ?? 'win';
-        $year = (int)substr($betting->issue, 0, 4);
-        $specialNumber = (int)($result[6] ?? 0);
-        $regularNumbers = array_map('intval', array_slice($result, 0, 6));
-        $allNumbers = $regularNumbers;
-        if ($specialNumber > 0 && !in_array($specialNumber, $allNumbers, true)) {
-            $allNumbers[] = $specialNumber;
-        }
-        $allNumbers = array_values(array_unique($allNumbers));
-
-        switch ($betting->method_name) {
-            case '特码':
-            case '特碼':
-                $hit = (int)$betting->bet_content === $specialNumber;
-                return $this->resolveBetResult($hit, $betType);
-
-            case '正码':
-            case '正碼':
-                $hit = in_array((int)$betting->bet_content, $regularNumbers, true);
-                return $this->resolveBetResult($hit, $betType);
-
-            case '平码':
-            case '平碼':
-                $hit = in_array((int)$betting->bet_content, $allNumbers, true);
-                return $this->resolveBetResult($hit, $betType);
-
-            case '特肖':
-                $specialZodiac = ZodiacYearService::getZodiacByNumberAndYear($specialNumber, $year);
-                $betZodiacs = ZodiacService::normalizeZodiacSelections(explode(',', $betting->bet_content), $year);
-                if (empty($betZodiacs)) {
-                    return 'lose';
-                }
-                $hit = in_array($specialZodiac, $betZodiacs, true);
-                return $this->resolveBetResult($hit, $betType);
-
-            case '正肖':
-                $betZodiacs = ZodiacService::normalizeZodiacSelections(explode(',', $betting->bet_content), $year);
-                if (empty($betZodiacs)) {
-                    return 'lose';
-                }
-                $drawnZodiacs = ZodiacService::convertNumbersToZodiacsWithYear($allNumbers, $year);
-                $hit = count(array_intersect($betZodiacs, $drawnZodiacs)) > 0;
-                return $this->resolveBetResult($hit, $betType);
-
-            case '三肖':
-            case '四肖':
-            case '五肖':
-            case '六肖':
-                $userZodiacs = ZodiacService::normalizeZodiacSelections(explode(',', $betting->bet_content), $year);
-                if (empty($userZodiacs)) {
-                    return 'lose';
-                }
-                if ($specialNumber === 49) {
-                    return 'draw';
-                }
-                $checkResult = ZodiacService::checkMultiZodiacWin($userZodiacs, $allNumbers, $year);
-                return $this->resolveBetResult($checkResult['is_win'], $betType);
-
-            default:
-                Log::warning('unknown_method_name', ['method_name' => $betting->method_name, 'betting_id' => $betting->id]);
-                return 'lose';
-        }
-    }
-
-    private function resolveBetResult(bool $hit, string $betType): string
-    {
-        if ($betType === 'not_win') {
-            return $hit ? 'lose' : 'win';
-        }
-        return $hit ? 'win' : 'lose';
     }
 
     /**
