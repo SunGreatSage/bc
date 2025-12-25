@@ -384,18 +384,37 @@ class OptimizedBestPlanService
             ];
         }
 
-        if ($targetRate !== null) {
-            usort($solutions, function ($a, $b) {
-                if ($a['distance_to_target'] === $b['distance_to_target']) {
-                    return $b['total_profit'] <=> $a['total_profit'];
-                }
-                return $a['distance_to_target'] <=> $b['distance_to_target'];
-            });
-        } else {
-            usort($solutions, fn($a, $b) => $b['total_profit'] <=> $a['total_profit']);
-        }
+        // Always sort by profit_rate descending to maintain consistent ordering (100% → 10%)
+        usort($solutions, function ($a, $b) {
+            if ($a['profit_rate'] === $b['profit_rate']) {
+                return $b['total_profit'] <=> $a['total_profit'];
+            }
+            return $b['profit_rate'] <=> $a['profit_rate'];
+        });
 
+        // If target rate is specified, find the best solution that matches the target
         $bestSolution = $solutions[0] ?? null;
+        if ($targetRate !== null && !empty($solutions)) {
+            $targetMin = $targetRate - 5.0;  // tolerance default 5%
+            $targetMax = $targetRate + 5.0;
+
+            // First, try to find a solution within the target range
+            $matchedSolution = null;
+            foreach ($solutions as $solution) {
+                if ($solution['profit_rate'] >= $targetMin && $solution['profit_rate'] <= $targetMax) {
+                    $matchedSolution = $solution;
+                    break;
+                }
+            }
+
+            // If found a match within target range, use it as best solution
+            if ($matchedSolution) {
+                $bestSolution = $matchedSolution;
+            } else {
+                // Otherwise, use the solution with highest profit rate
+                $bestSolution = $solutions[0];
+            }
+        }
         $riskAssessment = $this->buildRiskAssessment($bestSolution);
         $riskWarning = $this->buildRiskWarning($bestSolution);
         $recommendations = $this->buildRecommendations($bestSolution);
