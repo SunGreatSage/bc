@@ -398,47 +398,16 @@ class BestPlanLogic extends BaseLogic
     }
 
     /**
-     * 生成动态利润率档位
-     * 根据实际方案分布动态生成档位，支持更细粒度的分层
+     * 生成固定的10%档位（100% 到 10%）
+     * 确保客户后台可以从全吃到低利润的所有档位中自由选择
      *
      * @param array $solutions 已规范化的方案列表
-     * @return array 动态档位列表，按降序排列
+     * @return array 固定档位列表：[100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
      */
     private static function generateDynamicRates(array $solutions): array
     {
-        if (empty($solutions)) {
-            return [100, 90, 80, 70, 60, 50, 40, 30, 20, 10];
-        }
-
-        // 获取实际方案的利润率范围
-        $rates = array_column($solutions, 'profit_rate_rounded');
-        $minRate = floor(min($rates) / 5) * 5;
-        $maxRate = ceil(max($rates) / 5) * 5;
-
-        // 约束在 [10, 100] 范围内
-        $minRate = max(10, $minRate);
-        $maxRate = min(100, $maxRate);
-
-        // 生成动态档位（每隔5%一个档位）
-        $dynamicRates = [];
-        for ($r = (int)$maxRate; $r >= (int)$minRate; $r -= 5) {
-            if ($r >= 10) {
-                $dynamicRates[] = $r;
-            }
-        }
-
-        // 确保包含100和10（如果数据范围支持）
-        if (!in_array(100, $dynamicRates) && $maxRate >= 100) {
-            array_unshift($dynamicRates, 100);
-        }
-        if (!in_array(10, $dynamicRates) && $minRate <= 10) {
-            $dynamicRates[] = 10;
-        }
-
-        // 降序排列
-        rsort($dynamicRates);
-
-        return array_values(array_unique($dynamicRates));
+        // 返回固定的10%档位，覆盖100%-10%的全范围
+        return [100, 90, 80, 70, 60, 50, 40, 30, 20, 10];
     }
 
     private static function buildRateBuckets(array $solutions, int $year): array
@@ -539,10 +508,20 @@ class BestPlanLogic extends BaseLogic
             }
 
             usort($bucket['solutions'], function ($a, $b) {
-                if ($a['profit_rate'] == $b['profit_rate']) {
-                    return $b['total_profit'] <=> $a['total_profit'];
+                // 第一优先级：利润率（降序）
+                if ($a['profit_rate'] != $b['profit_rate']) {
+                    return $b['profit_rate'] <=> $a['profit_rate'];
                 }
-                return $b['profit_rate'] <=> $a['profit_rate'];
+
+                // 第二优先级：混乱度/多样性（降序）- 优先返回混乱度高的号码
+                $diversityA = $a['diversity_score'] ?? 0;
+                $diversityB = $b['diversity_score'] ?? 0;
+                if ($diversityA != $diversityB) {
+                    return $diversityB <=> $diversityA;
+                }
+
+                // 第三优先级：总利润（降序）
+                return $b['total_profit'] <=> $a['total_profit'];
             });
 
             $buckets[] = $bucket;
@@ -1443,7 +1422,10 @@ class BestPlanLogic extends BaseLogic
             if (empty($betZodiacs)) {
                 return 'lose';
             }
-            $hit = $specialZodiac !== '' && in_array($specialZodiac, $betZodiacs, true);
+
+            // 支持跨年份生肖：7th号码可以匹配任意年份的同生肖
+            $allPossibleZodiacs = self::getAllPossibleZodiacs($m7);
+            $hit = !empty(array_intersect($betZodiacs, $allPossibleZodiacs));
             return self::resolveResult($hit, $betType);
         }
 
@@ -1464,6 +1446,61 @@ class BestPlanLogic extends BaseLogic
         }
 
         return 'lose';
+    }
+
+    /**
+     * 获取号码在所有年份中可能的生肖
+     *
+     * 例如：号码3在不同年份中可能是：
+     * - 1981年的鸡
+     * - 1993年的鸡
+     * - 2005年的鸡
+     * - 2017年的鸡
+     * - 2029年的鸡
+     *
+     * 这允许特肖投注在跨年份范围内生效，
+     * 只要7th号码的生肖在任何年份中匹配投注的生肖即可
+     *
+     * @param int $number 号码（1-49）
+     * @return array 该号码在所有年份中对应的生肖列表（去重）
+     */
+    private static function getAllPossibleZodiacs(int $number): array
+    {
+        if ($number < 1 || $number > 49) {
+            return [];
+        }
+
+        static $cache = [];
+
+        // 优先检查缓存
+        if (isset($cache[$number])) {
+            return $cache[$number];
+        }
+
+        $zodiacs = [];
+
+        // 扫描一个完整的生肖轮转周期（12年）
+        // 在这个周期内可以获得该号码的所有可能生肖
+        $baseYear = 2000;
+        for ($offset = 0; $offset < 12; $offset++) {
+            $year = $baseYear + $offset;
+            try {
+                $numberMap = ZodiacYearService::getNumberMapByYear($year);
+                if (isset($numberMap[$number])) {
+                    $zodiac = $numberMap[$number];
+                    if (!empty($zodiac) && !in_array($zodiac, $zodiacs, true)) {
+                        $zodiacs[] = $zodiac;
+                    }
+                }
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+
+        // 缓存结果
+        $cache[$number] = $zodiacs;
+
+        return $zodiacs;
     }
 
     private static function containsKeyword(string $haystack, array $keywords): bool
