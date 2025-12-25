@@ -280,12 +280,47 @@ class BestPlanLogic extends BaseLogic
                 trace("🎯 目标利润率: {$targetRate}%, 初始误差: ±{$tolerance}%", 'info');
                 trace("📊 生成方案数量: " . count($result['top_solutions']), 'info');
 
-                // 使用智能目标利润率搜索（逐步扩展范围）
+                // 第一次尝试：使用当前方案库搜索
                 $searchResult = self::findTargetRateSolutionByExpansion(
                     $result['top_solutions'],
                     $targetRate,
                     $tolerance
                 );
+
+                // 如果找不到,判断是否需要扩展搜索空间
+                $searchSpaceExpanded = false;
+                if (!isset($searchResult['solution']) || $searchResult['solution'] === null) {
+                    trace("⚠️ 初始搜索空间无法覆盖目标利润率,尝试扩展搜索范围...", 'warning');
+
+                    // 检查当前方案的覆盖范围
+                    $rates = array_column($result['top_solutions'], 'profit_rate');
+                    $minRate = min($rates);
+                    $maxRate = max($rates);
+                    $coverageRange = $maxRate - $minRate;
+
+                    trace("📈 当前覆盖范围: [{$minRate}%, {$maxRate}%], 跨度: {$coverageRange}%", 'debug');
+
+                    // 如果覆盖范围太小（<50%），扩展搜索空间重新生成方案
+                    if ($coverageRange < 50) {
+                        trace("🔍 覆盖范围过小,正在扩展搜索空间重新生成方案...", 'info');
+                        $result = self::expandSearchSpaceAndFindBest(
+                            $service,
+                            $targetRate,
+                            $tolerance
+                        );
+                        $searchSpaceExpanded = true;
+
+                        // 用新方案重试搜索
+                        if (!empty($result['top_solutions'])) {
+                            trace("✅ 扩展后方案数: " . count($result['top_solutions']), 'info');
+                            $searchResult = self::findTargetRateSolutionByExpansion(
+                                $result['top_solutions'],
+                                $targetRate,
+                                $tolerance
+                            );
+                        }
+                    }
+                }
 
                 if ($searchResult['solution']) {
                     $bestSolution = $searchResult['solution'];
@@ -340,11 +375,13 @@ class BestPlanLogic extends BaseLogic
                     'tolerance' => $tolerance,
                     'achieved' => $bestSolution['profit_rate'] ?? 0,
                     'matched' => isset($matchedSolution),
+                    'search_space_expanded' => $searchSpaceExpanded,  // 是否扩展了搜索空间
                     // ✨ 搜索过程详解
                     'search_result' => [
                         'expansion_level' => $searchResult['expansion_level'],
                         'found_range' => $searchResult['range'],
                         'matched_count' => count($searchResult['all_matched'] ?? []),
+                        'initial_solution_count' => count($result['top_solutions'] ?? []),  // 方案数量
                         'search_process' => array_map(function($step) {
                             return [
                                 'level' => $step['level'],
@@ -360,6 +397,7 @@ class BestPlanLogic extends BaseLogic
                     'tolerance' => $tolerance,
                     'achieved' => $bestSolution['profit_rate'] ?? 0,
                     'matched' => false,
+                    'search_space_expanded' => false,
                     'note' => 'No search result available',
                 ] : null),
             ];
@@ -367,6 +405,71 @@ class BestPlanLogic extends BaseLogic
         } catch (\Exception $e) {
             self::setError($e->getMessage());
             return false;
+        }
+    }
+
+    /**
+     * 扩展搜索空间重新生成方案
+     *
+     * 场景：当前方案库覆盖范围太小，无法满足目标利润率要求
+     * 解决方案：动态增加候选特码数和每个特码的组合数
+     *
+     * @param \app\common\service\OptimizedBestPlanService $service
+     * @param float $targetRate 目标利润率
+     * @param float $tolerance 容差范围
+     * @return array 扩展后的方案结果
+     */
+    private static function expandSearchSpaceAndFindBest(
+        \app\common\service\OptimizedBestPlanService $service,
+        float $targetRate,
+        float $tolerance
+    ): array {
+        trace("🚀 启动扩展搜索空间...", 'info');
+
+        // 通过反射或动态调用增加搜索参数
+        // 第一轮：3倍扩展
+        $originalSpecialLimit = 20;     // 原始: 20个特码
+        $originalComboLimit = 800;       // 原始: 800个组合/特码
+
+        $expandedSpecial = $originalSpecialLimit * 2;      // 扩展到 40 个特码
+        $expandedCombo = $originalComboLimit * 2;          // 扩展到 1600 个组合/特码
+
+        trace("📍 扩展参数：特码候选数 {$originalSpecialLimit} → {$expandedSpecial}，组合数 {$originalComboLimit} → {$expandedCombo}", 'debug');
+
+        try {
+            // 使用反射设置私有属性（如果支持）
+            $reflection = new \ReflectionClass($service);
+
+            if ($reflection->hasProperty('specialCandidateLimit')) {
+                $prop = $reflection->getProperty('specialCandidateLimit');
+                $prop->setAccessible(true);
+                $prop->setValue($service, $expandedSpecial);
+            }
+
+            if ($reflection->hasProperty('maxCombosPerSpecial')) {
+                $prop = $reflection->getProperty('maxCombosPerSpecial');
+                $prop->setAccessible(true);
+                $prop->setValue($service, $expandedCombo);
+            }
+
+            // 重新计算最佳方案
+            $result = $service->findBest7Numbers(null, 5.0, true);
+
+            trace("✅ 扩展搜索完成，生成方案数: " . count($result['top_solutions']), 'info');
+
+            // 检查新的覆盖范围
+            if (!empty($result['top_solutions'])) {
+                $rates = array_column($result['top_solutions'], 'profit_rate');
+                $newMin = min($rates);
+                $newMax = max($rates);
+                trace("📊 扩展后覆盖范围: [{$newMin}%, {$newMax}%], 跨度: " . ($newMax - $newMin) . "%", 'debug');
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            trace("❌ 扩展搜索空间失败: " . $e->getMessage(), 'error');
+            // 降级处理：返回原始结果
+            return $service->findBest7Numbers(null, 5.0, true);
         }
     }
 
