@@ -274,90 +274,42 @@ class BestPlanLogic extends BaseLogic
             $result = $service->findBest7Numbers(null, 5.0, true);
             $rateBuckets = self::buildRateBuckets($result['all_solutions'] ?? $result['top_solutions'], $year);
 
-            // ✅ 如果指定了目标利润率,尝试找到符合条件的号码组合
+            // ✅ 如果指定了目标利润率,使用智能扩展搜索
+            $searchResult = null;
             if ($targetRate !== null && !empty($result['top_solutions'])) {
-                trace("🎯 目标利润率: {$targetRate}%, 误差: ±{$tolerance}%", 'info');
+                trace("🎯 目标利润率: {$targetRate}%, 初始误差: ±{$tolerance}%", 'info');
                 trace("📊 生成方案数量: " . count($result['top_solutions']), 'info');
 
-                $targetMin = $targetRate - $tolerance;
-                $targetMax = $targetRate + $tolerance;
+                // 使用智能目标利润率搜索（逐步扩展范围）
+                $searchResult = self::findTargetRateSolutionByExpansion(
+                    $result['top_solutions'],
+                    $targetRate,
+                    $tolerance
+                );
 
-                // ✨ 优化: top_solutions已按利润率升序排列,优先查找范围内的方案
-                $matchedSolution = null;
-                $closestSolution = null;
-                $closestDiff = 999999;
+                if ($searchResult['solution']) {
+                    $bestSolution = $searchResult['solution'];
+                    $matchedSolution = $searchResult['solution'];
 
-                foreach ($result['top_solutions'] as $solution) {
-                    $profitRate = $solution['profit_rate'];
-                    $diff = abs($profitRate - $targetRate);
+                    // 输出搜索过程日志
+                    trace("✅ 搜索成功!", 'info');
+                    trace("   找到范围: [{$searchResult['range']['min']}%, {$searchResult['range']['max']}%]", 'info');
+                    trace("   扩展级别: {$searchResult['expansion_level']}", 'info');
+                    trace("   符合方案数: " . count($searchResult['all_matched']), 'info');
+                    trace("   选中利润率: {$bestSolution['profit_rate']}%", 'info');
 
-                    // 记录最接近的方案
-                    if ($diff < $closestDiff) {
-                        $closestDiff = $diff;
-                        $closestSolution = $solution;
-                    }
-
-                    // 检查是否在目标范围内
-                    if ($profitRate >= $targetMin && $profitRate <= $targetMax) {
-                        $matchedSolution = $solution;
-                        trace("✅ 找到符合目标利润率的方案: {$profitRate}% (目标: {$targetMin}%-{$targetMax}%, 策略: {$solution['strategy']})", 'info');
-                        break;
-                    }
-                }
-
-                // 如果找到符合条件的方案,使用它
-                if ($matchedSolution) {
-                    $bestSolution = $matchedSolution;
-                    trace("✅ 使用符合目标利润率的方案", 'info');
-                } else {
-                    // 🔍 输出方案范围统计,帮助调试
-                    $profitRates = array_column($result['top_solutions'], 'profit_rate');
-                    $minRate = min($profitRates);
-                    $maxRate = max($profitRates);
-                    trace("📈 方案利润率范围: {$minRate}% ~ {$maxRate}%", 'info');
-
-                    // ⚠️ 没有找到符合条件的方案
-                    trace("⚠️ 未找到完全符合的方案 (目标: {$targetMin}%-{$targetMax}%)", 'warning');
-
-                    // 🎯 智能选择策略:
-                    // 规则1: 如果目标利润率 > 0,必须优先选择盈利方案(利润率 ≥ 0)
-                    // 规则2: 如果没有盈利方案,则使用最接近目标的方案(可能为负)
-                    if ($targetRate > 0) {
-                        // 查找所有盈利方案
-                        $profitableSolutions = array_filter($result['top_solutions'], function($s) {
-                            return $s['profit_rate'] >= 0;
-                        });
-
-                        if (!empty($profitableSolutions)) {
-                            // 从盈利方案中选择最接近目标的
-                            $closestProfitable = null;
-                            $minDiff = 999999;
-                            foreach ($profitableSolutions as $solution) {
-                                $diff = abs($solution['profit_rate'] - $targetRate);
-                                if ($diff < $minDiff) {
-                                    $minDiff = $diff;
-                                    $closestProfitable = $solution;
-                                }
-                            }
-                            $bestSolution = $closestProfitable;
-                            trace("💡 目标利润率>0,强制选择盈利方案: {$bestSolution['profit_rate']}% (差距: {$minDiff}%)", 'info');
+                    // 输出详细的搜索过程
+                    foreach ($searchResult['search_process'] as $step) {
+                        if ($step['found_count'] > 0) {
+                            trace("   └─ Level {$step['level']}: 范围 [{$step['range']['min']}%, {$step['range']['max']}%] - ✅ 找到 {$step['found_count']} 个方案", 'debug');
                         } else {
-                            // 没有任何盈利方案,使用亏损最小的方案
-                            $bestSolution = end($result['top_solutions']); // 数组最后一个(利润率最高)
-                            trace("⚠️ 无盈利方案!使用亏损最小方案: {$bestSolution['profit_rate']}%", 'warning');
+                            trace("   └─ Level {$step['level']}: 范围 [{$step['range']['min']}%, {$step['range']['max']}%] - ❌ 0个方案", 'debug');
                         }
-                    } else {
-                        // 目标利润率 ≤ 0,使用最接近的方案(可能为负)
-                        $bestSolution = $closestSolution ?: $result['best_solution'];
-                        trace("💡 使用最接近的方案: {$bestSolution['profit_rate']}% (差距: {$closestDiff}%)", 'info');
                     }
-
-                    // 给出优化建议
-                    if (abs($bestSolution['profit_rate'] - $targetRate) > 20) {
-                        trace("💡 建议: 当前投注数据无法实现目标利润率,建议:", 'info');
-                        trace("   1. 调整目标利润率到 {$minRate}%-{$maxRate}% 范围内", 'info');
-                        trace("   2. 或增加更多投注数据以扩大可选方案范围", 'info');
-                    }
+                } else {
+                    // 不应该发生，因为搜索会一直扩展到 [10%-100%]
+                    trace("⚠️ 未找到任何方案", 'warning');
+                    $bestSolution = $result['best_solution'];
                 }
             } else {
                 // 没有指定目标利润率,使用最大利润方案(数组最后一个元素)
@@ -383,17 +335,140 @@ class BestPlanLogic extends BaseLogic
                 'risk_assessment' => $result['risk_assessment'] ?? null,
                 'recommendations' => $result['recommendations'] ?? [],
                 'strategy_used' => $targetRate !== null ? 'target_rate' : 'balanced',  // 标记使用的策略
-                'target_rate_config' => $targetRate !== null ? [
+                'target_rate_config' => $targetRate !== null && $searchResult !== null ? [
                     'target' => $targetRate,
                     'tolerance' => $tolerance,
                     'achieved' => $bestSolution['profit_rate'] ?? 0,
                     'matched' => isset($matchedSolution),
-                ] : null,
+                    // ✨ 搜索过程详解
+                    'search_result' => [
+                        'expansion_level' => $searchResult['expansion_level'],
+                        'found_range' => $searchResult['range'],
+                        'matched_count' => count($searchResult['all_matched'] ?? []),
+                        'search_process' => array_map(function($step) {
+                            return [
+                                'level' => $step['level'],
+                                'tolerance' => $step['tolerance'],
+                                'range' => $step['range'],
+                                'found_count' => $step['found_count'],
+                                'status' => $step['found_count'] > 0 ? 'found' : 'not_found',
+                            ];
+                        }, $searchResult['search_process'] ?? []),
+                    ],
+                ] : ($targetRate !== null ? [
+                    'target' => $targetRate,
+                    'tolerance' => $tolerance,
+                    'achieved' => $bestSolution['profit_rate'] ?? 0,
+                    'matched' => false,
+                    'note' => 'No search result available',
+                ] : null),
             ];
 
         } catch (\Exception $e) {
             self::setError($e->getMessage());
             return false;
+        }
+    }
+
+    /**
+     * 智能目标利润率搜索 - 逐步扩展范围
+     *
+     * 算法逻辑：
+     * 1. 首先在 [target - tolerance, target + tolerance] 范围内搜索
+     * 2. 如果找不到，逐步扩展范围：
+     *    - 扩展1倍：[target - 2*tolerance, target + 2*tolerance]
+     *    - 扩展2倍：[target - 3*tolerance, target + 3*tolerance]
+     *    - ...以此类推，直到覆盖整个 [10%, 100%] 范围
+     * 3. 最终按利润率从高到低返回符合条件的方案
+     *
+     * @param array $solutions 所有方案列表（已按利润率排序）
+     * @param float $targetRate 目标利润率（如 50%）
+     * @param float $tolerance 初始误差范围（如 10%）
+     * @return array ['solution' => 最佳方案, 'range' => 查找范围, 'expansion_level' => 扩展级别]
+     */
+    private static function findTargetRateSolutionByExpansion(
+        array $solutions,
+        float $targetRate,
+        float $tolerance
+    ): array {
+        if (empty($solutions)) {
+            return [
+                'solution' => null,
+                'range' => null,
+                'expansion_level' => 0,
+                'search_process' => [],
+            ];
+        }
+
+        $searchProcess = [];
+        $expansionLevel = 0;
+        $currentTolerance = $tolerance;
+
+        // 逐步扩展搜索范围，直到找到方案或覆盖整个范围
+        while (true) {
+            // 计算当前搜索范围
+            $rangeMin = max(10.0, $targetRate - $currentTolerance);
+            $rangeMax = min(100.0, $targetRate + $currentTolerance);
+
+            // 在当前范围内搜索
+            $matched = array_filter($solutions, function ($solution) use ($rangeMin, $rangeMax) {
+                $rate = $solution['profit_rate'];
+                return $rate >= $rangeMin && $rate <= $rangeMax;
+            });
+
+            // 记录搜索过程
+            $searchStep = [
+                'level' => $expansionLevel,
+                'tolerance' => $currentTolerance,
+                'range' => [
+                    'min' => round($rangeMin, 2),
+                    'max' => round($rangeMax, 2),
+                ],
+                'found_count' => count($matched),
+            ];
+            $searchProcess[] = $searchStep;
+
+            // 如果找到匹配的方案，按利润率降序排列并返回第一个
+            if (!empty($matched)) {
+                // 按利润率降序排列
+                usort($matched, function ($a, $b) {
+                    return $b['profit_rate'] <=> $a['profit_rate'];
+                });
+
+                return [
+                    'solution' => reset($matched),
+                    'range' => [
+                        'min' => round($rangeMin, 2),
+                        'max' => round($rangeMax, 2),
+                    ],
+                    'expansion_level' => $expansionLevel,
+                    'all_matched' => $matched,  // 返回所有匹配的方案
+                    'search_process' => $searchProcess,
+                ];
+            }
+
+            // 检查是否已经覆盖整个范围 [10%, 100%]
+            if ($rangeMin <= 10.0 && $rangeMax >= 100.0) {
+                // 已覆盖全范围但仍未找到，返回整个列表按降序
+                usort($solutions, function ($a, $b) {
+                    return $b['profit_rate'] <=> $a['profit_rate'];
+                });
+                return [
+                    'solution' => reset($solutions),
+                    'range' => [
+                        'min' => 10.0,
+                        'max' => 100.0,
+                    ],
+                    'expansion_level' => $expansionLevel,
+                    'all_matched' => $solutions,
+                    'search_process' => $searchProcess,
+                    'note' => 'Covered full range [10%-100%], returning highest profit rate',
+                ];
+            }
+
+            // 扩展容差值以进行下一轮搜索
+            $expansionLevel++;
+            $currentTolerance = $tolerance * ($expansionLevel + 1);
         }
     }
 
