@@ -1202,34 +1202,49 @@ class BestPlanLogic extends BaseLogic
                 ->find();
 
             if (!$issue) {
+                Db::rollback();
                 self::setError('期号不存在');
                 return false;
             }
 
+            // Check if planning window is open (must be after close_time)
             $closeTimeRaw = $issue['close_time'] ?? 0;
             $closeTimeTs = is_numeric($closeTimeRaw) ? (int)$closeTimeRaw : (int)strtotime((string)$closeTimeRaw);
-            if ($closeTimeTs > 0 && time() < $closeTimeTs) {
+            $currentTime = time();
+            if ($closeTimeTs > 0 && $currentTime < $closeTimeTs) {
+                Db::rollback();
                 self::setError('未到封盘时间，不能提交计划');
                 return false;
             }
 
             if (!empty($issue['result'])) {
+                Db::rollback();
                 self::setError('本期已开奖，不能重复提交计划');
                 return false;
             }
 
             if (!empty($issue['is_settled'])) {
+                Db::rollback();
                 self::setError('本期已结算，不能重复提交计划');
+                return false;
+            }
+
+            // Prevent duplicate submission of manual plan
+            if (!empty($issue['planned_result']) && $issue['planned_source'] == 1) {
+                Db::rollback();
+                self::setError('本期已设置计划，不能重复提交');
                 return false;
             }
 
             $numbers = array_values(array_map('intval', $bestNumbers));
             if (count($numbers) !== 7) {
+                Db::rollback();
                 self::setError('必须提交7个开奖号码');
                 return false;
             }
             foreach ($numbers as $num) {
                 if ($num < 1 || $num > 49) {
+                    Db::rollback();
                     self::setError('号码范围必须在1-49之间');
                     return false;
                 }
@@ -1238,8 +1253,10 @@ class BestPlanLogic extends BaseLogic
             $m1_m6 = array_slice($numbers, 0, 6);
             $m7 = $numbers[6];
 
+            // Use lockForUpdate to maintain exclusive lock during update
             Db::table('la_lottery_issue')
                 ->where('id', $issue['id'])
+                ->lockForUpdate()
                 ->update([
                     'planned_result' => implode(',', $numbers),
                     'planned_at' => time(),
