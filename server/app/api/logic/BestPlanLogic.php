@@ -397,6 +397,50 @@ class BestPlanLogic extends BaseLogic
         }
     }
 
+    /**
+     * 生成动态利润率档位
+     * 根据实际方案分布动态生成档位，支持更细粒度的分层
+     *
+     * @param array $solutions 已规范化的方案列表
+     * @return array 动态档位列表，按降序排列
+     */
+    private static function generateDynamicRates(array $solutions): array
+    {
+        if (empty($solutions)) {
+            return [100, 90, 80, 70, 60, 50, 40, 30, 20, 10];
+        }
+
+        // 获取实际方案的利润率范围
+        $rates = array_column($solutions, 'profit_rate_rounded');
+        $minRate = floor(min($rates) / 5) * 5;
+        $maxRate = ceil(max($rates) / 5) * 5;
+
+        // 约束在 [10, 100] 范围内
+        $minRate = max(10, $minRate);
+        $maxRate = min(100, $maxRate);
+
+        // 生成动态档位（每隔5%一个档位）
+        $dynamicRates = [];
+        for ($r = (int)$maxRate; $r >= (int)$minRate; $r -= 5) {
+            if ($r >= 10) {
+                $dynamicRates[] = $r;
+            }
+        }
+
+        // 确保包含100和10（如果数据范围支持）
+        if (!in_array(100, $dynamicRates) && $maxRate >= 100) {
+            array_unshift($dynamicRates, 100);
+        }
+        if (!in_array(10, $dynamicRates) && $minRate <= 10) {
+            $dynamicRates[] = 10;
+        }
+
+        // 降序排列
+        rsort($dynamicRates);
+
+        return array_values(array_unique($dynamicRates));
+    }
+
     private static function buildRateBuckets(array $solutions, int $year): array
     {
         $normalized = self::normalizeBucketSolutions($solutions, $year);
@@ -405,17 +449,11 @@ class BestPlanLogic extends BaseLogic
             $normalized = self::normalizeBucketSolutions(self::generateRandomSolutions(160), $year);
         }
         if (empty($normalized)) {
-            $normalized = self::normalizeBucketSolutions([[
-                'm1_m6' => [1, 2, 3, 4, 5, 6],
-                'm7' => 7,
-                'profit_rate' => 100.0,
-                'total_profit' => 0.0,
-                'total_prize' => 0.0,
-                'bet_amount' => 0.0,
-            ]], $year);
+            $normalized = self::normalizeBucketSolutions(self::generateRandomSolutions(200), $year);
         }
 
-        $rates = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10];
+        // 生成动态档位而不是固定的10档
+        $rates = self::generateDynamicRates($normalized);
         $totalNeeded = count($rates) * 10;
         $allowDuplicates = count($normalized) < $totalNeeded;
         $usedCounts = [];
@@ -578,7 +616,8 @@ class BestPlanLogic extends BaseLogic
                 continue;
             }
             $counts[$zodiac] = ($counts[$zodiac] ?? 0) + 1;
-            if ($counts[$zodiac] > 2) {
+            // 允许同一生肖最多4个号码，支持重肖需求
+            if ($counts[$zodiac] > 4) {
                 return false;
             }
         }
@@ -852,6 +891,33 @@ class BestPlanLogic extends BaseLogic
         return $max;
     }
 
+    /**
+     * 检查是否存在连续序列（5个或以上连续号码）
+     *
+     * @param array $numbers 号码数组（已排序）
+     * @return int 最大连续号码数
+     */
+    private static function getMaxConsecutive(array $numbers): int
+    {
+        if (empty($numbers)) {
+            return 0;
+        }
+
+        $max = 1;
+        $current = 1;
+
+        for ($i = 1; $i < count($numbers); $i++) {
+            if ($numbers[$i] == $numbers[$i - 1] + 1) {
+                $current++;
+                $max = max($max, $current);
+            } else {
+                $current = 1;
+            }
+        }
+
+        return $max;
+    }
+
     private static function generateRandomSolutions(int $count): array
     {
         $solutions = [];
@@ -868,6 +934,13 @@ class BestPlanLogic extends BaseLogic
             unset($numbers[$m7Index]);
             $m1_m6 = array_values($numbers);
             sort($m1_m6);
+
+            // 排除顺序号码（连续5个或以上）
+            $maxConsecutive = self::getMaxConsecutive($m1_m6);
+            if ($maxConsecutive >= 5) {
+                $attempts++;
+                continue;
+            }
 
             $key = self::buildSolutionKey($m1_m6, $m7);
             if (isset($used[$key])) {
