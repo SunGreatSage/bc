@@ -1025,6 +1025,12 @@ class BestPlanLogic extends BaseLogic
         return $score;
     }
 
+    /**
+     * 检查是否存在连续序列（5个或以上连续号码）
+     *
+     * @param array $numbers 号码数组（已排序）
+     * @return int 最大连续号码数
+     */
     private static function getMaxConsecutive(array $numbers): int
     {
         if (empty($numbers)) {
@@ -1045,33 +1051,6 @@ class BestPlanLogic extends BaseLogic
                 $max = $current;
             }
         }
-        return $max;
-    }
-
-    /**
-     * 检查是否存在连续序列（5个或以上连续号码）
-     *
-     * @param array $numbers 号码数组（已排序）
-     * @return int 最大连续号码数
-     */
-    private static function getMaxConsecutive(array $numbers): int
-    {
-        if (empty($numbers)) {
-            return 0;
-        }
-
-        $max = 1;
-        $current = 1;
-
-        for ($i = 1; $i < count($numbers); $i++) {
-            if ($numbers[$i] == $numbers[$i - 1] + 1) {
-                $current++;
-                $max = max($max, $current);
-            } else {
-                $current = 1;
-            }
-        }
-
         return $max;
     }
 
