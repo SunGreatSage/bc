@@ -35,38 +35,48 @@ class BestPlanLogic extends BaseLogic
             // 创建计算服务 - 使用优化版算法(统一"中"与"不中"投注)
             $service = new \app\common\service\OptimizedBestPlanService($gid, $qishu, $year, $plateCode);
 
-            // 如果没有投注数据,生成随机号码并显示100%利润
+            // 如果没有投注数据,生成至少20个随机方案
             if ($service->getBetCount() === 0) {
-                // 生成随机的7个不重复号码(1-49)
-                $randomNumbers = range(1, 49);
-                shuffle($randomNumbers);
-                $selectedNumbers = array_slice($randomNumbers, 0, 7);
-                sort($selectedNumbers);
+                // 生成20个随机方案供选择
+                $randomSolutions = self::generateRandomSolutions(20);
 
-                $m1_m6 = array_slice($selectedNumbers, 0, 6);
-                $m7 = $selectedNumbers[6];
+                if (empty($randomSolutions)) {
+                    // 如果生成失败,返回单个随机方案
+                    $randomNumbers = range(1, 49);
+                    shuffle($randomNumbers);
+                    $selectedNumbers = array_slice($randomNumbers, 0, 7);
+                    sort($selectedNumbers);
 
-                $bestSolution = [
-                    'm1_m6' => $m1_m6,
-                    'm7' => $m7,
-                    'total_profit' => 0,
-                    'profit_rate' => 100.0,  // 没有投注,利润率100%
-                    'bet_amount' => 0,
-                    'prize_amount' => 0,
-                ];
+                    $m1_m6 = array_slice($selectedNumbers, 0, 6);
+                    $m7 = $selectedNumbers[6];
 
+                    $bestSolution = [
+                        'm1_m6' => $m1_m6,
+                        'm7' => $m7,
+                        'total_profit' => 0,
+                        'profit_rate' => 100.0,
+                        'bet_amount' => 0,
+                        'prize_amount' => 0,
+                    ];
+
+                    $randomSolutions = [$bestSolution];
+                } else {
+                    $bestSolution = $randomSolutions[0];
+                }
+
+                $selectedNumbers = array_merge($bestSolution['m1_m6'], [$bestSolution['m7']]);
                 $summary = [
                     'total_bets' => 0,
                     'total_orders' => 0,
                     'best_numbers' => $selectedNumbers,
-                    'best_m7' => $m7,
-                    'best_m1_m6' => $m1_m6,
+                    'best_m7' => $bestSolution['m7'],
+                    'best_m1_m6' => $bestSolution['m1_m6'],
                     'best_profit' => 0,
                     'best_profit_rate' => 100.0,
                     'has_bets' => false,  // 标记：无投注数据
                 ];
 
-                // 构造号码详情
+                // 构造号码详情（使用最佳方案的号码）
                 $numberDetails = [];
                 foreach ($selectedNumbers as $number) {
                     $numberDetails[] = [
@@ -116,8 +126,8 @@ class BestPlanLogic extends BaseLogic
                 return [
                     'summary' => $summary,
                     'best_solution' => $bestSolution,
-                    'top_solutions' => [$bestSolution],
-                    'message' => '该期暂无投注数据,已生成随机开奖号码',
+                    'top_solutions' => $randomSolutions,  // ✅ 返回20个方案
+                    'message' => '该期暂无投注数据,已生成' . count($randomSolutions) . '个随机开奖方案',
                 ];
             }
 
@@ -226,47 +236,62 @@ class BestPlanLogic extends BaseLogic
             // 使用优化版算法(统一"中"与"不中"投注)
             $service = new \app\common\service\OptimizedBestPlanService($gid, $qishu, $year, $plateCode);
 
-            // 如果没有投注数据,生成随机号码并显示100%利润
+            // 如果没有投注数据,生成至少20个随机方案
             if ($service->getBetCount() === 0) {
-                // 生成随机的7个不重复号码(1-49)
-                $randomNumbers = range(1, 49);
-                shuffle($randomNumbers);
-                $selectedNumbers = array_slice($randomNumbers, 0, 7);
-                sort($selectedNumbers);
+                // 生成20个随机方案供选择
+                $randomSolutions = self::generateRandomSolutions(20);
 
-                $m1_m6 = array_slice($selectedNumbers, 0, 6);
-                $m7 = $selectedNumbers[6];
+                if (empty($randomSolutions)) {
+                    // 如果生成失败,返回单个随机方案
+                    $randomNumbers = range(1, 49);
+                    shuffle($randomNumbers);
+                    $selectedNumbers = array_slice($randomNumbers, 0, 7);
+                    sort($selectedNumbers);
 
-                $bestSolution = [
-                    'm1_m6' => $m1_m6,
-                    'm7' => $m7,
-                    'total_profit' => 0,
-                    'profit_rate' => 100.0,  // 没有投注,利润率100%
-                    'bet_amount' => 0,
-                    'prize_amount' => 0,
-                ];
+                    $m1_m6 = array_slice($selectedNumbers, 0, 6);
+                    $m7 = $selectedNumbers[6];
+
+                    $bestSolution = [
+                        'm1_m6' => $m1_m6,
+                        'm7' => $m7,
+                        'total_profit' => 0,
+                        'profit_rate' => 100.0,
+                        'bet_amount' => 0,
+                        'prize_amount' => 0,
+                    ];
+
+                    $randomSolutions = [$bestSolution];
+                    $selectedNumbers = array_merge($m1_m6, [$m7]);
+                } else {
+                    // 使用第一个方案作为最佳方案
+                    $bestSolution = $randomSolutions[0];
+                    $selectedNumbers = array_merge($bestSolution['m1_m6'], [$bestSolution['m7']]);
+                }
+
+                // ✅ 构建利润率档位
+                $rateBuckets = self::buildRateBuckets($randomSolutions, $year);
 
                 return [
                     'summary' => [
                         'total_bets' => 0,
                         'total_orders' => 0,
                         'best_numbers' => $selectedNumbers,
-                        'best_m7' => $m7,
-                        'best_m1_m6' => $m1_m6,
+                        'best_m7' => $bestSolution['m7'],
+                        'best_m1_m6' => $bestSolution['m1_m6'],
                         'best_profit' => 0,
                         'best_profit_rate' => 100.0,
                         'has_bets' => false,  // 标记：无投注数据
                     ],
                     'best_solution' => $bestSolution,
-                    'top_solutions' => [$bestSolution],
+                    'top_solutions' => $randomSolutions,  // ✅ 返回20个方案
+                    'rate_buckets' => $rateBuckets,  // ✅ 返回档位数据
                     'risk_assessment' => [
                         'risk_level' => 'safe',
                         'description' => '该期无投注数据,无风险',
                     ],
-                    'recommendations' => ['该期暂无投注数据,已生成随机号码供开奖使用'],
+                    'recommendations' => ['该期暂无投注数据,已生成' . count($randomSolutions) . '个随机号码供开奖选择'],
                     'strategy_used' => 'random',
-                    'rate_buckets' => self::buildRateBuckets([], $year),
-                    'message' => '该期暂无投注数据,已生成随机开奖号码',
+                    'message' => '该期暂无投注数据,已生成随机开奖方案',
                 ];
             }
 
