@@ -87,10 +87,13 @@ class DrawLottery extends Command
      */
     /**
      * 自动计算提前时间（秒）：开奖前多久自动计算
-     * 设置为60秒（1分钟），即开奖前1分钟才自动计算
-     * 这样管理员有更多时间手动选择号码（封盘后到开奖前1分钟都可以选择）
+     * 设置为120秒（2分钟），即开奖前2分钟才自动计算
+     * 这样管理员有更多时间手动选择号码（封盘后到开奖前2分钟都可以选择）
+     *
+     * 注意：此值应大于定时任务执行间隔（当前为60秒），
+     * 以确保在窗口期内至少有一次任务执行机会
      */
-    private const AUTO_PLAN_BEFORE_DRAW_SECONDS = 60;
+    private const AUTO_PLAN_BEFORE_DRAW_SECONDS = 120;
 
     private function planClosedIssues(Output $output): void
     {
