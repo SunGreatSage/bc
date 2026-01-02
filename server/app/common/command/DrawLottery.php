@@ -85,6 +85,13 @@ class DrawLottery extends Command
      * 1. 后台手动设置的 planned_result（planned_source=1）不会被覆盖
      * 2. 只有未设置 planned_result 的期次才会自动计算
      */
+    /**
+     * 自动计算提前时间（秒）：开奖前多久自动计算
+     * 设置为60秒（1分钟），即开奖前1分钟才自动计算
+     * 这样管理员有更多时间手动选择号码（封盘后到开奖前1分钟都可以选择）
+     */
+    private const AUTO_PLAN_BEFORE_DRAW_SECONDS = 60;
+
     private function planClosedIssues(Output $output): void
     {
         $issues = LotteryIssue::getPendingPlanIssues();
@@ -92,11 +99,23 @@ class DrawLottery extends Command
             return;
         }
 
+        $now = time();
+
         foreach ($issues as $issue) {
             // 检查是否已有后台手动设置的计划（planned_source=1 表示后台手动设置）
             $existingPlanned = $this->parseNumbersString($issue->planned_result);
             if (count($existingPlanned) === 7 && $issue->planned_source == 1) {
                 $output->writeln("Skip {$issue->plate_code}-{$issue->issue}: already has manual planned_result");
+                continue;
+            }
+
+            // 延迟自动计算：只在开奖前N秒才自动计算，给后台管理员足够时间选择号码
+            $drawTime = is_numeric($issue->draw_time) ? (int)$issue->draw_time : strtotime($issue->draw_time);
+            $autoPlannedTime = $drawTime - self::AUTO_PLAN_BEFORE_DRAW_SECONDS;
+
+            if ($now < $autoPlannedTime) {
+                $waitSeconds = $autoPlannedTime - $now;
+                $output->writeln("Wait {$issue->plate_code}-{$issue->issue}: auto-plan in {$waitSeconds}s (waiting for manual selection)");
                 continue;
             }
 
