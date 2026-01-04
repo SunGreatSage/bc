@@ -328,7 +328,7 @@ class BestPlanLogic extends BaseLogic
                 // 濡傛灉鎵句笉鍒?鍒ゆ柇鏄惁闇€瑕佹墿灞曟悳绱㈢┖闂?
                 $searchSpaceExpanded = false;
                 if (!isset($searchResult['solution']) || $searchResult['solution'] === null) {
-                    trace("鈿狅笍 鍒濆鎼滅储绌洪棿鏃犳硶瑕嗙洊鐩爣鍒╂鼎鐜?灏濊瘯鎵╁睍鎼滅储鑼冨洿...", 'warning');
+                    trace("No solution found after expansion; using best solution.", 'warning');
 
                     // 妫€鏌ュ綋鍓嶆柟妗堢殑瑕嗙洊鑼冨洿
                     $rates = array_column($result['top_solutions'], 'profit_rate');
@@ -374,14 +374,14 @@ class BestPlanLogic extends BaseLogic
                     // 杈撳嚭璇︾粏鐨勬悳绱㈣繃绋?
                     foreach ($searchResult['search_process'] as $step) {
                         if ($step['found_count'] > 0) {
-                            trace("   鈹斺攢 Level {$step['level']}: 鑼冨洿 [{$step['range']['min']}%, {$step['range']['max']}%] - 鉁?鎵惧埌 {$step['found_count']} 涓柟妗?, 'debug');
+                            trace("   Level {$step['level']}: range [{$step['range']['min']}%, {$step['range']['max']}%] - found {$step['found_count']} solutions", 'debug');
                         } else {
-                            trace("   鈹斺攢 Level {$step['level']}: 鑼冨洿 [{$step['range']['min']}%, {$step['range']['max']}%] - 鉂?0涓柟妗?, 'debug');
+                            trace("   Level {$step['level']}: range [{$step['range']['min']}%, {$step['range']['max']}%] - found 0 solutions", 'debug');
                         }
                     }
                 } else {
                     // 涓嶅簲璇ュ彂鐢燂紝鍥犱负鎼滅储浼氫竴鐩存墿灞曞埌 [10%-100%]
-                    trace("鈿狅笍 鏈壘鍒颁换浣曟柟妗?, 'warning');
+                    trace("No solution found after expansion; using best solution.", 'warning');
                     $bestSolution = $result['best_solution'];
                 }
             } else {
@@ -1578,7 +1578,7 @@ class BestPlanLogic extends BaseLogic
         }
 
         if (!$issue) {
-            trace("鈿狅笍 [getCurrentQishu] 娌℃湁鎵惧埌鏈熷彿: gid=$gid, plateCode=$plateCode", 'warning');
+                    trace("No solution found after expansion; using best solution.", 'warning');
             return null;
         }
 
@@ -1609,7 +1609,7 @@ class BestPlanLogic extends BaseLogic
             $result['draw_numbers'] = explode(',', $resultValue);
             $result['draw_numbers_text'] = $resultValue;
         } else {
-            trace("鈿狅笍 result瀛楁涓虹┖鎴栦笉鏄瓧绗︿覆, 杩斿洖绌烘暟缁?, 'warning');
+            trace("No result value or non-string result; returning empty draw numbers.", 'warning');
         }
 
         trace("鉁?鏈€缁堣繑鍥炴暟鎹? " . json_encode($result, JSON_UNESCAPED_UNICODE), 'info');
