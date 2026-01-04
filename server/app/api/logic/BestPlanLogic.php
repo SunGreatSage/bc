@@ -435,6 +435,9 @@ class BestPlanLogic extends BaseLogic
                 $summary['best_profit'] = $bestSolution['total_profit'] ?? 0;
                 $summary['best_profit_rate'] = $bestSolution['profit_rate'] ?? 0;
             }
+            if ($maxConsecutive !== null && empty($result['top_solutions']) && $bestSolution) {
+                $rateBuckets = self::buildRateBuckets([$bestSolution], $year);
+            }
 
             $targetMatched = false;
             if ($targetRate !== null && $bestSolution) {
@@ -461,8 +464,11 @@ class BestPlanLogic extends BaseLogic
                 }
                 $topSolutions = $solutions;
             }
-            if ($maxConsecutive !== null && empty($topSolutions) && $bestSolution) {
-                $topSolutions = [$bestSolution];
+            if ($maxConsecutive !== null) {
+                $topSolutions = self::filterSolutionsByMaxConsecutive($topSolutions, $maxConsecutive);
+                if (empty($topSolutions) && $bestSolution) {
+                    $topSolutions = [$bestSolution];
+                }
             }
 
             return [
@@ -2107,6 +2113,3 @@ class BestPlanLogic extends BaseLogic
         return $statusMap[$status] ?? 'unknown';
     }
 }
-
-
-
