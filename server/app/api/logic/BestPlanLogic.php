@@ -1206,8 +1206,8 @@ class BestPlanLogic extends BaseLogic
             sort($m1_m6);
 
             // 鎺掗櫎椤哄簭鍙风爜锛堣繛缁?涓垨浠ヤ笂锛?
-            $maxConsecutive = self::getMaxConsecutive($m1_m6);
-            if ($allowedMax > 0 && $maxConsecutive > $allowedMax) {
+            $comboMaxConsecutive = self::getMaxConsecutive(array_merge($m1_m6, [(int)$m7]));
+            if ($allowedMax > 0 && $comboMaxConsecutive > $allowedMax) {
                 $attempts++;
                 continue;
             }
@@ -1255,8 +1255,8 @@ class BestPlanLogic extends BaseLogic
         if ($maxConsecutive <= 0) {
             return null;
         }
-        if ($maxConsecutive > 6) {
-            return 6;
+        if ($maxConsecutive > 7) {
+            return 7;
         }
         return $maxConsecutive;
     }
@@ -1277,7 +1277,12 @@ class BestPlanLogic extends BaseLogic
             if (count($m1_m6) !== 6) {
                 continue;
             }
-            $maxSeq = self::getMaxConsecutive($m1_m6);
+            $comboNumbers = $m1_m6;
+            $m7 = $solution['m7'] ?? null;
+            if ($m7 !== null) {
+                $comboNumbers[] = (int)$m7;
+            }
+            $maxSeq = self::getMaxConsecutive($comboNumbers);
             if ($maxSeq > $maxConsecutive) {
                 continue;
             }
@@ -1335,7 +1340,12 @@ class BestPlanLogic extends BaseLogic
                 continue;
             }
             sort($m1_m6);
-            if (self::getMaxConsecutive($m1_m6) > $maxConsecutive) {
+            $comboNumbers = $m1_m6;
+            $m7 = $solution['m7'] ?? null;
+            if ($m7 !== null) {
+                $comboNumbers[] = (int)$m7;
+            }
+            if (self::getMaxConsecutive($comboNumbers) > $maxConsecutive) {
                 continue;
             }
             $solution['m1_m6'] = $m1_m6;
