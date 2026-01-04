@@ -287,7 +287,12 @@ class OptimizedBestPlanService
     /**
      * 寻找最佳开奖组合
      */
-    public function findBest7Numbers(?float $targetRate = null, float $tolerance = 5.0, bool $includeAllSolutions = false): array
+    public function findBest7Numbers(
+        ?float $targetRate = null,
+        float $tolerance = 5.0,
+        bool $includeAllSolutions = false,
+        ?int $maxConsecutive = null
+    ): array
     {
         if (empty($this->allBets)) {
             $result = [
@@ -337,6 +342,10 @@ class OptimizedBestPlanService
                     continue;
                 }
                 $seen[$key] = true;
+
+                if (!$this->isComboWithinMaxConsecutive($combo, $specialCode, $maxConsecutive)) {
+                    continue;
+                }
 
                 $combined = $this->calculateCombinedProfit($combo, $specialCode);
                 $profit = $combined['total_profit'];
@@ -714,6 +723,44 @@ class OptimizedBestPlanService
         return $result;
     }
 
+    protected function isComboWithinMaxConsecutive(array $combo, int $specialCode, ?int $maxConsecutive): bool
+    {
+        if ($maxConsecutive === null || $maxConsecutive <= 0) {
+            return true;
+        }
+
+        $numbers = $combo;
+        $numbers[] = $specialCode;
+        return $this->getMaxConsecutive($numbers, $maxConsecutive) <= $maxConsecutive;
+    }
+
+    protected function getMaxConsecutive(array $numbers, ?int $limit = null): int
+    {
+        if (empty($numbers)) {
+            return 0;
+        }
+
+        sort($numbers);
+        $max = 1;
+        $current = 1;
+        $count = count($numbers);
+        for ($i = 1; $i < $count; $i++) {
+            if ($numbers[$i] === $numbers[$i - 1] + 1) {
+                $current++;
+                if ($current > $max) {
+                    $max = $current;
+                    if ($limit !== null && $max > $limit) {
+                        return $max;
+                    }
+                }
+            } else {
+                $current = 1;
+            }
+        }
+
+        return $max;
+    }
+
     protected function expandZodiacsToNumbers(array $zodiacs): array
     {
         $numbers = [];
@@ -831,7 +878,12 @@ class OptimizedBestPlanService
      * @param float|null $maxRate 最大利润率（百分比），null表示不限
      * @return array
      */
-    public function findByProfitRange(?float $minRate = null, ?float $maxRate = null, bool $includeAll = false): array
+    public function findByProfitRange(
+        ?float $minRate = null,
+        ?float $maxRate = null,
+        bool $includeAll = false,
+        ?int $maxConsecutive = null
+    ): array
     {
         if (empty($this->allBets)) {
             return [
@@ -870,7 +922,14 @@ class OptimizedBestPlanService
 
             $combinations = $this->generateCombinationsLimited($normalPool, 6, $this->maxCombosPerSpecial);
             foreach ($combinations as $combo) {
-                $solution = $this->evaluateSolutionWithRange($combo, $specialCode, $minRate, $maxRate, $seen);
+                $solution = $this->evaluateSolutionWithRange(
+                    $combo,
+                    $specialCode,
+                    $minRate,
+                    $maxRate,
+                    $seen,
+                    $maxConsecutive
+                );
                 if ($solution !== null) {
                     $allSolutions[] = $solution;
                 }
@@ -878,10 +937,10 @@ class OptimizedBestPlanService
         }
 
         // Phase 2: Layered random sampling (by risk tier)
-        $this->addLayeredSamples($allSolutions, $seen, $minRate, $maxRate);
+        $this->addLayeredSamples($allSolutions, $seen, $minRate, $maxRate, $maxConsecutive);
 
         // Phase 3: Pure random sampling
-        $this->addRandomSamples($allSolutions, $seen, $minRate, $maxRate);
+        $this->addRandomSamples($allSolutions, $seen, $minRate, $maxRate, $maxConsecutive);
 
         // Sort by distance to target range center
         $targetCenter = null;
@@ -946,8 +1005,12 @@ class OptimizedBestPlanService
         int $specialCode,
         ?float $minRate,
         ?float $maxRate,
-        array &$seen
+        array &$seen,
+        ?int $maxConsecutive = null
     ): ?array {
+        if (!$this->isComboWithinMaxConsecutive($combo, $specialCode, $maxConsecutive)) {
+            return null;
+        }
         sort($combo);
         $key = implode('-', $combo) . '-' . $specialCode;
         if (isset($seen[$key])) {
@@ -977,7 +1040,13 @@ class OptimizedBestPlanService
     /**
      * Add layered random samples based on risk tiers
      */
-    protected function addLayeredSamples(array &$solutions, array &$seen, ?float $minRate, ?float $maxRate): void
+    protected function addLayeredSamples(
+        array &$solutions,
+        array &$seen,
+        ?float $minRate,
+        ?float $maxRate,
+        ?int $maxConsecutive = null
+    ): void
     {
         $specialWeightsSorted = $this->specialCodeWeights;
         asort($specialWeightsSorted);
@@ -1000,7 +1069,14 @@ class OptimizedBestPlanService
                     continue;
                 }
 
-                $solution = $this->evaluateSolutionWithRange($combo, $specialCode, $minRate, $maxRate, $seen);
+                $solution = $this->evaluateSolutionWithRange(
+                    $combo,
+                    $specialCode,
+                    $minRate,
+                    $maxRate,
+                    $seen,
+                    $maxConsecutive
+                );
                 if ($solution !== null) {
                     $solution['sample_tier'] = $tierName;
                     $solutions[] = $solution;
@@ -1012,7 +1088,13 @@ class OptimizedBestPlanService
     /**
      * Add pure random samples
      */
-    protected function addRandomSamples(array &$solutions, array &$seen, ?float $minRate, ?float $maxRate): void
+    protected function addRandomSamples(
+        array &$solutions,
+        array &$seen,
+        ?float $minRate,
+        ?float $maxRate,
+        ?int $maxConsecutive = null
+    ): void
     {
         for ($i = 0; $i < self::RANDOM_SAMPLE_COUNT; $i++) {
             $specialCode = mt_rand(1, 49);
@@ -1021,7 +1103,14 @@ class OptimizedBestPlanService
                 continue;
             }
 
-            $solution = $this->evaluateSolutionWithRange($combo, $specialCode, $minRate, $maxRate, $seen);
+            $solution = $this->evaluateSolutionWithRange(
+                $combo,
+                $specialCode,
+                $minRate,
+                $maxRate,
+                $seen,
+                $maxConsecutive
+            );
             if ($solution !== null) {
                 $solution['sample_tier'] = 'random';
                 $solutions[] = $solution;

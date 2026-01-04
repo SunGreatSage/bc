@@ -126,7 +126,7 @@ class BestPlanLogic extends BaseLogic
                 ];
             }
 
-            $result = $service->findBest7Numbers(null, 5.0, true);
+            $result = $service->findBest7Numbers(null, 5.0, true, $maxConsecutive);
             if ($maxConsecutive !== null) {
                 $filteredAll = self::filterSolutionsByMaxConsecutive(
                     $result['all_solutions'] ?? $result['top_solutions'],
@@ -320,7 +320,7 @@ class BestPlanLogic extends BaseLogic
                     'message' => 'No bets: random draw generated.',
                 ];
             }
-            $result = $service->findBest7Numbers(null, 5.0, true);
+            $result = $service->findBest7Numbers(null, 5.0, true, $maxConsecutive);
             $rateBuckets = self::buildRateBuckets($result['all_solutions'] ?? $result['top_solutions'], $year);
 
             // 鉁?濡傛灉鎸囧畾浜嗙洰鏍囧埄娑︾巼,浣跨敤鏅鸿兘鎵╁睍鎼滅储
@@ -355,7 +355,8 @@ class BestPlanLogic extends BaseLogic
                         $result = self::expandSearchSpaceAndFindBest(
                             $service,
                             $targetRate,
-                            $tolerance
+                            $tolerance,
+                            $maxConsecutive
                         );
                         $searchSpaceExpanded = true;
 
@@ -531,7 +532,8 @@ class BestPlanLogic extends BaseLogic
     private static function expandSearchSpaceAndFindBest(
         \app\common\service\OptimizedBestPlanService $service,
         float $targetRate,
-        float $tolerance
+        float $tolerance,
+        ?int $maxConsecutive = null
     ): array {
         trace("馃殌 鍚姩鎵╁睍鎼滅储绌洪棿...", 'info');
 
@@ -562,7 +564,7 @@ class BestPlanLogic extends BaseLogic
             }
 
             // 閲嶆柊璁＄畻鏈€浣虫柟妗?
-            $result = $service->findBest7Numbers(null, 5.0, true);
+            $result = $service->findBest7Numbers(null, 5.0, true, $maxConsecutive);
 
             trace("鉁?鎵╁睍鎼滅储瀹屾垚锛岀敓鎴愭柟妗堟暟: " . count($result['top_solutions']), 'info');
 
@@ -578,7 +580,7 @@ class BestPlanLogic extends BaseLogic
         } catch (\Exception $e) {
             trace("鉂?鎵╁睍鎼滅储绌洪棿澶辫触: " . $e->getMessage(), 'error');
             // 闄嶇骇澶勭悊锛氳繑鍥炲師濮嬬粨鏋?
-            return $service->findBest7Numbers(null, 5.0, true);
+            return $service->findBest7Numbers(null, 5.0, true, $maxConsecutive);
         }
     }
 
@@ -1397,7 +1399,7 @@ class BestPlanLogic extends BaseLogic
                 $normalProp->setValue($service, $level['normal']);
                 $comboProp->setValue($service, $level['combos']);
 
-                $result = $service->findBest7Numbers(null, 5.0, true);
+                $result = $service->findBest7Numbers(null, 5.0, true, $maxConsecutive);
                 $lastResult = $result;
                 $solutions = $result['all_solutions'] ?? $result['top_solutions'] ?? [];
                 $best = self::pickBestSolutionWithMaxConsecutive($solutions, $maxConsecutive);
@@ -1430,7 +1432,7 @@ class BestPlanLogic extends BaseLogic
         int $attempts = 3
     ): ?array {
         for ($i = 0; $i < $attempts; $i++) {
-            $sample = $service->findByProfitRange(null, null, true);
+            $sample = $service->findByProfitRange(null, null, true, $maxConsecutive);
             $solutions = $sample['all_solutions'] ?? ($sample['matched_solutions'] ?? []);
             $best = self::pickBestSolutionWithMaxConsecutive($solutions, $maxConsecutive);
             if ($best !== null) {
