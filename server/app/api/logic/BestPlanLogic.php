@@ -127,6 +127,17 @@ class BestPlanLogic extends BaseLogic
             }
 
             $result = $service->findBest7Numbers(null, 5.0, true);
+            if ($maxConsecutive !== null) {
+                $filteredAll = self::filterSolutionsByMaxConsecutive(
+                    $result['all_solutions'] ?? $result['top_solutions'],
+                    $maxConsecutive
+                );
+                $filteredTop = self::filterSolutionsByMaxConsecutive($result['top_solutions'], $maxConsecutive);
+                if (array_key_exists('all_solutions', $result)) {
+                    $result['all_solutions'] = $filteredAll;
+                }
+                $result['top_solutions'] = $filteredTop;
+            }
             $rateBuckets = self::buildRateBuckets($result['all_solutions'] ?? $result['top_solutions'], $year);
             $bestSolution = $result['best_solution'];
 
@@ -449,6 +460,9 @@ class BestPlanLogic extends BaseLogic
                     $solutions = array_slice($solutions, 0, $sliceLimit);
                 }
                 $topSolutions = $solutions;
+            }
+            if ($maxConsecutive !== null && empty($topSolutions) && $bestSolution) {
+                $topSolutions = [$bestSolution];
             }
 
             return [
@@ -1298,6 +1312,33 @@ class BestPlanLogic extends BaseLogic
         return $candidates[0]['solution'];
     }
 
+    private static function filterSolutionsByMaxConsecutive(array $solutions, int $maxConsecutive): array
+    {
+        if ($maxConsecutive <= 0 || empty($solutions)) {
+            return $solutions;
+        }
+
+        $filtered = [];
+        foreach ($solutions as $solution) {
+            $m1_m6 = $solution['m1_m6'] ?? null;
+            if (!is_array($m1_m6)) {
+                continue;
+            }
+            $m1_m6 = array_values(array_unique(array_map('intval', $m1_m6)));
+            if (count($m1_m6) !== 6) {
+                continue;
+            }
+            sort($m1_m6);
+            if (self::getMaxConsecutive($m1_m6) > $maxConsecutive) {
+                continue;
+            }
+            $solution['m1_m6'] = $m1_m6;
+            $filtered[] = $solution;
+        }
+
+        return $filtered;
+    }
+
     private static function expandSearchSpaceForMaxConsecutive(
         \app\common\service\OptimizedBestPlanService $service,
         int $maxConsecutive
@@ -2066,7 +2107,6 @@ class BestPlanLogic extends BaseLogic
         return $statusMap[$status] ?? 'unknown';
     }
 }
-
 
 
 
