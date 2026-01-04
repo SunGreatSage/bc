@@ -831,7 +831,7 @@ class OptimizedBestPlanService
      * @param float|null $maxRate 最大利润率（百分比），null表示不限
      * @return array
      */
-    public function findByProfitRange(?float $minRate = null, ?float $maxRate = null): array
+    public function findByProfitRange(?float $minRate = null, ?float $maxRate = null, bool $includeAll = false): array
     {
         if (empty($this->allBets)) {
             return [
@@ -920,7 +920,7 @@ class OptimizedBestPlanService
         $matchedSolutions = array_values($matchedSolutions);
         $recommendations = $this->buildRecommendationsWithRange($matchedSolutions, $minRate, $maxRate, count($allSolutions));
 
-        return [
+        $response = [
             'matched_solutions' => array_slice($matchedSolutions, 0, self::TOP_SOLUTION_LIMIT),
             'total_matched' => count($matchedSolutions),
             'total_evaluated' => count($allSolutions),
@@ -930,6 +930,12 @@ class OptimizedBestPlanService
             'best_in_range' => $matchedSolutions[0] ?? null,
             'recommendations' => $recommendations,
         ];
+
+        if ($includeAll) {
+            $response['all_solutions'] = $allSolutions;
+        }
+
+        return $response;
     }
 
     /**
