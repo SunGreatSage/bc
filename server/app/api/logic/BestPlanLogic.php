@@ -1231,7 +1231,7 @@ class BestPlanLogic extends BaseLogic
     private static function normalizeMaxConsecutive($maxConsecutive): ?int
     {
         if ($maxConsecutive === null || $maxConsecutive === '') {
-            return 3;
+            return 2;
         }
         $maxConsecutive = (int)$maxConsecutive;
         if ($maxConsecutive <= 0) {
