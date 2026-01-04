@@ -126,20 +126,23 @@ class BestPlanLogic extends BaseLogic
                 ];
             }
 
-            $result = $service->findBest7Numbers(null, 5.0, true, $maxConsecutive);
-            if ($maxConsecutive !== null) {
-                $filteredAll = self::filterSolutionsByMaxConsecutive(
-                    $result['all_solutions'] ?? $result['top_solutions'],
-                    $maxConsecutive
-                );
-                $filteredTop = self::filterSolutionsByMaxConsecutive($result['top_solutions'], $maxConsecutive);
-                if (array_key_exists('all_solutions', $result)) {
-                    $result['all_solutions'] = $filteredAll;
-                }
-                $result['top_solutions'] = $filteredTop;
+            $result = $service->findBest7Numbers(null, 5.0, true);
+
+            $allSolutions = array_key_exists('all_solutions', $result)
+                ? self::filterSolutionsByNonNegative($result['all_solutions'])
+                : null;
+            $topSolutions = self::filterSolutionsByNonNegative($result['top_solutions']);
+            if ($allSolutions !== null) {
+                $result['all_solutions'] = $allSolutions;
             }
-            $rateBuckets = self::buildRateBuckets($result['all_solutions'] ?? $result['top_solutions'], $year);
+            $result['top_solutions'] = $topSolutions;
+
+            $bucketSource = $allSolutions ?? $topSolutions;
+            $rateBuckets = self::buildRateBuckets($bucketSource, $year);
             $bestSolution = $result['best_solution'];
+            if ($bestSolution !== null && self::getSolutionTotalProfit($bestSolution) < 0) {
+                $bestSolution = self::pickBestNonNegativeSolution($bucketSource);
+            }
 
             $summary = [
                 'total_bets' => $result['total_bets'],
@@ -322,9 +325,23 @@ class BestPlanLogic extends BaseLogic
             }
             $result = $service->findBest7Numbers(null, 5.0, true, $maxConsecutive);
 
-            $bucketSource = $result['all_solutions'] ?? $result['top_solutions'];
+            $allSolutions = array_key_exists('all_solutions', $result)
+                ? self::filterSolutionsByNonNegative($result['all_solutions'])
+                : null;
+            $topSolutions = self::filterSolutionsByNonNegative($result['top_solutions']);
             if ($maxConsecutive !== null) {
-                $bucketSource = self::filterSolutionsByMaxConsecutive($bucketSource, $maxConsecutive);
+                if ($allSolutions !== null) {
+                    $allSolutions = self::filterSolutionsByMaxConsecutive($allSolutions, $maxConsecutive);
+                }
+                $topSolutions = self::filterSolutionsByMaxConsecutive($topSolutions, $maxConsecutive);
+            }
+            if ($allSolutions !== null) {
+                $result['all_solutions'] = $allSolutions;
+            }
+            $result['top_solutions'] = $topSolutions;
+
+            $bucketSource = $allSolutions ?? $topSolutions;
+            if ($maxConsecutive !== null) {
                 $bucketSource = self::fillSolutionsToMinimum($service, $bucketSource, 100, $maxConsecutive);
             }
             $rateBuckets = self::buildRateBuckets($bucketSource, $year, $maxConsecutive);
@@ -408,6 +425,10 @@ class BestPlanLogic extends BaseLogic
             }
 
             // 鏋勫缓鎽樿锛堜娇鐢ㄨ绠楃粨鏋滀腑鐨勬暟鎹級
+            if ($bestSolution !== null && self::getSolutionTotalProfit($bestSolution) < 0) {
+                $bestSolution = self::pickBestNonNegativeSolution($bucketSource);
+            }
+
             $summary = [
                 'total_bets' => $result['total_bets'],
                 'total_orders' => $result['total_orders'],
@@ -423,6 +444,7 @@ class BestPlanLogic extends BaseLogic
                 if ($searchResult && !empty($searchResult['all_matched'])) {
                     $mixCandidates = $searchResult['all_matched'];
                 }
+                $mixCandidates = self::filterSolutionsByNonNegative($mixCandidates);
                 $bestSolutionWithConstraint = self::pickBestSolutionWithMaxConsecutive($mixCandidates, $maxConsecutive);
                 if ($bestSolutionWithConstraint === null) {
                     $expanded = self::expandSearchSpaceForMaxConsecutive($service, $maxConsecutive);
@@ -860,6 +882,10 @@ class BestPlanLogic extends BaseLogic
 
             $profitRate = isset($solution['profit_rate']) ? (float)$solution['profit_rate'] : 0.0;
             $profitRateRounded = round($profitRate, 2);
+            $totalProfit = self::getSolutionTotalProfit($solution);
+            if ($totalProfit < 0) {
+                continue;
+            }
             $key = self::buildSolutionKey($m1_m6, $m7);
             $comboNumbers = array_merge($m1_m6, [$m7]);
             $comboMaxConsecutive = self::getMaxConsecutive($comboNumbers);
@@ -873,7 +899,7 @@ class BestPlanLogic extends BaseLogic
                 'numbers' => array_merge($m1_m6, [$m7]),
                 'profit_rate' => $profitRate,
                 'profit_rate_rounded' => $profitRateRounded,
-                'total_profit' => isset($solution['total_profit']) ? (float)$solution['total_profit'] : 0.0,
+                'total_profit' => $totalProfit,
                 'total_prize' => isset($solution['total_prize']) ? (float)$solution['total_prize'] : (float)($solution['prize_amount'] ?? 0),
                 'bet_amount' => isset($solution['bet_amount']) ? (float)$solution['bet_amount'] : (float)($solution['total_bets'] ?? 0),
                 'strategy' => $solution['strategy'] ?? null,
@@ -1275,6 +1301,9 @@ class BestPlanLogic extends BaseLogic
             if ($maxConsecutive !== null && self::getMaxConsecutive($comboNumbers) > $maxConsecutive) {
                 continue;
             }
+            if (self::getSolutionTotalProfit($solution) < 0) {
+                continue;
+            }
             sort($m1_m6);
             $key = self::buildSolutionKey($m1_m6, $m7);
             $solution['m1_m6'] = $m1_m6;
@@ -1303,6 +1332,10 @@ class BestPlanLogic extends BaseLogic
                 $attempts++;
                 continue;
             }
+            if (self::getSolutionTotalProfit($built) < 0) {
+                $attempts++;
+                continue;
+            }
             $key = self::buildSolutionKey($built['m1_m6'], $built['m7']);
             if (!isset($unique[$key])) {
                 $unique[$key] = $built;
@@ -1311,6 +1344,46 @@ class BestPlanLogic extends BaseLogic
         }
 
         return array_values($unique);
+    }
+
+    private static function getSolutionTotalProfit(array $solution): float
+    {
+        if (array_key_exists('total_profit', $solution)) {
+            return (float)$solution['total_profit'];
+        }
+        if (array_key_exists('profit', $solution)) {
+            return (float)$solution['profit'];
+        }
+        return 0.0;
+    }
+
+    private static function filterSolutionsByNonNegative(array $solutions): array
+    {
+        if (empty($solutions)) {
+            return [];
+        }
+
+        $filtered = [];
+        foreach ($solutions as $solution) {
+            if (self::getSolutionTotalProfit($solution) < 0) {
+                continue;
+            }
+            $filtered[] = $solution;
+        }
+        return $filtered;
+    }
+
+    private static function pickBestNonNegativeSolution(array $solutions): ?array
+    {
+        if (empty($solutions)) {
+            return null;
+        }
+        $filtered = self::filterSolutionsByNonNegative($solutions);
+        if (empty($filtered)) {
+            return null;
+        }
+        $sorted = self::sortSolutions($filtered, 'profit_rate');
+        return $sorted[0] ?? null;
     }
 
     private static function normalizeSolutionLimit($limit): ?int
@@ -1479,6 +1552,7 @@ class BestPlanLogic extends BaseLogic
                 $result = $service->findBest7Numbers(null, 5.0, true, $maxConsecutive);
                 $lastResult = $result;
                 $solutions = $result['all_solutions'] ?? $result['top_solutions'] ?? [];
+                $solutions = self::filterSolutionsByNonNegative($solutions);
                 $best = self::pickBestSolutionWithMaxConsecutive($solutions, $maxConsecutive);
                 if ($best !== null) {
                     return [
@@ -1511,6 +1585,7 @@ class BestPlanLogic extends BaseLogic
         for ($i = 0; $i < $attempts; $i++) {
             $sample = $service->findByProfitRange(null, null, true, $maxConsecutive);
             $solutions = $sample['all_solutions'] ?? ($sample['matched_solutions'] ?? []);
+            $solutions = self::filterSolutionsByNonNegative($solutions);
             $best = self::pickBestSolutionWithMaxConsecutive($solutions, $maxConsecutive);
             if ($best !== null) {
                 return $best;
