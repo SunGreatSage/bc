@@ -444,6 +444,42 @@ class OptimizedBestPlanService
         return $result;
     }
 
+    public function buildSolutionFromNumbers(array $m1_m6, int $m7, ?int $maxConsecutive = null): ?array
+    {
+        $m1_m6 = array_values(array_unique(array_map('intval', $m1_m6)));
+        if (count($m1_m6) !== 6) {
+            return null;
+        }
+        $m7 = (int)$m7;
+        if ($m7 < 1 || $m7 > 49) {
+            return null;
+        }
+        if (in_array($m7, $m1_m6, true)) {
+            return null;
+        }
+        sort($m1_m6);
+        if (!$this->isComboWithinMaxConsecutive($m1_m6, $m7, $maxConsecutive)) {
+            return null;
+        }
+
+        $combined = $this->calculateCombinedProfit($m1_m6, $m7);
+        $profit = $combined['total_profit'];
+        $profitRate = $this->totalBetAmount > 0
+            ? round(($profit / $this->totalBetAmount) * 100, 2)
+            : 0.0;
+
+        return [
+            'm1_m6' => $m1_m6,
+            'm7' => $m7,
+            'total_profit' => round($profit, 2),
+            'total_prize' => round($combined['total_prize'], 2),
+            'bet_amount' => $this->totalBetAmount,
+            'profit_rate' => $profitRate,
+            'special_weight' => $this->specialCodeWeights[$m7] ?? 0,
+            'normal_weights' => array_sum(array_map(fn($n) => $this->normalCodeWeights[$n] ?? 0, $m1_m6)),
+        ];
+    }
+
     protected function calculateCombinedProfit(array $normalCodes, int $specialCode): array
     {
         $totalPrize = 0.0;

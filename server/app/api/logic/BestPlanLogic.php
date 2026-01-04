@@ -295,7 +295,7 @@ class BestPlanLogic extends BaseLogic
                 }
                 $selectedNumbers = array_merge($bestSolution['m1_m6'], [$bestSolution['m7']]);
 
-                $rateBuckets = self::buildRateBuckets($randomSolutions, $year);
+                $rateBuckets = self::buildRateBuckets($randomSolutions, $year, $maxConsecutive);
 
                 return [
                     'summary' => [
@@ -321,7 +321,13 @@ class BestPlanLogic extends BaseLogic
                 ];
             }
             $result = $service->findBest7Numbers(null, 5.0, true, $maxConsecutive);
-            $rateBuckets = self::buildRateBuckets($result['all_solutions'] ?? $result['top_solutions'], $year);
+
+            $bucketSource = $result['all_solutions'] ?? $result['top_solutions'];
+            if ($maxConsecutive !== null) {
+                $bucketSource = self::filterSolutionsByMaxConsecutive($bucketSource, $maxConsecutive);
+                $bucketSource = self::fillSolutionsToMinimum($service, $bucketSource, 100, $maxConsecutive);
+            }
+            $rateBuckets = self::buildRateBuckets($bucketSource, $year, $maxConsecutive);
 
             // 鉁?濡傛灉鎸囧畾浜嗙洰鏍囧埄娑︾巼,浣跨敤鏅鸿兘鎵╁睍鎼滅储
             $searchResult = null;
@@ -436,8 +442,8 @@ class BestPlanLogic extends BaseLogic
                 $summary['best_profit'] = $bestSolution['total_profit'] ?? 0;
                 $summary['best_profit_rate'] = $bestSolution['profit_rate'] ?? 0;
             }
-            if ($maxConsecutive !== null && empty($result['top_solutions']) && $bestSolution) {
-                $rateBuckets = self::buildRateBuckets([$bestSolution], $year);
+            if ($maxConsecutive !== null && empty($rateBuckets) && $bestSolution) {
+                $rateBuckets = self::buildRateBuckets([$bestSolution], $year, $maxConsecutive);
             }
 
             $targetMatched = false;
@@ -699,15 +705,15 @@ class BestPlanLogic extends BaseLogic
         return [100, 90, 80, 70, 60, 50, 40, 30, 20, 10];
     }
 
-    private static function buildRateBuckets(array $solutions, int $year): array
+    private static function buildRateBuckets(array $solutions, int $year, ?int $maxConsecutive = null): array
     {
-        $normalized = self::normalizeBucketSolutions($solutions, $year);
+        $normalized = self::normalizeBucketSolutions($solutions, $year, $maxConsecutive);
 
         if (empty($normalized)) {
-            $normalized = self::normalizeBucketSolutions(self::generateRandomSolutions(160), $year);
+            $normalized = self::normalizeBucketSolutions(self::generateRandomSolutions(160, $maxConsecutive), $year, $maxConsecutive);
         }
         if (empty($normalized)) {
-            $normalized = self::normalizeBucketSolutions(self::generateRandomSolutions(200), $year);
+            $normalized = self::normalizeBucketSolutions(self::generateRandomSolutions(200, $maxConsecutive), $year, $maxConsecutive);
         }
 
         // 鐢熸垚鍔ㄦ€佹。浣嶈€屼笉鏄浐瀹氱殑10妗?
@@ -819,7 +825,7 @@ class BestPlanLogic extends BaseLogic
         return $buckets;
     }
 
-    private static function normalizeBucketSolutions(array $solutions, int $year): array
+    private static function normalizeBucketSolutions(array $solutions, int $year, ?int $maxConsecutiveLimit = null): array
     {
         if (empty($solutions)) {
             return [];
@@ -855,7 +861,11 @@ class BestPlanLogic extends BaseLogic
             $profitRate = isset($solution['profit_rate']) ? (float)$solution['profit_rate'] : 0.0;
             $profitRateRounded = round($profitRate, 2);
             $key = self::buildSolutionKey($m1_m6, $m7);
-            $maxConsecutive = self::getMaxConsecutive($m1_m6);
+            $comboNumbers = array_merge($m1_m6, [$m7]);
+            $comboMaxConsecutive = self::getMaxConsecutive($comboNumbers);
+            if ($maxConsecutiveLimit !== null && $comboMaxConsecutive > $maxConsecutiveLimit) {
+                continue;
+            }
 
             $normalized[$key] = [
                 'm1_m6' => $m1_m6,
@@ -869,8 +879,8 @@ class BestPlanLogic extends BaseLogic
                 'strategy' => $solution['strategy'] ?? null,
                 'distance_to_target' => isset($solution['distance_to_target']) ? (float)$solution['distance_to_target'] : null,
                 'solution_key' => $key,
-                'diversity_score' => self::calculateDiversityScore($m1_m6, $maxConsecutive),
-                'is_sequential' => $maxConsecutive >= 5,
+                'diversity_score' => self::calculateDiversityScore($m1_m6, $comboMaxConsecutive),
+                'is_sequential' => $comboMaxConsecutive >= 5,
             ];
         }
 
@@ -1234,6 +1244,73 @@ class BestPlanLogic extends BaseLogic
         }
 
         return $solutions;
+    }
+
+    private static function fillSolutionsToMinimum(
+        \app\common\service\OptimizedBestPlanService $service,
+        array $solutions,
+        int $minCount,
+        ?int $maxConsecutive = null
+    ): array {
+        if ($minCount <= 0) {
+            return $solutions;
+        }
+
+        $unique = [];
+        foreach ($solutions as $solution) {
+            $m1_m6 = $solution['m1_m6'] ?? null;
+            $m7 = $solution['m7'] ?? null;
+            if (!is_array($m1_m6) || $m7 === null) {
+                continue;
+            }
+            $m1_m6 = array_values(array_unique(array_map('intval', $m1_m6)));
+            if (count($m1_m6) !== 6) {
+                continue;
+            }
+            $m7 = (int)$m7;
+            if ($m7 < 1 || $m7 > 49 || in_array($m7, $m1_m6, true)) {
+                continue;
+            }
+            $comboNumbers = array_merge($m1_m6, [$m7]);
+            if ($maxConsecutive !== null && self::getMaxConsecutive($comboNumbers) > $maxConsecutive) {
+                continue;
+            }
+            sort($m1_m6);
+            $key = self::buildSolutionKey($m1_m6, $m7);
+            $solution['m1_m6'] = $m1_m6;
+            $solution['m7'] = $m7;
+            $unique[$key] = $solution;
+        }
+
+        if (count($unique) >= $minCount) {
+            return array_values($unique);
+        }
+
+        $attempts = 0;
+        $maxAttempts = max(200, $minCount * 20);
+        while (count($unique) < $minCount && $attempts < $maxAttempts) {
+            $random = self::generateRandomSolutions(1, $maxConsecutive);
+            if (empty($random)) {
+                $attempts++;
+                continue;
+            }
+            $candidate = $random[0];
+            $m1_m6 = $candidate['m1_m6'] ?? [];
+            $m7 = (int)($candidate['m7'] ?? 0);
+
+            $built = $service->buildSolutionFromNumbers($m1_m6, $m7, $maxConsecutive);
+            if ($built === null) {
+                $attempts++;
+                continue;
+            }
+            $key = self::buildSolutionKey($built['m1_m6'], $built['m7']);
+            if (!isset($unique[$key])) {
+                $unique[$key] = $built;
+            }
+            $attempts++;
+        }
+
+        return array_values($unique);
     }
 
     private static function normalizeSolutionLimit($limit): ?int
