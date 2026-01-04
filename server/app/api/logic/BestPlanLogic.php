@@ -421,7 +421,12 @@ class BestPlanLogic extends BaseLogic
             ];
 
             $topSolutions = $result['top_solutions'];
-            if ($sortBy !== null || $limit !== null) {
+            if ($sortBy === null && $limit === null) {
+                $bucketed = self::flattenRateBuckets($rateBuckets, 10);
+                if (!empty($bucketed)) {
+                    $topSolutions = $bucketed;
+                }
+            } else {
                 $sortKey = self::normalizeSortBy($sortBy);
                 $solutions = $result['all_solutions'] ?? $topSolutions;
                 $solutions = self::sortSolutions($solutions, $sortKey);
@@ -828,6 +833,8 @@ class BestPlanLogic extends BaseLogic
                 'total_profit' => isset($solution['total_profit']) ? (float)$solution['total_profit'] : 0.0,
                 'total_prize' => isset($solution['total_prize']) ? (float)$solution['total_prize'] : (float)($solution['prize_amount'] ?? 0),
                 'bet_amount' => isset($solution['bet_amount']) ? (float)$solution['bet_amount'] : (float)($solution['total_bets'] ?? 0),
+                'strategy' => $solution['strategy'] ?? null,
+                'distance_to_target' => isset($solution['distance_to_target']) ? (float)$solution['distance_to_target'] : null,
                 'solution_key' => $key,
                 'diversity_score' => self::calculateDiversityScore($m1_m6, $maxConsecutive),
                 'is_sequential' => $maxConsecutive >= 5,
@@ -1039,6 +1046,8 @@ class BestPlanLogic extends BaseLogic
                 'total_profit' => (float)($solution['total_profit'] ?? 0),
                 'total_prize' => (float)($solution['total_prize'] ?? 0),
                 'bet_amount' => (float)($solution['bet_amount'] ?? 0),
+                'strategy' => $solution['strategy'] ?? null,
+                'distance_to_target' => isset($solution['distance_to_target']) ? (float)$solution['distance_to_target'] : null,
             ];
             if (!empty($solution['duplicate'])) {
                 $item['duplicate'] = true;
@@ -1046,6 +1055,22 @@ class BestPlanLogic extends BaseLogic
             $formatted[] = $item;
         }
         return $formatted;
+    }
+
+    private static function flattenRateBuckets(array $buckets, int $perBucket = 10): array
+    {
+        $flat = [];
+        foreach ($buckets as $bucket) {
+            $solutions = $bucket['solutions'] ?? [];
+            if (empty($solutions)) {
+                continue;
+            }
+            if ($perBucket > 0) {
+                $solutions = array_slice($solutions, 0, $perBucket);
+            }
+            $flat = array_merge($flat, $solutions);
+        }
+        return $flat;
     }
 
     private static function calculateDiversityScore(array $numbers, int $maxConsecutive): int
