@@ -141,7 +141,8 @@ class BestPlanLogic extends BaseLogic
         ?float $targetRate = null,
         float $tolerance = 5.0,
         ?string $sortBy = null,
-        ?int $limit = null
+        ?int $limit = null,
+        ?int $maxConsecutive = null
     ) {
         // ✅ 检查期号是否已经开奖
         $issue = Db::table('la_lottery_issue')
@@ -160,7 +161,7 @@ class BestPlanLogic extends BaseLogic
         }
 
         // 调用 API 的 BestPlanLogic（因为计算逻辑是通用的）
-        return \app\api\logic\BestPlanLogic::calculateRealtime($gid, $qishu, $plateCode, $year, $targetRate, $tolerance, $sortBy, $limit);
+        return \app\api\logic\BestPlanLogic::calculateRealtime($gid, $qishu, $plateCode, $year, $targetRate, $tolerance, $sortBy, $limit, $maxConsecutive);
     }
 
 

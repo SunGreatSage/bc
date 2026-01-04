@@ -247,7 +247,8 @@ class BestPlanLogic extends BaseLogic
         ?float $targetRate = null,
         float $tolerance = 5.0,
         ?string $sortBy = null,
-        ?int $limit = null
+        ?int $limit = null,
+        ?int $maxConsecutive = null
     ) {
         try {
             $year = $year ?? (int)date('Y');
@@ -256,6 +257,7 @@ class BestPlanLogic extends BaseLogic
                 $sortBy = null;
             }
             $limit = self::normalizeSolutionLimit($limit);
+            $maxConsecutive = self::normalizeMaxConsecutive($maxConsecutive);
 
             // 使用优化版算法(统一"中"与"不中"投注)
             $service = new \app\common\service\OptimizedBestPlanService($gid, $qishu, $year, $plateCode);
@@ -299,6 +301,9 @@ class BestPlanLogic extends BaseLogic
                 $sortKey = self::normalizeSortBy($sortBy);
                 $randomSolutions = self::sortSolutions($randomSolutions, $sortKey);
                 $bestSolution = $randomSolutions[0];
+                if ($maxConsecutive !== null) {
+                    $bestSolution = self::pickBestSolutionWithMaxConsecutive($bestSolution, $randomSolutions, $maxConsecutive);
+                }
                 $selectedNumbers = array_merge($bestSolution['m1_m6'], [$bestSolution['m7']]);
 
                 // ✅ 构建利润率档位
@@ -419,6 +424,19 @@ class BestPlanLogic extends BaseLogic
                 'best_profit' => $bestSolution['total_profit'] ?? 0,
                 'best_profit_rate' => $bestSolution['profit_rate'] ?? 0,
             ];
+
+            if ($maxConsecutive !== null) {
+                $mixCandidates = $result['all_solutions'] ?? $result['top_solutions'];
+                if ($searchResult && !empty($searchResult['all_matched'])) {
+                    $mixCandidates = $searchResult['all_matched'];
+                }
+                $bestSolution = self::pickBestSolutionWithMaxConsecutive($bestSolution, $mixCandidates, $maxConsecutive);
+                $summary['best_numbers'] = $bestSolution ? array_merge($bestSolution['m1_m6'], [$bestSolution['m7']]) : [];
+                $summary['best_m7'] = $bestSolution['m7'] ?? 0;
+                $summary['best_m1_m6'] = $bestSolution['m1_m6'] ?? [];
+                $summary['best_profit'] = $bestSolution['total_profit'] ?? 0;
+                $summary['best_profit_rate'] = $bestSolution['profit_rate'] ?? 0;
+            }
 
             $topSolutions = $result['top_solutions'];
             if ($sortBy === null && $limit === null) {
@@ -1208,6 +1226,75 @@ class BestPlanLogic extends BaseLogic
             return null;
         }
         return $limit > self::MAX_TOP_SOLUTION_LIMIT ? self::MAX_TOP_SOLUTION_LIMIT : $limit;
+    }
+
+    private static function normalizeMaxConsecutive($maxConsecutive): ?int
+    {
+        if ($maxConsecutive === null || $maxConsecutive === '') {
+            return 3;
+        }
+        $maxConsecutive = (int)$maxConsecutive;
+        if ($maxConsecutive <= 0) {
+            return null;
+        }
+        if ($maxConsecutive > 6) {
+            return 6;
+        }
+        return $maxConsecutive;
+    }
+
+    private static function pickBestSolutionWithMaxConsecutive(
+        ?array $bestSolution,
+        array $solutions,
+        int $maxConsecutive
+    ): ?array {
+        if ($maxConsecutive <= 0 || empty($solutions)) {
+            return $bestSolution;
+        }
+
+        $candidates = [];
+        foreach ($solutions as $solution) {
+            $m1_m6 = $solution['m1_m6'] ?? null;
+            if (!is_array($m1_m6)) {
+                continue;
+            }
+            $m1_m6 = array_values(array_unique(array_map('intval', $m1_m6)));
+            if (count($m1_m6) !== 6) {
+                continue;
+            }
+            $maxSeq = self::getMaxConsecutive($m1_m6);
+            if ($maxSeq > $maxConsecutive) {
+                continue;
+            }
+            $diversityScore = self::calculateDiversityScore($m1_m6, $maxSeq);
+            $solution['m1_m6'] = $m1_m6;
+            $candidates[] = [
+                'solution' => $solution,
+                'diversity_score' => $diversityScore,
+            ];
+        }
+
+        if (empty($candidates)) {
+            return $bestSolution;
+        }
+
+        usort($candidates, function ($a, $b) {
+            $rateA = (float)($a['solution']['profit_rate'] ?? 0);
+            $rateB = (float)($b['solution']['profit_rate'] ?? 0);
+            if ($rateA !== $rateB) {
+                return $rateB <=> $rateA;
+            }
+            $divA = (int)$a['diversity_score'];
+            $divB = (int)$b['diversity_score'];
+            if ($divA !== $divB) {
+                return $divB <=> $divA;
+            }
+            $profitA = (float)($a['solution']['total_profit'] ?? 0);
+            $profitB = (float)($b['solution']['total_profit'] ?? 0);
+            return $profitB <=> $profitA;
+        });
+
+        return $candidates[0]['solution'];
     }
 
     private static function normalizeSortBy(?string $sortBy): string

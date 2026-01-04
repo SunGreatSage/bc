@@ -136,6 +136,7 @@ class BestPlanController extends BaseAdminController
         $tolerance = $this->request->post('tolerance');
         $sortBy = $this->request->post('sort_by');
         $limit = $this->request->post('limit');
+        $maxConsecutive = $this->request->post('max_consecutive');
 
         if (empty($qishu)) {
             return $this->fail('期号不能为空');
@@ -152,8 +153,12 @@ class BestPlanController extends BaseAdminController
         if ($limit !== null && $limit <= 0) {
             $limit = null;
         }
+        $maxConsecutive = $maxConsecutive !== '' && $maxConsecutive !== null ? (int)$maxConsecutive : null;
+        if ($maxConsecutive !== null && $maxConsecutive <= 0) {
+            $maxConsecutive = null;
+        }
 
-        $result = BestPlanLogic::calculateRealtime($gid, $qishu, $plateCode, $year, $targetRate, $tolerance, $sortBy, $limit);
+        $result = BestPlanLogic::calculateRealtime($gid, $qishu, $plateCode, $year, $targetRate, $tolerance, $sortBy, $limit, $maxConsecutive);
 
         if ($result === false) {
             return $this->fail(BestPlanLogic::getError());
