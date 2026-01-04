@@ -133,7 +133,9 @@ class BestPlanController extends BaseAdminController
         $plateCode = $this->request->post('plate_code', 'A');  // 新增：盘口代码
         $year = $this->request->post('year');
         $targetRate = $this->request->post('target_rate');  // 新增：目标利润率
-        $tolerance = $this->request->post('tolerance');      // 新增：误差范围
+        $tolerance = $this->request->post('tolerance');
+        $sortBy = $this->request->post('sort_by');
+        $limit = $this->request->post('limit');
 
         if (empty($qishu)) {
             return $this->fail('期号不能为空');
@@ -142,8 +144,16 @@ class BestPlanController extends BaseAdminController
         $year = $year ? (int)$year : null;
         $targetRate = $targetRate !== '' && $targetRate !== null ? (float)$targetRate : null;
         $tolerance = $tolerance !== '' && $tolerance !== null ? (float)$tolerance : 5.0;
+        $sortBy = is_string($sortBy) ? trim($sortBy) : null;
+        if ($sortBy === '') {
+            $sortBy = null;
+        }
+        $limit = $limit !== '' && $limit !== null ? (int)$limit : null;
+        if ($limit !== null && $limit <= 0) {
+            $limit = null;
+        }
 
-        $result = BestPlanLogic::calculateRealtime($gid, $qishu, $plateCode, $year, $targetRate, $tolerance);
+        $result = BestPlanLogic::calculateRealtime($gid, $qishu, $plateCode, $year, $targetRate, $tolerance, $sortBy, $limit);
 
         if ($result === false) {
             return $this->fail(BestPlanLogic::getError());

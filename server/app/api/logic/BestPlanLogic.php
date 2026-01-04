@@ -18,6 +18,8 @@ use think\facade\Db;
  */
 class BestPlanLogic extends BaseLogic
 {
+    private const MAX_TOP_SOLUTION_LIMIT = 1000;
+
     /**
      * 执行分析并保存结果
      *
@@ -123,7 +125,22 @@ class BestPlanLogic extends BaseLogic
                     Db::table('la_best_plan_history')->insert($data);
                 }
 
-                return [
+                $topSolutions = $result['top_solutions'];
+            if ($sortBy !== null || $limit !== null) {
+                $sortKey = self::normalizeSortBy($sortBy);
+                $solutions = $result['all_solutions'] ?? $topSolutions;
+                $solutions = self::sortSolutions($solutions, $sortKey);
+                $sliceLimit = $limit ?? count($topSolutions);
+                if ($sliceLimit > self::MAX_TOP_SOLUTION_LIMIT) {
+                    $sliceLimit = self::MAX_TOP_SOLUTION_LIMIT;
+                }
+                if ($sliceLimit > 0) {
+                    $solutions = array_slice($solutions, 0, $sliceLimit);
+                }
+                $topSolutions = $solutions;
+            }
+
+            return [
                     'summary' => $summary,
                     'best_solution' => $bestSolution,
                     'top_solutions' => $randomSolutions,  // ✅ 返回20个方案
@@ -202,7 +219,7 @@ class BestPlanLogic extends BaseLogic
             return [
                 'summary' => $summary,
                 'best_solution' => $bestSolution,
-                'top_solutions' => $result['top_solutions'],
+                'top_solutions' => $topSolutions,
             ];
 
         } catch (\Exception $e) {
@@ -228,10 +245,17 @@ class BestPlanLogic extends BaseLogic
         string $plateCode = 'A',
         ?int $year = null,
         ?float $targetRate = null,
-        float $tolerance = 5.0
+        float $tolerance = 5.0,
+        ?string $sortBy = null,
+        ?int $limit = null
     ) {
         try {
             $year = $year ?? (int)date('Y');
+            $sortBy = is_string($sortBy) ? trim($sortBy) : null;
+            if ($sortBy === '') {
+                $sortBy = null;
+            }
+            $limit = self::normalizeSolutionLimit($limit);
 
             // 使用优化版算法(统一"中"与"不中"投注)
             $service = new \app\common\service\OptimizedBestPlanService($gid, $qishu, $year, $plateCode);
@@ -239,7 +263,11 @@ class BestPlanLogic extends BaseLogic
             // 如果没有投注数据,生成至少20个随机方案
             if ($service->getBetCount() === 0) {
                 // 生成20个随机方案供选择
-                $randomSolutions = self::generateRandomSolutions(20);
+                $randomLimit = $limit ?? 20;
+                if ($randomLimit > self::MAX_TOP_SOLUTION_LIMIT) {
+                    $randomLimit = self::MAX_TOP_SOLUTION_LIMIT;
+                }
+                $randomSolutions = self::generateRandomSolutions($randomLimit);
 
                 if (empty($randomSolutions)) {
                     // 如果生成失败,返回单个随机方案
@@ -267,6 +295,11 @@ class BestPlanLogic extends BaseLogic
                     $bestSolution = $randomSolutions[0];
                     $selectedNumbers = array_merge($bestSolution['m1_m6'], [$bestSolution['m7']]);
                 }
+
+                $sortKey = self::normalizeSortBy($sortBy);
+                $randomSolutions = self::sortSolutions($randomSolutions, $sortKey);
+                $bestSolution = $randomSolutions[0];
+                $selectedNumbers = array_merge($bestSolution['m1_m6'], [$bestSolution['m7']]);
 
                 // ✅ 构建利润率档位
                 $rateBuckets = self::buildRateBuckets($randomSolutions, $year);
@@ -387,10 +420,25 @@ class BestPlanLogic extends BaseLogic
                 'best_profit_rate' => $bestSolution['profit_rate'] ?? 0,
             ];
 
+            $topSolutions = $result['top_solutions'];
+            if ($sortBy !== null || $limit !== null) {
+                $sortKey = self::normalizeSortBy($sortBy);
+                $solutions = $result['all_solutions'] ?? $topSolutions;
+                $solutions = self::sortSolutions($solutions, $sortKey);
+                $sliceLimit = $limit ?? count($topSolutions);
+                if ($sliceLimit > self::MAX_TOP_SOLUTION_LIMIT) {
+                    $sliceLimit = self::MAX_TOP_SOLUTION_LIMIT;
+                }
+                if ($sliceLimit > 0) {
+                    $solutions = array_slice($solutions, 0, $sliceLimit);
+                }
+                $topSolutions = $solutions;
+            }
+
             return [
                 'summary' => $summary,
                 'best_solution' => $bestSolution,
-                'top_solutions' => $result['top_solutions'],
+                'top_solutions' => $topSolutions,
                 'rate_buckets' => $rateBuckets,
                 'risk_assessment' => $result['risk_assessment'] ?? null,
                 'recommendations' => $result['recommendations'] ?? [],
@@ -1121,6 +1169,60 @@ class BestPlanLogic extends BaseLogic
 
             $attempts++;
         }
+
+        return $solutions;
+    }
+
+    private static function normalizeSolutionLimit($limit): ?int
+    {
+        if ($limit === null || $limit === '') {
+            return null;
+        }
+        $limit = (int)$limit;
+        if ($limit <= 0) {
+            return null;
+        }
+        return $limit > self::MAX_TOP_SOLUTION_LIMIT ? self::MAX_TOP_SOLUTION_LIMIT : $limit;
+    }
+
+    private static function normalizeSortBy(?string $sortBy): string
+    {
+        $sortBy = strtolower(trim((string)$sortBy));
+        if ($sortBy === 'total_profit' || $sortBy === 'profit') {
+            return 'total_profit';
+        }
+        return 'profit_rate';
+    }
+
+    private static function sortSolutions(array $solutions, string $sortBy): array
+    {
+        if (empty($solutions)) {
+            return $solutions;
+        }
+        if ($sortBy === 'total_profit') {
+            usort($solutions, function ($a, $b) {
+                $profitA = (float)($a['total_profit'] ?? 0);
+                $profitB = (float)($b['total_profit'] ?? 0);
+                if ($profitA === $profitB) {
+                    $rateA = (float)($a['profit_rate'] ?? 0);
+                    $rateB = (float)($b['profit_rate'] ?? 0);
+                    return $rateB <=> $rateA;
+                }
+                return $profitB <=> $profitA;
+            });
+            return $solutions;
+        }
+
+        usort($solutions, function ($a, $b) {
+            $rateA = (float)($a['profit_rate'] ?? 0);
+            $rateB = (float)($b['profit_rate'] ?? 0);
+            if ($rateA === $rateB) {
+                $profitA = (float)($a['total_profit'] ?? 0);
+                $profitB = (float)($b['total_profit'] ?? 0);
+                return $profitB <=> $profitA;
+            }
+            return $rateB <=> $rateA;
+        });
 
         return $solutions;
     }
