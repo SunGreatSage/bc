@@ -1998,10 +1998,10 @@ class BestPlanLogic extends BaseLogic
             $m1_m6 = array_slice($numbers, 0, 6);
             $m7 = $numbers[6];
 
-            // Use lockForUpdate to maintain exclusive lock during update
+            // Use row lock to maintain exclusive lock during update
             Db::table('la_lottery_issue')
                 ->where('id', $issue['id'])
-                ->lockForUpdate()
+                ->lock(true)
                 ->update([
                     'planned_result' => implode(',', $numbers),
                     'planned_at' => time(),
