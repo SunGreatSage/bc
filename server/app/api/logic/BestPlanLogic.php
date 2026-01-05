@@ -1948,17 +1948,7 @@ class BestPlanLogic extends BaseLogic
 
             if (!$issue) {
                 Db::rollback();
-                self::setError('Operation failed.');
-                return false;
-            }
-
-            // Check if planning window is open (must be after close_time)
-            $closeTimeRaw = $issue['close_time'] ?? 0;
-            $closeTimeTs = is_numeric($closeTimeRaw) ? (int)$closeTimeRaw : (int)strtotime((string)$closeTimeRaw);
-            $currentTime = time();
-            if ($closeTimeTs > 0 && $currentTime < $closeTimeTs) {
-                Db::rollback();
-                self::setError('Operation failed.');
+                self::setError('期号不存在或盘口不匹配，请检查参数');
                 return false;
             }
 
@@ -1977,20 +1967,20 @@ class BestPlanLogic extends BaseLogic
             // Prevent duplicate submission of manual plan
             if (!empty($issue['planned_result']) && $issue['planned_source'] == 1) {
                 Db::rollback();
-                self::setError('Plan already set for this issue.');
+                self::setError('本期已设置手动计划号码，不能重复提交');
                 return false;
             }
 
             $numbers = array_values(array_map('intval', $bestNumbers));
             if (count($numbers) !== 7) {
                 Db::rollback();
-                self::setError('Operation failed.');
+                self::setError('开奖号码数量必须为7个');
                 return false;
             }
             foreach ($numbers as $num) {
                 if ($num < 1 || $num > 49) {
                     Db::rollback();
-                    self::setError('Numbers must be between 1 and 49.');
+                    self::setError('号码范围必须在1-49之间');
                     return false;
                 }
             }
