@@ -50,6 +50,7 @@ class OptimizedBestPlanService
     /** 玩法缓存，避免重复解析 */
     protected array $specialNumberBets = [];
     protected array $normalNumberBets = [];
+    protected array $numberComboBets = [];
     protected array $specialZodiacBets = [];
     protected array $positiveZodiacBets = [];
     protected array $multiZodiacBets = [];
@@ -78,6 +79,7 @@ class OptimizedBestPlanService
     {
         $this->specialNumberBets = [];
         $this->normalNumberBets = [];
+        $this->numberComboBets = [];
         $this->specialZodiacBets = [];
         $this->positiveZodiacBets = [];
         $this->multiZodiacBets = [];
@@ -109,6 +111,19 @@ class OptimizedBestPlanService
                 $numbers = array_values(array_unique(array_map('intval', $items)));
                 if (!empty($numbers)) {
                     $this->normalNumberBets[] = $base + ['numbers' => $numbers];
+                }
+                continue;
+            }
+
+            $comboRule = $this->getNumberComboRule($methodName);
+            if ($comboRule) {
+                $numbers = $this->parseNumberSelections($content);
+                if (count($numbers) === $comboRule['select_count']) {
+                    $this->numberComboBets[] = $base + [
+                        'numbers' => $numbers,
+                        'select_count' => $comboRule['select_count'],
+                        'hit_count' => $comboRule['hit_count'],
+                    ];
                 }
                 continue;
             }
@@ -252,6 +267,15 @@ class OptimizedBestPlanService
                     if ($num >= 1 && $num <= 49) {
                         $this->normalCodeWeights[$num] += $direction * $weightedAmount;
                     }
+                }
+                continue;
+            }
+
+            $comboRule = $this->getNumberComboRule($methodName);
+            if ($comboRule) {
+                $betNumbers = $this->parseNumberSelections($content);
+                foreach ($betNumbers as $num) {
+                    $this->normalCodeWeights[$num] += $direction * $weightedAmount;
                 }
                 continue;
             }
@@ -500,6 +524,12 @@ class OptimizedBestPlanService
             $this->accumulatePrize($result, $bet['amount'], $bet['odds'], $totalPrize);
         }
 
+        foreach ($this->numberComboBets as $bet) {
+            $hitCount = count(array_intersect($bet['numbers'], $normalCodes));
+            $result = $this->resolveResult($hitCount >= $bet['hit_count'], $bet['bet_type']);
+            $this->accumulatePrize($result, $bet['amount'], $bet['odds'], $totalPrize);
+        }
+
         foreach ($this->specialZodiacBets as $bet) {
             $hit = $specialZodiac !== '' && in_array($specialZodiac, $bet['zodiacs'], true);
             $result = $this->resolveResult($hit, $bet['bet_type']);
@@ -561,6 +591,17 @@ class OptimizedBestPlanService
             $betNumbers = array_map('intval', $rawItems);
             $hit = !empty(array_intersect($betNumbers, $allNumbers));
             return $this->resolveResult($hit, $betType);
+        }
+
+        $comboRule = $this->getNumberComboRule($methodName);
+        if ($comboRule) {
+            $betNumbers = $this->parseNumberSelections($content);
+            if (count($betNumbers) !== $comboRule['select_count']) {
+                return 'lose';
+            }
+            $normalCodes = array_values(array_diff($allNumbers, [$specialCode]));
+            $hitCount = count(array_intersect($betNumbers, $normalCodes));
+            return $this->resolveResult($hitCount >= $comboRule['hit_count'], $betType);
         }
 
         if ($this->containsKeyword($methodName, self::KEYWORDS_SPECIAL_ZODIAC)) {
@@ -638,6 +679,64 @@ class OptimizedBestPlanService
             return $hit ? 'lose' : 'win';
         }
         return $hit ? 'win' : 'lose';
+    }
+
+    protected function getNumberComboRule(string $methodName): ?array
+    {
+        $normalized = str_replace([' ', '　', '-', '_'], '', trim($methodName));
+        $chineseNumberMap = [
+            '一' => 1,
+            '二' => 2,
+            '三' => 3,
+            '四' => 4,
+            '五' => 5,
+            '六' => 6,
+            '七' => 7,
+            '八' => 8,
+            '九' => 9,
+        ];
+
+        if (preg_match('/([一二三四五六七八九])中([一二三四五六七八九])/u', $normalized, $matches)) {
+            $selectCount = $chineseNumberMap[$matches[1]] ?? 0;
+            $hitCount = $chineseNumberMap[$matches[2]] ?? 0;
+        } elseif (preg_match('/([1-9])中([1-9])/u', $normalized, $matches)) {
+            $selectCount = (int)$matches[1];
+            $hitCount = (int)$matches[2];
+        } else {
+            return null;
+        }
+
+        if ($selectCount < 2 || $hitCount < 1 || $hitCount > $selectCount) {
+            return null;
+        }
+
+        return [
+            'select_count' => $selectCount,
+            'hit_count' => $hitCount,
+        ];
+    }
+
+    protected function parseNumberSelections(string $content): array
+    {
+        $parts = preg_split('/[,\s，、;-]+/u', $content);
+        if ($parts === false) {
+            return [];
+        }
+
+        $numbers = [];
+        foreach ($parts as $part) {
+            $part = trim($part);
+            if ($part === '' || !preg_match('/^\d{1,2}$/', $part)) {
+                continue;
+            }
+
+            $number = (int)$part;
+            if ($number >= 1 && $number <= 49) {
+                $numbers[] = $number;
+            }
+        }
+
+        return array_values(array_unique($numbers));
     }
 
     protected function containsKeyword(string $haystack, array $keywords): bool

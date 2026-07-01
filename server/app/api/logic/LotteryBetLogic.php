@@ -101,7 +101,7 @@ class LotteryBetLogic
         $bettings = Db::name('betting_record')->where(['issue_id' => $issueId, 'status' => 0])->select();
 
         foreach ($bettings as $bet) {
-            // ?? bet_type ??????
+            // 读取投注类型
             $betType = $bet['bet_type'] ?? 'win';
             $resultType = self::checkWin($bet['method_name'], $bet['bet_content'], $drawnNumbers, $year, $betType);
             $isWin = $resultType === 'win';
@@ -109,7 +109,7 @@ class LotteryBetLogic
             $prizeAmount = $isWin ? $bet['total_amount'] * $bet['odds'] : ($isDraw ? $bet['total_amount'] : 0);
             $status = $isWin ? 1 : ($isDraw ? 4 : 2);
 
-            // ??????
+            // 更新投注记录
             Db::name('betting_record')->where('id', $bet['id'])->update([
                 'status' => $status,
                 'prize_amount' => $prizeAmount,
@@ -117,7 +117,7 @@ class LotteryBetLogic
                 'settled_at' => time()
             ]);
 
-            // ?????????
+            // 查询用户账户
             $account = Db::name('user_account')->where('user_id', $bet['user_id'])->find();
 
             if ($isWin) {
@@ -127,17 +127,17 @@ class LotteryBetLogic
                     ->inc('total_prize', $prizeAmount)
                     ->update();
 
-                // ????
+                // 记录中奖单
                 WinningRecord::recordWin($bet, $prizeAmount);
 
-                // ????
+                // 记录中奖流水
                 AccountLog::recordWinning(
                     $bet['user_id'],
                     $prizeAmount,
                     $bet['total_amount'],
                     $account,
                     $bet['sn'],
-                    "????: {$bet['method_name']} {$bet['bet_content']}"
+                    "中奖派奖: {$bet['method_name']} {$bet['bet_content']}"
                 );
             } elseif ($isDraw) {
                 Db::name('user_account')->where('user_id', $bet['user_id'])
@@ -150,18 +150,18 @@ class LotteryBetLogic
                     $bet['total_amount'],
                     $account,
                     $bet['sn'],
-                    "49?????: {$bet['method_name']} {$bet['bet_content']}"
+                    "49和局退款: {$bet['method_name']} {$bet['bet_content']}"
                 );
             } else {
                 Db::name('user_account')->where('user_id', $bet['user_id'])->dec('frozen_amount', $bet['total_amount'])->update();
 
-                // ???????
+                // 未中奖解冻
                 AccountLog::recordUnfreeze(
                     $bet['user_id'],
                     $bet['total_amount'],
                     $account,
                     $bet['sn'],
-                    "?????: {$bet['method_name']} {$bet['bet_content']}"
+                    "未中奖解冻: {$bet['method_name']} {$bet['bet_content']}"
                 );
             }
         }
@@ -180,7 +180,7 @@ class LotteryBetLogic
      */
     public static function checkWin($methodName, $betContent, $drawnNumbers, $year, $betType = 'win')
     {
-        $special = $drawnNumbers[7] ?? $drawnNumbers[6]; // ??(?8???7?)
+        $special = $drawnNumbers[7] ?? $drawnNumbers[6]; // 特码，兼容第8个或第7个元素
         $specialNumber = (int)$special;
         $regularNumbers = array_map('intval', array_slice($drawnNumbers, 0, 6)); // 前6个正码
         $allNumbers = $regularNumbers;
@@ -188,6 +188,17 @@ class LotteryBetLogic
             $allNumbers[] = $specialNumber;
         }
         $allNumbers = array_values(array_unique($allNumbers));
+        $comboRule = self::getNumberComboRule($methodName);
+
+        if ($comboRule) {
+            $betNumbers = self::parseNumberSelections($betContent);
+            if (count($betNumbers) !== $comboRule['select_count']) {
+                return 'lose';
+            }
+
+            $hitCount = count(array_intersect($betNumbers, $regularNumbers));
+            return self::resolveResult($hitCount >= $comboRule['hit_count'], $betType);
+        }
 
         switch ($methodName) {
             case '特码':
@@ -344,6 +355,108 @@ class LotteryBetLogic
     }
 
     /**
+     * 解析数字连码规则：二中二=选2中2，三中二=选3中2，三中三=选3中3。
+     */
+    private static function getNumberComboRule(string $methodName, string $methodCode = ''): ?array
+    {
+        $codeMap = [
+            'erzhonger' => [2, 2],
+            'sanzhonger' => [3, 2],
+            'sanzhongsan' => [3, 3],
+            'sizhonger' => [4, 2],
+            'sizhongsan' => [4, 3],
+            'sizhongsi' => [4, 4],
+        ];
+
+        $methodCode = strtolower(trim($methodCode));
+        if (isset($codeMap[$methodCode])) {
+            return [
+                'select_count' => $codeMap[$methodCode][0],
+                'hit_count' => $codeMap[$methodCode][1],
+            ];
+        }
+
+        $normalized = str_replace([' ', '　', '-', '_'], '', trim($methodName));
+        $chineseNumberMap = [
+            '一' => 1,
+            '二' => 2,
+            '三' => 3,
+            '四' => 4,
+            '五' => 5,
+            '六' => 6,
+            '七' => 7,
+            '八' => 8,
+            '九' => 9,
+        ];
+
+        if (preg_match('/([一二三四五六七八九])中([一二三四五六七八九])/u', $normalized, $matches)) {
+            $selectCount = $chineseNumberMap[$matches[1]] ?? 0;
+            $hitCount = $chineseNumberMap[$matches[2]] ?? 0;
+        } elseif (preg_match('/([1-9])中([1-9])/u', $normalized, $matches)) {
+            $selectCount = (int)$matches[1];
+            $hitCount = (int)$matches[2];
+        } else {
+            return null;
+        }
+
+        if ($selectCount < 2 || $hitCount < 1 || $hitCount > $selectCount) {
+            return null;
+        }
+
+        return [
+            'select_count' => $selectCount,
+            'hit_count' => $hitCount,
+        ];
+    }
+
+    /**
+     * 解析投注号码，兼容逗号、中文逗号、空格、短横线分隔。
+     */
+    private static function parseNumberSelections(string $betContent): array
+    {
+        $parts = preg_split('/[,\s，、;-]+/u', $betContent);
+        if ($parts === false) {
+            return [];
+        }
+
+        $numbers = [];
+        foreach ($parts as $part) {
+            $part = trim($part);
+            if ($part === '' || !preg_match('/^\d{1,2}$/', $part)) {
+                continue;
+            }
+
+            $number = (int)$part;
+            if ($number >= 1 && $number <= 49) {
+                $numbers[] = $number;
+            }
+        }
+
+        return array_values(array_unique($numbers));
+    }
+
+    /**
+     * 下单内容校验。普通号码玩法保持原行为，数字连码强制选够指定号码。
+     */
+    private static function validateBetContent(array $playMethod, string $betContent, int $index): void
+    {
+        $comboRule = self::getNumberComboRule((string)$playMethod['name'], (string)($playMethod['code'] ?? ''));
+        if (!$comboRule) {
+            return;
+        }
+
+        $numbers = self::parseNumberSelections($betContent);
+        if (count($numbers) !== $comboRule['select_count']) {
+            throw new \Exception(sprintf(
+                '第%d注投注失败: %s玩法必须选择%d个不重复号码',
+                $index + 1,
+                $playMethod['name'],
+                $comboRule['select_count']
+            ));
+        }
+    }
+
+    /**
      * 获取当前期号
      */
     public static function getCurrentIssue($gameId, $plateCode)
@@ -434,6 +547,11 @@ class LotteryBetLogic
 
             // 根据玩法类型返回不同的数据
             $playCode = $playMethod['code'];
+            $comboRule = self::getNumberComboRule($playName, $playCode);
+
+            if ($comboRule) {
+                return self::getComboNumberOptions($playName, $playMethod, $year, $plateCode, $comboRule);
+            }
 
             // 特码、正码、平码：返回1-49号码
             if (in_array($playCode, ['tema', 'zhengma', 'pingma'])) {
@@ -496,6 +614,22 @@ class LotteryBetLogic
             'odds_not_win' => $oddsNotWin,       // 历史遗留字段(已废弃)
             'options' => $options,
         ];
+    }
+
+    /**
+     * 获取数字连码选项（1-49，组合成一注）
+     */
+    private static function getComboNumberOptions($playName, $playMethod, $year, $plateCode, array $comboRule)
+    {
+        $result = self::getNumberOptions($playName, $playMethod, $year, $plateCode);
+        $result['play_type'] = 'combo_number';
+        $result['select_count'] = $comboRule['select_count'];
+        $result['hit_count'] = $comboRule['hit_count'];
+        $result['special_rules'] = [
+            'regular_only' => '只按前6个正码判奖，特码不参与命中计算',
+        ];
+
+        return $result;
     }
 
     /**
@@ -791,6 +925,8 @@ class LotteryBetLogic
                 if ($odds <= 0) {
                     throw new \Exception('第' . ($index + 1) . '注投注失败: 赔率配置错误');
                 }
+
+                self::validateBetContent($playMethod, (string)$order['bet_content'], $index);
 
                 // 生成投注单号
                 $sn = OrderSnService::generateBetSn($userId);

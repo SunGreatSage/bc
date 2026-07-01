@@ -525,94 +525,104 @@ class BestPlanService
             $betNumbers = $this->parseBetContent($bet['content']);
             $betType = $bet['bet_type'] ?? 'win';  // 获取投注类型
             $resultType = 'lose';
+            $comboRule = $this->getNumberComboRule($playName);
 
-            switch ($playName) {
-                case self::PLAY_TYPE_SPECIAL_NUMBER:
-                case '特碼':
-                    // 特码：投注号码 = m7
-                    $betNumbers = array_map('intval', $betNumbers);
-                    $hit = in_array($specialCode, $betNumbers, true);
-                    $resultType = $this->resolveBetOutcome($hit, $betType);
-                    break;
+            if ($comboRule) {
+                $numberSelections = $this->parseNumberSelections((string)$bet['content']);
+                if (count($numberSelections) === $comboRule['select_count']) {
+                    $hitCount = count(array_intersect($numberSelections, $normalCodes));
+                    $resultType = $this->resolveBetOutcome($hitCount >= $comboRule['hit_count'], $betType);
+                }
+            } else {
 
-                case '平码':
-                case '平碼':
-                    $hit = false;
-                    foreach ($betNumbers as $betNum) {
-                        if (in_array((int)$betNum, $all7Numbers, true)) {
-                            $hit = true;
-                            break;
+                switch ($playName) {
+                    case self::PLAY_TYPE_SPECIAL_NUMBER:
+                    case '特碼':
+                        // 特码：投注号码 = m7
+                        $betNumbers = array_map('intval', $betNumbers);
+                        $hit = in_array($specialCode, $betNumbers, true);
+                        $resultType = $this->resolveBetOutcome($hit, $betType);
+                        break;
+
+                    case '平码':
+                    case '平碼':
+                        $hit = false;
+                        foreach ($betNumbers as $betNum) {
+                            if (in_array((int)$betNum, $all7Numbers, true)) {
+                                $hit = true;
+                                break;
+                            }
                         }
-                    }
-                    $resultType = $this->resolveBetOutcome($hit, $betType);
-                    break;
+                        $resultType = $this->resolveBetOutcome($hit, $betType);
+                        break;
 
-                case self::PLAY_TYPE_NORMAL_NUMBER:
-                case '正碼':
-                    // 正码：投注号码在 m1-m6 中
-                    $hit = false;
-                    foreach ($betNumbers as $betNum) {
-                        if (in_array((int)$betNum, $normalCodes, true)) {
-                            $hit = true;
-                            break;
+                    case self::PLAY_TYPE_NORMAL_NUMBER:
+                    case '正碼':
+                        // 正码：投注号码在 m1-m6 中
+                        $hit = false;
+                        foreach ($betNumbers as $betNum) {
+                            if (in_array((int)$betNum, $normalCodes, true)) {
+                                $hit = true;
+                                break;
+                            }
                         }
-                    }
-                    $resultType = $this->resolveBetOutcome($hit, $betType);
-                    break;
+                        $resultType = $this->resolveBetOutcome($hit, $betType);
+                        break;
 
-                case self::PLAY_TYPE_SPECIAL_ZODIAC:
-                case '特肖':
-                    // 特肖：m7的生肖
-                    $specialZodiac = $this->zodiacMap[$specialCode] ?? '';
-                    $hit = in_array($specialZodiac, $betNumbers, true);
-                    $resultType = $this->resolveBetOutcome($hit, $betType);
-                    break;
+                    case self::PLAY_TYPE_SPECIAL_ZODIAC:
+                    case '特肖':
+                        // 特肖：m7的生肖
+                        $specialZodiac = $this->zodiacMap[$specialCode] ?? '';
+                        $hit = in_array($specialZodiac, $betNumbers, true);
+                        $resultType = $this->resolveBetOutcome($hit, $betType);
+                        break;
 
-                case self::PLAY_TYPE_POSITIVE_ZODIAC:
-                case '正肖':
-                    $hit = count(array_intersect($uniqueZodiacs, $betNumbers)) > 0;
-                    $resultType = $this->resolveBetOutcome($hit, $betType);
-                    break;
-
-                case self::PLAY_TYPE_SIX_ZODIAC:
-                case '六肖':
-                    if ($specialCode == 49) {
-                        $resultType = 'draw';
-                    } else {
+                    case self::PLAY_TYPE_POSITIVE_ZODIAC:
+                    case '正肖':
                         $hit = count(array_intersect($uniqueZodiacs, $betNumbers)) > 0;
                         $resultType = $this->resolveBetOutcome($hit, $betType);
-                    }
-                    break;
+                        break;
 
-                case self::PLAY_TYPE_FIVE_ZODIAC:
-                case '五肖':
-                    if ($specialCode == 49) {
-                        $resultType = 'draw';
-                    } else {
-                        $hit = count(array_intersect($uniqueZodiacs, $betNumbers)) > 0;
-                        $resultType = $this->resolveBetOutcome($hit, $betType);
-                    }
-                    break;
+                    case self::PLAY_TYPE_SIX_ZODIAC:
+                    case '六肖':
+                        if ($specialCode == 49) {
+                            $resultType = 'draw';
+                        } else {
+                            $hit = count(array_intersect($uniqueZodiacs, $betNumbers)) > 0;
+                            $resultType = $this->resolveBetOutcome($hit, $betType);
+                        }
+                        break;
 
-                case self::PLAY_TYPE_FOUR_ZODIAC:
-                case '四肖':
-                    if ($specialCode == 49) {
-                        $resultType = 'draw';
-                    } else {
-                        $hit = count(array_intersect($uniqueZodiacs, $betNumbers)) > 0;
-                        $resultType = $this->resolveBetOutcome($hit, $betType);
-                    }
-                    break;
+                    case self::PLAY_TYPE_FIVE_ZODIAC:
+                    case '五肖':
+                        if ($specialCode == 49) {
+                            $resultType = 'draw';
+                        } else {
+                            $hit = count(array_intersect($uniqueZodiacs, $betNumbers)) > 0;
+                            $resultType = $this->resolveBetOutcome($hit, $betType);
+                        }
+                        break;
 
-                case self::PLAY_TYPE_THREE_ZODIAC:
-                case '三肖':
-                    if ($specialCode == 49) {
-                        $resultType = 'draw';
-                    } else {
-                        $hit = count(array_intersect($uniqueZodiacs, $betNumbers)) > 0;
-                        $resultType = $this->resolveBetOutcome($hit, $betType);
-                    }
-                    break;
+                    case self::PLAY_TYPE_FOUR_ZODIAC:
+                    case '四肖':
+                        if ($specialCode == 49) {
+                            $resultType = 'draw';
+                        } else {
+                            $hit = count(array_intersect($uniqueZodiacs, $betNumbers)) > 0;
+                            $resultType = $this->resolveBetOutcome($hit, $betType);
+                        }
+                        break;
+
+                    case self::PLAY_TYPE_THREE_ZODIAC:
+                    case '三肖':
+                        if ($specialCode == 49) {
+                            $resultType = 'draw';
+                        } else {
+                            $hit = count(array_intersect($uniqueZodiacs, $betNumbers)) > 0;
+                            $resultType = $this->resolveBetOutcome($hit, $betType);
+                        }
+                        break;
+                }
             }
 
             if ($resultType === 'win') {
@@ -639,6 +649,64 @@ class BestPlanService
     {
         $items = explode(',', trim($content));
         return array_filter(array_map('trim', $items));
+    }
+
+    protected function getNumberComboRule(string $methodName): ?array
+    {
+        $normalized = str_replace([' ', '　', '-', '_'], '', trim($methodName));
+        $chineseNumberMap = [
+            '一' => 1,
+            '二' => 2,
+            '三' => 3,
+            '四' => 4,
+            '五' => 5,
+            '六' => 6,
+            '七' => 7,
+            '八' => 8,
+            '九' => 9,
+        ];
+
+        if (preg_match('/([一二三四五六七八九])中([一二三四五六七八九])/u', $normalized, $matches)) {
+            $selectCount = $chineseNumberMap[$matches[1]] ?? 0;
+            $hitCount = $chineseNumberMap[$matches[2]] ?? 0;
+        } elseif (preg_match('/([1-9])中([1-9])/u', $normalized, $matches)) {
+            $selectCount = (int)$matches[1];
+            $hitCount = (int)$matches[2];
+        } else {
+            return null;
+        }
+
+        if ($selectCount < 2 || $hitCount < 1 || $hitCount > $selectCount) {
+            return null;
+        }
+
+        return [
+            'select_count' => $selectCount,
+            'hit_count' => $hitCount,
+        ];
+    }
+
+    protected function parseNumberSelections(string $content): array
+    {
+        $parts = preg_split('/[,\s，、;-]+/u', $content);
+        if ($parts === false) {
+            return [];
+        }
+
+        $numbers = [];
+        foreach ($parts as $part) {
+            $part = trim($part);
+            if ($part === '' || !preg_match('/^\d{1,2}$/', $part)) {
+                continue;
+            }
+
+            $number = (int)$part;
+            if ($number >= 1 && $number <= 49) {
+                $numbers[] = $number;
+            }
+        }
+
+        return array_values(array_unique($numbers));
     }
 
     /**

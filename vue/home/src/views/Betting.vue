@@ -46,19 +46,22 @@
         </div>
 
         <!-- 号码类玩法的赔率显示行 -->
-        <div v-if="playType === 'number'" class="mb-4 p-3 bg-white rounded-lg border">
+        <div v-if="playType === 'number' || playType === 'combo_number'" class="mb-4 p-3 bg-white rounded-lg border">
           <!-- 赔率显示 -->
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-4 flex-wrap">
             <span class="text-sm text-gray-600">赔率:</span>
             <span class="text-lg font-bold"
                   :class="currentTheme === 'gold' ? 'text-amber-700' : 'text-purple-700'">
               {{ getAverageOdds('win') }}
             </span>
+            <span v-if="playType === 'combo_number'" class="text-sm text-gray-600">
+              选{{ comboSelectCount }}个号码，中{{ comboHitCount }}个即中奖（只算正码）
+            </span>
           </div>
         </div>
 
         <!-- 号码类玩法 (特碼、正碼/平码) -->
-        <div v-if="playType === 'number'" class="grid grid-cols-5 justify-items-center gap-2 mb-6">
+        <div v-if="playType === 'number' || playType === 'combo_number'" class="grid grid-cols-5 justify-items-center gap-2 mb-6">
           <button
             v-for="option in orderedBetNumbers"
             :key="option.value"
@@ -227,15 +230,15 @@
             </thead>
             <!-- 表格内容 -->
             <tbody>
-              <!-- 生肖类游戏：单行显示所有选中的生肖 -->
-              <tr v-if="playType === 'zodiac'" class="hover:bg-gray-50">
+              <!-- 生肖/数字组合类游戏：单行显示整组投注 -->
+              <tr v-if="playType === 'zodiac' || playType === 'combo_number'" class="hover:bg-gray-50">
                 <!-- 明细列 -->
                 <td class="border border-gray-300 px-4 py-2 text-sm text-gray-900">
                   {{ getDetailText() }}
                 </td>
-                <!-- 号码列：显示所有选中的生肖，逗号分隔 -->
+                <!-- 号码列：显示所有选中的生肖/号码，逗号分隔 -->
                 <td class="border border-gray-300 px-4 py-2 text-sm font-medium text-gray-900">
-                  {{ getSelectedZodiacDisplay() }}
+                  {{ playType === 'combo_number' ? getSelectedNumberDisplay() : getSelectedZodiacDisplay() }}
                 </td>
                 <!-- 赔率列：显示平均赔率 -->
                 <td class="border border-gray-300 px-4 py-2 text-sm text-red-600 font-medium">
@@ -303,6 +306,7 @@
               <tr :class="currentTheme === 'gold' ? 'bg-amber-100' : 'bg-purple-100'" class="font-semibold">
                 <td class="border border-gray-300 px-4 py-2 text-sm text-gray-900" colspan="2">
                   <span v-if="playType === 'zodiac'">选中生肖: {{ selectedNumbers.length }}</span>
+                  <span v-else-if="playType === 'combo_number'">组合: 1 注（已选 {{ selectedNumbers.length }} 个号码）</span>
                   <span v-else>注数: {{ selectedNumbers.length }}</span>
                 </td>
                 <td class="border border-gray-300 px-4 py-2 text-sm text-gray-900" colspan="2">总金额: ¥{{ modalTotalAmount }}</td>
@@ -353,8 +357,10 @@ const secondsToClose = ref(0) // 距离封盘的秒数
 // API数据相关状态
 const betNumbersData = ref([])
 const playName = ref('特碼') // 默认玩法名称
-const playType = ref('number') // 玩法类型：number 或 zodiac
+const playType = ref('number') // 玩法类型：number、zodiac 或 combo_number
 const currentYear = ref(new Date().getFullYear()) // 当前年份
+const comboSelectCount = ref(0)
+const comboHitCount = ref(0)
 
 // 六肖快速选择状态
 const isDomesticAnimalsSelected = ref(false)
@@ -417,12 +423,15 @@ const fetchBetNumbers = async () => {
       betNumbersData.value = result.data.options || []
       console.log('获取到的生肖数据:', result.data.options)
 
-      // 根据 play_name 是否包含"肖"来判断玩法类型
+      // 优先使用后端返回的玩法类型，兼容旧接口再按名称判断生肖玩法
+      const responsePlayType = result.data.play_type || ''
       const isZodiacGame = result.data.play_name && result.data.play_name.includes('肖')
-      playType.value = isZodiacGame ? 'zodiac' : 'number'
+      playType.value = responsePlayType || (isZodiacGame ? 'zodiac' : 'number')
+      comboSelectCount.value = parseInt(result.data.select_count || 0)
+      comboHitCount.value = parseInt(result.data.hit_count || 0)
 
       // 如果是生肖玩法，清空选中的号码和快速选择状态
-      if (playType.value === 'zodiac') {
+      if (playType.value === 'zodiac' || playType.value === 'combo_number') {
         selectedNumbers.value = []
         isDomesticAnimalsSelected.value = false
         isWildAnimalsSelected.value = false
@@ -448,6 +457,10 @@ const modalTotalAmount = computed(() => {
     // 生肖类游戏：单个金额 × 选中生肖数量
     const amount = parseFloat(modalBetAmounts.value[0]) || 0
     return amount * selectedNumbers.value.length
+  } else if (playType.value === 'combo_number') {
+    // 数字连码：整组号码为一注
+    const amount = parseFloat(modalBetAmounts.value[0]) || 0
+    return amount
   } else {
     // 数字类游戏：累加所有输入框金额
     return modalBetAmounts.value.reduce((total, amount) => {
@@ -526,6 +539,14 @@ const getNumberDisplay = (num) => {
     // 数字游戏显示格式化的号码
     return num.toString().padStart(2, '0')
   }
+}
+
+// 获取数字组合显示文本
+const getSelectedNumberDisplay = () => {
+  if (selectedNumbers.value.length === 0) return '无'
+  return selectedNumbers.value
+    .map(num => num.toString().padStart(2, '0'))
+    .join('，')
 }
 
 // 获取赔率显示
@@ -651,6 +672,10 @@ const toggleNumber = (num) => {
   if (index > -1) {
     selectedNumbers.value.splice(index, 1)
   } else {
+    if (playType.value === 'combo_number' && comboSelectCount.value > 0 && selectedNumbers.value.length >= comboSelectCount.value) {
+      alert(`${playName.value}玩法只能选择${comboSelectCount.value}个号码`)
+      return
+    }
     selectedNumbers.value.push(num)
   }
 
@@ -702,7 +727,12 @@ const reverseSelection = () => {
   const allAvailableNumbers = orderedBetNumbers.value.map(option => option.value)
 
   // 反选：选择所有未选中的号码
-  selectedNumbers.value = allAvailableNumbers.filter(num => !selectedNumbers.value.includes(num))
+  const reversed = allAvailableNumbers.filter(num => !selectedNumbers.value.includes(num))
+  if (playType.value === 'combo_number' && comboSelectCount.value > 0) {
+    selectedNumbers.value = reversed.slice(0, comboSelectCount.value)
+    return
+  }
+  selectedNumbers.value = reversed
 }
 
 // 选择家禽
@@ -770,7 +800,15 @@ const confirmBet = () => {
     }
   }
 
-  if (playType.value === 'zodiac') {
+  if (playType.value === 'combo_number') {
+    const required = comboSelectCount.value || 0
+    if (required && selectedNumbers.value.length !== required) {
+      alert(`${playName.value}玩法必须选择${required}个号码！当前已选择${selectedNumbers.value.length}个。`)
+      return
+    }
+  }
+
+  if (playType.value === 'zodiac' || playType.value === 'combo_number') {
     // 生肖游戏：单行显示，只有一个金额输入
     modalBetAmounts.value = [betAmount.value.toString()]
   } else {
@@ -849,6 +887,30 @@ const submitBet = async () => {
           bet_type: 'win'  // 固定为'win',用户只能投注"中"
         })
       }
+
+    } else if (playType.value === 'combo_number') {
+      const amount = parseFloat(modalBetAmounts.value[0]) || 0
+      if (amount <= 0) {
+        alert('下注金额必须大于0！')
+        return
+      }
+
+      const required = comboSelectCount.value || 0
+      if (required && selectedNumbers.value.length !== required) {
+        alert(`${playName.value}玩法必须选择${required}个号码！当前已选择${selectedNumbers.value.length}个。`)
+        return
+      }
+
+      const betContent = selectedNumbers.value
+        .map(number => number.toString().padStart(2, '0'))
+        .join(',')
+
+      orders.push({
+        pid: currentPid.value,
+        bet_content: betContent,
+        bet_amount: parseInt(amount),
+        bet_type: 'win'
+      })
 
     } else {
       // 数字类游戏：为每个号码创建一个订单

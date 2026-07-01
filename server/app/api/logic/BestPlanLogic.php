@@ -10,7 +10,7 @@ use app\common\service\ZodiacYearService;
 use think\facade\Db;
 
 /**
- * 鏈€浣虫帶鐩樿鍒?- 涓氬姟閫昏緫绫?
+ * 最佳控盘计划 - 业务逻辑类
  *
  * @package app\api\logic
  * @author Claude AI
@@ -21,12 +21,12 @@ class BestPlanLogic extends BaseLogic
     private const MAX_TOP_SOLUTION_LIMIT = 1000;
 
     /**
-     * 鎵ц鍒嗘瀽骞朵繚瀛樼粨鏋?
+     * 执行分析并保存结果
      *
-     * @param int $gid 娓告垙ID
-     * @param string $qishu 鏈熷彿
-     * @param string $plateCode 鐩樺彛浠ｇ爜
-     * @param int|null $year 骞翠唤锛堝彲閫夛紝榛樿褰撳墠骞翠唤锛?
+     * @param int $gid 游戏ID
+     * @param string $qishu 期号
+     * @param string $plateCode 盘口代码
+     * @param int|null $year 年份（可选，默认当前年份）
      * @return array|false
      */
     public static function analyze(int $gid, string $qishu, string $plateCode, ?int $year = null)
@@ -214,14 +214,14 @@ class BestPlanLogic extends BaseLogic
     }
 
     /**
-     * 瀹炴椂璁＄畻锛堜笉淇濆瓨鍒版暟鎹簱锛?
+     * 实时计算（不保存到数据库）
      *
-     * @param int $gid 娓告垙ID
-     * @param string $qishu 鏈熷彿
-     * @param string $plateCode 鐩樺彛浠ｇ爜锛堝A銆丅銆丆锛?
-     * @param int|null $year 骞翠唤
-     * @param float|null $targetRate 鐩爣鍒╂鼎鐜囷紙濡?0琛ㄧず10%锛宯ull琛ㄧず鏈€澶у寲鍒╂鼎锛?
-     * @param float $tolerance 璇樊鑼冨洿锛堥粯璁?%锛?
+     * @param int $gid 游戏ID
+     * @param string $qishu 期号
+     * @param string $plateCode 盘口代码（如 A、B、C）
+     * @param int|null $year 年份
+     * @param float|null $targetRate 目标利润率（如 10 表示 10%，null 表示最大化利润）
+     * @param float $tolerance 误差范围（默认 5%）
      * @return array|false
      */
     public static function calculateRealtime(
@@ -244,11 +244,11 @@ class BestPlanLogic extends BaseLogic
             $limit = self::normalizeSolutionLimit($limit);
             $maxConsecutive = self::normalizeMaxConsecutive($maxConsecutive);
 
-            // 浣跨敤浼樺寲鐗堢畻娉?缁熶竴"涓?涓?涓嶄腑"鎶曟敞)
+            // 使用优化版算法，统一处理中/不中投注。
             $service = new \app\common\service\OptimizedBestPlanService($gid, $qishu, $year, $plateCode);
 
-            // 濡傛灉娌℃湁鎶曟敞鏁版嵁,鐢熸垚鑷冲皯20涓殢鏈烘柟妗?
-                        if ($service->getBetCount() === 0) {
+            // 如果没有投注数据，生成随机方案。
+            if ($service->getBetCount() === 0) {
                 $randomLimit = $limit ?? 20;
                 if ($randomLimit > self::MAX_TOP_SOLUTION_LIMIT) {
                     $randomLimit = self::MAX_TOP_SOLUTION_LIMIT;
@@ -346,35 +346,35 @@ class BestPlanLogic extends BaseLogic
             }
             $rateBuckets = self::buildRateBuckets($bucketSource, $year, $maxConsecutive);
 
-            // 鉁?濡傛灉鎸囧畾浜嗙洰鏍囧埄娑︾巼,浣跨敤鏅鸿兘鎵╁睍鎼滅储
+            // 如果指定了目标利润率，使用智能扩展搜索。
             $searchResult = null;
             if ($targetRate !== null && !empty($result['top_solutions'])) {
-                trace("馃幆 鐩爣鍒╂鼎鐜? {$targetRate}%, 鍒濆璇樊: 卤{$tolerance}%", 'info');
-                trace("馃搳 鐢熸垚鏂规鏁伴噺: " . count($result['top_solutions']), 'info');
+                trace("目标利润率: {$targetRate}%, 初始误差: ±{$tolerance}%", 'info');
+                trace("生成方案数量: " . count($result['top_solutions']), 'info');
 
-                // 绗竴娆″皾璇曪細浣跨敤褰撳墠鏂规搴撴悳绱?
+                // 第一次尝试：使用当前方案库搜索。
                 $searchResult = self::findTargetRateSolutionByExpansion(
                     $result['top_solutions'],
                     $targetRate,
                     $tolerance
                 );
 
-                // 濡傛灉鎵句笉鍒?鍒ゆ柇鏄惁闇€瑕佹墿灞曟悳绱㈢┖闂?
+                // 如果找不到，判断是否需要扩展搜索空间。
                 $searchSpaceExpanded = false;
                 if (!isset($searchResult['solution']) || $searchResult['solution'] === null) {
                     trace("No solution found after expansion; using best solution.", 'warning');
 
-                    // 妫€鏌ュ綋鍓嶆柟妗堢殑瑕嗙洊鑼冨洿
+                    // 检查当前方案的覆盖范围。
                     $rates = array_column($result['top_solutions'], 'profit_rate');
                     $minRate = min($rates);
                     $maxRate = max($rates);
                     $coverageRange = $maxRate - $minRate;
 
-                    trace("馃搱 褰撳墠瑕嗙洊鑼冨洿: [{$minRate}%, {$maxRate}%], 璺ㄥ害: {$coverageRange}%", 'debug');
+                    trace("当前覆盖范围: [{$minRate}%, {$maxRate}%], 跨度: {$coverageRange}%", 'debug');
 
-                    // 濡傛灉瑕嗙洊鑼冨洿澶皬锛?50%锛夛紝鎵╁睍鎼滅储绌洪棿閲嶆柊鐢熸垚鏂规
+                    // 如果覆盖范围太小（小于 50%），扩展搜索空间重新生成方案。
                     if ($coverageRange < 50) {
-                        trace("馃攳 瑕嗙洊鑼冨洿杩囧皬,姝ｅ湪鎵╁睍鎼滅储绌洪棿閲嶆柊鐢熸垚鏂规...", 'info');
+                        trace("覆盖范围过小，正在扩展搜索空间重新生成方案...", 'info');
                         $result = self::expandSearchSpaceAndFindBest(
                             $service,
                             $targetRate,
@@ -383,9 +383,9 @@ class BestPlanLogic extends BaseLogic
                         );
                         $searchSpaceExpanded = true;
 
-                        // 鐢ㄦ柊鏂规閲嶈瘯鎼滅储
+                        // 用新方案重试搜索。
                         if (!empty($result['top_solutions'])) {
-                            trace("鉁?鎵╁睍鍚庢柟妗堟暟: " . count($result['top_solutions']), 'info');
+                            trace("扩展后方案数: " . count($result['top_solutions']), 'info');
                             $searchResult = self::findTargetRateSolutionByExpansion(
                                 $result['top_solutions'],
                                 $targetRate,
@@ -399,14 +399,13 @@ class BestPlanLogic extends BaseLogic
                     $bestSolution = $searchResult['solution'];
                     $matchedSolution = $searchResult['solution'];
 
-                    // 杈撳嚭鎼滅储杩囩▼鏃ュ織
-                    trace("鉁?鎼滅储鎴愬姛!", 'info');
-                    trace("   鎵惧埌鑼冨洿: [{$searchResult['range']['min']}%, {$searchResult['range']['max']}%]", 'info');
-                    trace("   鎵╁睍绾у埆: {$searchResult['expansion_level']}", 'info');
-                    trace("   绗﹀悎鏂规鏁? " . count($searchResult['all_matched']), 'info');
-                    trace("   閫変腑鍒╂鼎鐜? {$bestSolution['profit_rate']}%", 'info');
+                    trace("搜索成功", 'info');
+                    trace("   找到范围: [{$searchResult['range']['min']}%, {$searchResult['range']['max']}%]", 'info');
+                    trace("   扩展级别: {$searchResult['expansion_level']}", 'info');
+                    trace("   符合方案数: " . count($searchResult['all_matched']), 'info');
+                    trace("   选中利润率: {$bestSolution['profit_rate']}%", 'info');
 
-                    // 杈撳嚭璇︾粏鐨勬悳绱㈣繃绋?
+                    // 输出详细搜索过程。
                     foreach ($searchResult['search_process'] as $step) {
                         if ($step['found_count'] > 0) {
                             trace("   Level {$step['level']}: range [{$step['range']['min']}%, {$step['range']['max']}%] - found {$step['found_count']} solutions", 'debug');
@@ -415,16 +414,16 @@ class BestPlanLogic extends BaseLogic
                         }
                     }
                 } else {
-                    // 涓嶅簲璇ュ彂鐢燂紝鍥犱负鎼滅储浼氫竴鐩存墿灞曞埌 [10%-100%]
+                    // 正常不应发生，搜索会一直扩展到 [10%-100%]。
                     trace("No solution found after expansion; using best solution.", 'warning');
                     $bestSolution = $result['best_solution'];
                 }
             } else {
-                // 娌℃湁鎸囧畾鐩爣鍒╂鼎鐜?浣跨敤鏈€澶у埄娑︽柟妗?鏁扮粍鏈€鍚庝竴涓厓绱?
+                // 没有指定目标利润率，使用当前最佳方案。
                 $bestSolution = $result['best_solution'];
             }
 
-            // 鏋勫缓鎽樿锛堜娇鐢ㄨ绠楃粨鏋滀腑鐨勬暟鎹級
+            // 构建摘要（使用计算结果中的数据）。
             if ($bestSolution !== null && self::getSolutionTotalProfit($bestSolution) < 0) {
                 $bestSolution = self::pickBestNonNegativeSolution($bucketSource);
             }
@@ -454,7 +453,7 @@ class BestPlanLogic extends BaseLogic
                     $bestSolutionWithConstraint = self::findBestSolutionBySampling($service, $maxConsecutive, 3);
                 }
                 if ($bestSolutionWithConstraint === null) {
-                    self::setError('鏃犳硶鎵惧埌婊¤冻杩炵画鍙烽檺鍒剁殑鏂规');
+                    self::setError('无法找到满足连续号码限制的方案');
                     return false;
                 }
                 $bestSolution = $bestSolutionWithConstraint;
@@ -507,19 +506,19 @@ class BestPlanLogic extends BaseLogic
                 'rate_buckets' => $rateBuckets,
                 'risk_assessment' => $result['risk_assessment'] ?? null,
                 'recommendations' => $result['recommendations'] ?? [],
-                'strategy_used' => $targetRate !== null ? 'target_rate' : 'balanced',  // 鏍囪浣跨敤鐨勭瓥鐣?
+                'strategy_used' => $targetRate !== null ? 'target_rate' : 'balanced',  // 标记使用的策略
                 'target_rate_config' => $targetRate !== null && $searchResult !== null ? [
                     'target' => $targetRate,
                     'tolerance' => $tolerance,
                     'achieved' => $bestSolution['profit_rate'] ?? 0,
                     'matched' => $targetMatched,
-                    'search_space_expanded' => $searchSpaceExpanded,  // 鏄惁鎵╁睍浜嗘悳绱㈢┖闂?
-                    // 鉁?鎼滅储杩囩▼璇﹁В
+                    'search_space_expanded' => $searchSpaceExpanded,  // 是否扩展了搜索空间
+                    // 搜索过程详情
                     'search_result' => [
                         'expansion_level' => $searchResult['expansion_level'],
                         'found_range' => $searchResult['range'],
                         'matched_count' => count($searchResult['all_matched'] ?? []),
-                        'initial_solution_count' => count($result['top_solutions'] ?? []),  // 鏂规鏁伴噺
+                        'initial_solution_count' => count($result['top_solutions'] ?? []),  // 方案数量
                         'search_process' => array_map(function($step) {
                             return [
                                 'level' => $step['level'],
@@ -547,15 +546,15 @@ class BestPlanLogic extends BaseLogic
     }
 
     /**
-     * 鎵╁睍鎼滅储绌洪棿閲嶆柊鐢熸垚鏂规
+     * 扩展搜索空间重新生成方案
      *
-     * 鍦烘櫙锛氬綋鍓嶆柟妗堝簱瑕嗙洊鑼冨洿澶皬锛屾棤娉曟弧瓒崇洰鏍囧埄娑︾巼瑕佹眰
-     * 瑙ｅ喅鏂规锛氬姩鎬佸鍔犲€欓€夌壒鐮佹暟鍜屾瘡涓壒鐮佺殑缁勫悎鏁?
+     * 场景：当前方案库覆盖范围太小，无法满足目标利润率要求。
+     * 方案：动态增加候选特码数和每个特码的组合数。
      *
      * @param \app\common\service\OptimizedBestPlanService $service
-     * @param float $targetRate 鐩爣鍒╂鼎鐜?
-     * @param float $tolerance 瀹瑰樊鑼冨洿
-     * @return array 鎵╁睍鍚庣殑鏂规缁撴灉
+     * @param float $targetRate 目标利润率
+     * @param float $tolerance 容差范围
+     * @return array 扩展后的方案结果
      */
     private static function expandSearchSpaceAndFindBest(
         \app\common\service\OptimizedBestPlanService $service,
@@ -563,20 +562,19 @@ class BestPlanLogic extends BaseLogic
         float $tolerance,
         ?int $maxConsecutive = null
     ): array {
-        trace("馃殌 鍚姩鎵╁睍鎼滅储绌洪棿...", 'info');
+        trace("启动扩展搜索空间...", 'info');
 
-        // 閫氳繃鍙嶅皠鎴栧姩鎬佽皟鐢ㄥ鍔犳悳绱㈠弬鏁?
-        // 绗竴杞細3鍊嶆墿灞?
-        $originalSpecialLimit = 20;     // 鍘熷: 20涓壒鐮?
-        $originalComboLimit = 800;       // 鍘熷: 800涓粍鍚?鐗圭爜
+        // 通过反射动态增加搜索参数。
+        $originalSpecialLimit = 20;     // 原始: 20 个特码
+        $originalComboLimit = 800;      // 原始: 每个特码 800 个组合
 
-        $expandedSpecial = $originalSpecialLimit * 2;      // 鎵╁睍鍒?40 涓壒鐮?
-        $expandedCombo = $originalComboLimit * 2;          // 鎵╁睍鍒?1600 涓粍鍚?鐗圭爜
+        $expandedSpecial = $originalSpecialLimit * 2;      // 扩展到 40 个特码
+        $expandedCombo = $originalComboLimit * 2;          // 扩展到每个特码 1600 个组合
 
-        trace("馃搷 鎵╁睍鍙傛暟锛氱壒鐮佸€欓€夋暟 {$originalSpecialLimit} 鈫?{$expandedSpecial}锛岀粍鍚堟暟 {$originalComboLimit} 鈫?{$expandedCombo}", 'debug');
+        trace("扩展参数: 特码候选数 {$originalSpecialLimit} -> {$expandedSpecial}, 组合数 {$originalComboLimit} -> {$expandedCombo}", 'debug');
 
         try {
-            // 浣跨敤鍙嶅皠璁剧疆绉佹湁灞炴€э紙濡傛灉鏀寔锛?
+            // 使用反射设置私有属性（如果支持）。
             $reflection = new \ReflectionClass($service);
 
             if ($reflection->hasProperty('specialCandidateLimit')) {
@@ -591,42 +589,39 @@ class BestPlanLogic extends BaseLogic
                 $prop->setValue($service, $expandedCombo);
             }
 
-            // 閲嶆柊璁＄畻鏈€浣虫柟妗?
+            // 重新计算最佳方案。
             $result = $service->findBest7Numbers(null, 5.0, true, $maxConsecutive);
 
-            trace("鉁?鎵╁睍鎼滅储瀹屾垚锛岀敓鎴愭柟妗堟暟: " . count($result['top_solutions']), 'info');
+            trace("扩展搜索完成，生成方案数: " . count($result['top_solutions']), 'info');
 
-            // 妫€鏌ユ柊鐨勮鐩栬寖鍥?
+            // 检查新的覆盖范围。
             if (!empty($result['top_solutions'])) {
                 $rates = array_column($result['top_solutions'], 'profit_rate');
                 $newMin = min($rates);
                 $newMax = max($rates);
-                trace("馃搳 鎵╁睍鍚庤鐩栬寖鍥? [{$newMin}%, {$newMax}%], 璺ㄥ害: " . ($newMax - $newMin) . "%", 'debug');
+                trace("扩展后覆盖范围: [{$newMin}%, {$newMax}%], 跨度: " . ($newMax - $newMin) . "%", 'debug');
             }
 
             return $result;
         } catch (\Exception $e) {
-            trace("鉂?鎵╁睍鎼滅储绌洪棿澶辫触: " . $e->getMessage(), 'error');
-            // 闄嶇骇澶勭悊锛氳繑鍥炲師濮嬬粨鏋?
+            trace("扩展搜索空间失败: " . $e->getMessage(), 'error');
+            // 降级处理：返回原始结果。
             return $service->findBest7Numbers(null, 5.0, true, $maxConsecutive);
         }
     }
 
     /**
-     * 鏅鸿兘鐩爣鍒╂鼎鐜囨悳绱?- 閫愭鎵╁睍鑼冨洿
+     * 智能目标利润率搜索 - 逐步扩展范围
      *
-     * 绠楁硶閫昏緫锛?
-     * 1. 棣栧厛鍦?[target - tolerance, target + tolerance] 鑼冨洿鍐呮悳绱?
-     * 2. 濡傛灉鎵句笉鍒帮紝閫愭鎵╁睍鑼冨洿锛?
-     *    - 鎵╁睍1鍊嶏細[target - 2*tolerance, target + 2*tolerance]
-     *    - 鎵╁睍2鍊嶏細[target - 3*tolerance, target + 3*tolerance]
-     *    - ...浠ユ绫绘帹锛岀洿鍒拌鐩栨暣涓?[10%, 100%] 鑼冨洿
-     * 3. 鏈€缁堟寜鍒╂鼎鐜囦粠楂樺埌浣庤繑鍥炵鍚堟潯浠剁殑鏂规
+     * 算法逻辑：
+     * 1. 首先在 [target - tolerance, target + tolerance] 范围内搜索
+     * 2. 如果找不到，逐步扩展范围
+     * 3. 最终按利润率从高到低返回符合条件的方案
      *
-     * @param array $solutions 鎵€鏈夋柟妗堝垪琛紙宸叉寜鍒╂鼎鐜囨帓搴忥級
-     * @param float $targetRate 鐩爣鍒╂鼎鐜囷紙濡?50%锛?
-     * @param float $tolerance 鍒濆璇樊鑼冨洿锛堝 10%锛?
-     * @return array ['solution' => 鏈€浣虫柟妗? 'range' => 鏌ユ壘鑼冨洿, 'expansion_level' => 鎵╁睍绾у埆]
+     * @param array $solutions 所有方案列表（已按利润率排序）
+     * @param float $targetRate 目标利润率（如 50%）
+     * @param float $tolerance 初始误差范围（如 10%）
+     * @return array ['solution' => 最佳方案, 'range' => 查找范围, 'expansion_level' => 扩展级别]
      */
     private static function findTargetRateSolutionByExpansion(
         array $solutions,
@@ -646,19 +641,19 @@ class BestPlanLogic extends BaseLogic
         $expansionLevel = 0;
         $currentTolerance = $tolerance;
 
-        // 閫愭鎵╁睍鎼滅储鑼冨洿锛岀洿鍒版壘鍒版柟妗堟垨瑕嗙洊鏁翠釜鑼冨洿
+        // 逐步扩展搜索范围，直到找到方案或覆盖整个范围。
         while (true) {
-            // 璁＄畻褰撳墠鎼滅储鑼冨洿
+            // 计算当前搜索范围。
             $rangeMin = max(10.0, $targetRate - $currentTolerance);
             $rangeMax = min(100.0, $targetRate + $currentTolerance);
 
-            // 鍦ㄥ綋鍓嶈寖鍥村唴鎼滅储
+            // 在当前范围内搜索。
             $matched = array_filter($solutions, function ($solution) use ($rangeMin, $rangeMax) {
                 $rate = $solution['profit_rate'];
                 return $rate >= $rangeMin && $rate <= $rangeMax;
             });
 
-            // 璁板綍鎼滅储杩囩▼
+            // 记录搜索过程。
             $searchStep = [
                 'level' => $expansionLevel,
                 'tolerance' => $currentTolerance,
@@ -670,9 +665,9 @@ class BestPlanLogic extends BaseLogic
             ];
             $searchProcess[] = $searchStep;
 
-            // 濡傛灉鎵惧埌鍖归厤鐨勬柟妗堬紝鎸夊埄娑︾巼闄嶅簭鎺掑垪骞惰繑鍥炵涓€涓?
+            // 如果找到匹配方案，按利润率降序排列并返回第一个。
             if (!empty($matched)) {
-                // 鎸夊埄娑︾巼闄嶅簭鎺掑垪
+                // 按利润率降序排列。
                 usort($matched, function ($a, $b) {
                     return $b['profit_rate'] <=> $a['profit_rate'];
                 });
@@ -684,14 +679,14 @@ class BestPlanLogic extends BaseLogic
                         'max' => round($rangeMax, 2),
                     ],
                     'expansion_level' => $expansionLevel,
-                    'all_matched' => $matched,  // 杩斿洖鎵€鏈夊尮閰嶇殑鏂规
+                    'all_matched' => $matched,  // 返回所有匹配的方案
                     'search_process' => $searchProcess,
                 ];
             }
 
-            // 妫€鏌ユ槸鍚﹀凡缁忚鐩栨暣涓寖鍥?[10%, 100%]
+            // 检查是否已经覆盖整个范围 [10%, 100%]。
             if ($rangeMin <= 10.0 && $rangeMax >= 100.0) {
-                // 宸茶鐩栧叏鑼冨洿浣嗕粛鏈壘鍒帮紝杩斿洖鏁翠釜鍒楄〃鎸夐檷搴?
+                // 已覆盖全范围但仍未找到，返回按利润率降序的整个列表。
                 usort($solutions, function ($a, $b) {
                     return $b['profit_rate'] <=> $a['profit_rate'];
                 });
@@ -708,22 +703,22 @@ class BestPlanLogic extends BaseLogic
                 ];
             }
 
-            // 鎵╁睍瀹瑰樊鍊间互杩涜涓嬩竴杞悳绱?
+            // 扩展容差值以进行下一轮搜索。
             $expansionLevel++;
             $currentTolerance = $tolerance * ($expansionLevel + 1);
         }
     }
 
     /**
-     * 鐢熸垚鍥哄畾鐨?0%妗ｄ綅锛?00% 鍒?10%锛?
-     * 纭繚瀹㈡埛鍚庡彴鍙互浠庡叏鍚冨埌浣庡埄娑︾殑鎵€鏈夋。浣嶄腑鑷敱閫夋嫨
+     * 生成固定的 10% 档位（100% 到 10%）。
+     * 确保后台可以从高到低的利润档位中自由选择。
      *
-     * @param array $solutions 宸茶鑼冨寲鐨勬柟妗堝垪琛?
-     * @return array 鍥哄畾妗ｄ綅鍒楄〃锛歔100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
+     * @param array $solutions 已规范化的方案列表
+     * @return array 固定档位列表：[100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
      */
     private static function generateDynamicRates(array $solutions): array
     {
-        // 杩斿洖鍥哄畾鐨?0%妗ｄ綅锛岃鐩?00%-10%鐨勫叏鑼冨洿
+        // 返回固定的 10% 档位，覆盖 100%-10% 的全范围。
         return [100, 90, 80, 70, 60, 50, 40, 30, 20, 10];
     }
 
@@ -738,7 +733,7 @@ class BestPlanLogic extends BaseLogic
             $normalized = self::normalizeBucketSolutions(self::generateRandomSolutions(200, $maxConsecutive), $year, $maxConsecutive);
         }
 
-        // 鐢熸垚鍔ㄦ€佹。浣嶈€屼笉鏄浐瀹氱殑10妗?
+        // 生成动态档位，而不是固定 10 档。
         $rates = self::generateDynamicRates($normalized);
         $totalNeeded = count($rates) * 10;
         $allowDuplicates = count($normalized) < $totalNeeded;
@@ -825,19 +820,19 @@ class BestPlanLogic extends BaseLogic
             }
 
             usort($bucket['solutions'], function ($a, $b) {
-                // 绗竴浼樺厛绾э細鍒╂鼎鐜囷紙闄嶅簭锛?
+                // 第一优先级：利润率（降序）。
                 if ($a['profit_rate'] != $b['profit_rate']) {
                     return $b['profit_rate'] <=> $a['profit_rate'];
                 }
 
-                // 绗簩浼樺厛绾э細娣蜂贡搴?澶氭牱鎬э紙闄嶅簭锛? 浼樺厛杩斿洖娣蜂贡搴﹂珮鐨勫彿鐮?
+                // 第二优先级：多样性（降序），优先返回混合度高的号码。
                 $diversityA = $a['diversity_score'] ?? 0;
                 $diversityB = $b['diversity_score'] ?? 0;
                 if ($diversityA != $diversityB) {
                     return $diversityB <=> $diversityA;
                 }
 
-                // 绗笁浼樺厛绾э細鎬诲埄娑︼紙闄嶅簭锛?
+                // 第三优先级：总利润（降序）。
                 return $b['total_profit'] <=> $a['total_profit'];
             });
 
@@ -922,7 +917,7 @@ class BestPlanLogic extends BaseLogic
                 continue;
             }
             $counts[$zodiac] = ($counts[$zodiac] ?? 0) + 1;
-            // 鍏佽鍚屼竴鐢熻倴鏈€澶?涓彿鐮侊紝鏀寔閲嶈倴闇€姹?
+            // 允许同一生肖最多 4 个号码，支持重肖需求。
             if ($counts[$zodiac] > 4) {
                 return false;
             }
@@ -1193,10 +1188,10 @@ class BestPlanLogic extends BaseLogic
     }
 
     /**
-     * 妫€鏌ユ槸鍚﹀瓨鍦ㄨ繛缁簭鍒楋紙5涓垨浠ヤ笂杩炵画鍙风爜锛?
+     * 检查是否存在连续号码序列。
      *
-     * @param array $numbers 鍙风爜鏁扮粍锛堝凡鎺掑簭锛?
-     * @return int 鏈€澶ц繛缁彿鐮佹暟
+     * @param array $numbers 号码数组
+     * @return int 最大连续号码数
      */
     private static function getMaxConsecutive(array $numbers): int
     {
@@ -1243,7 +1238,7 @@ class BestPlanLogic extends BaseLogic
             $m1_m6 = array_values($numbers);
             sort($m1_m6);
 
-            // 鎺掗櫎椤哄簭鍙风爜锛堣繛缁?涓垨浠ヤ笂锛?
+            // 排除超出连续号码限制的组合。
             $comboMaxConsecutive = self::getMaxConsecutive(array_merge($m1_m6, [(int)$m7]));
             if ($allowedMax > 0 && $comboMaxConsecutive > $allowedMax) {
                 $attempts++;
@@ -1637,14 +1632,14 @@ class BestPlanLogic extends BaseLogic
     }
 
     /**
-     * 鏍规嵁鐩爣鍒╂鼎鐜囨煡鎵惧彿鐮?
+     * 根据目标利润率查找号码
      *
-     * @param int $gid 娓告垙ID
-     * @param string $qishu 鏈熷彿
-     * @param string $plateCode 鐩樺彛浠ｇ爜锛堝A銆丅銆丆锛?
-     * @param float $targetRate 鐩爣鍒╂鼎鐜?
-     * @param float $tolerance 鍏佽璇樊
-     * @param int|null $year 骞翠唤
+     * @param int $gid 游戏ID
+     * @param string $qishu 期号
+     * @param string $plateCode 盘口代码（如 A、B、C）
+     * @param float $targetRate 目标利润率
+     * @param float $tolerance 允许误差
+     * @param int|null $year 年份
      * @return array|false
      */
     public static function findByTargetRate(
@@ -1658,15 +1653,15 @@ class BestPlanLogic extends BaseLogic
         try {
             $year = $year ?? (int)date('Y');
 
-            // 浣跨敤澧炲己鐗堢畻娉?
+            // 使用增强版算法。
             $service = new \app\common\service\EnhancedBestPlanService($gid, $qishu, $year, $plateCode);
 
             if ($service->getBetCount() === 0) {
-                self::setError('璇ユ湡鏆傛棤鎶曟敞鏁版嵁');
+                self::setError('该期暂无投注数据');
                 return false;
             }
 
-            // 浣跨敤澧炲己鐗堟柟娉曟煡鎵炬帴杩戠洰鏍囧埄娑︾巼鐨勬柟妗?
+            // 使用增强版方法查找接近目标利润率的方案。
             $result = $service->findBest7NumbersEnhanced($targetRate, $tolerance, 'balanced');
 
             return [
@@ -1685,10 +1680,10 @@ class BestPlanLogic extends BaseLogic
     }
 
     /**
-     * 鑾峰彇鍒嗘瀽鍘嗗彶鍒楄〃
+     * 获取分析历史列表
      *
-     * @param int $gid 娓告垙ID
-     * @param int $limit 杩斿洖鏉℃暟
+     * @param int $gid 游戏ID
+     * @param int $limit 返回条数
      * @return array
      */
     public static function getHistoryList(int $gid, int $limit = 10): array
@@ -1706,9 +1701,9 @@ class BestPlanLogic extends BaseLogic
     }
 
     /**
-     * 鑾峰彇鍒嗘瀽璇︽儏
+     * 获取分析详情
      *
-     * @param int $id 璁板綍ID
+     * @param int $id 记录ID
      * @return array|null
      */
     public static function getDetail(int $id): ?array
@@ -1721,15 +1716,15 @@ class BestPlanLogic extends BaseLogic
             return null;
         }
 
-        // 瑙ｆ瀽JSON瀛楁
+        // 解析 JSON 字段。
         $record['number_details'] = json_decode($record['number_details'], true);
 
-        // 纭繚鏄暟缁?
+        // 确保是数组。
         if (!is_array($record['number_details'])) {
             $record['number_details'] = [];
         }
 
-        // 鎸夊埄娑︽帓搴忥紙浠呭綋鏁扮粍闈炵┖涓斿寘鍚玴rofit瀛楁锛?
+        // 按利润排序。
         if (!empty($record['number_details'])) {
             usort($record['number_details'], function($a, $b) {
                 $profitA = $a['profit'] ?? 0;
@@ -1738,7 +1733,7 @@ class BestPlanLogic extends BaseLogic
             });
         }
 
-        // 娣诲姞椋庨櫓绛夌骇鏂囨湰
+        // 添加风险等级文本。
         foreach ($record['number_details'] as &$item) {
             $item['risk_level_text'] = BestPlanService::getRiskLevelText($item['risk_level'] ?? 0);
         }
@@ -1747,99 +1742,96 @@ class BestPlanLogic extends BaseLogic
     }
 
     /**
-     * 鑾峰彇褰撳墠鍙垎鏋愮殑鏈熷彿
+     * 获取当前可分析的期号
      *
-     * @param int $gid 娓告垙ID
-     * @param string $plateCode 鐩樺彛浠ｇ爜锛堝锛欰銆丅銆丆锛?
+     * @param int $gid 游戏ID
+     * @param string $plateCode 盘口代码（如 A、B、C）
      * @return array|null
      */
     public static function getCurrentQishu(int $gid, string $plateCode = 'am'): ?array
     {
-        trace("馃攳 [getCurrentQishu] 鏌ヨ鍙傛暟: gid=$gid, plateCode=$plateCode", 'info');
+        trace("[getCurrentQishu] 查询参数: gid=$gid, plateCode=$plateCode", 'info');
 
-        // 浼樺厛鏌ヨ鎶曟敞涓殑鏈熷彿 (status=2)
+        // 优先查询投注中的期号 (status=2)。
         $issue = Db::table('la_lottery_issue')
             ->field('issue, plate_code, open_time, close_time, draw_time, status, result')
             ->where('game_id', $gid)
-            ->where('plate_code', $plateCode)  // 鉁?娣诲姞鐩樺彛绛涢€?
-            ->where('status', 2)  // 2=鎶曟敞涓?
+            ->where('plate_code', $plateCode)
+            ->where('status', 2)  // 2=投注中
             ->order('draw_time', 'asc')
             ->find();
 
-        // 濡傛灉娌℃湁鎶曟敞涓殑鏈熷彿锛屾煡璇㈠緟寮€鐩樼殑鏈熷彿锛坰tatus=1锛?
+        // 如果没有投注中的期号，查询待开盘的期号 (status=1)。
         if (!$issue) {
             $issue = Db::table('la_lottery_issue')
                 ->field('issue, plate_code, open_time, close_time, draw_time, status, result')
                 ->where('game_id', $gid)
-                ->where('plate_code', $plateCode)  // 鉁?娣诲姞鐩樺彛绛涢€?
-                ->where('status', 1)  // 1=寰呭紑鐩?
+                ->where('plate_code', $plateCode)
+                ->where('status', 1)  // 1=待开盘
                 ->order('draw_time', 'asc')
                 ->find();
         }
 
-        // 濡傛灉杩樻病鏈夛紝鏌ヨ鏈€鏂扮殑宸插紑濂栨湡鍙凤紙status=3锛? 鐢ㄤ簬鏄剧ず寮€濂栫粨鏋?
+        // 如果还没有，查询最新的已开奖期号 (status=3)，用于展示开奖结果。
         if (!$issue) {
             $issue = Db::table('la_lottery_issue')
                 ->field('issue, plate_code, open_time, close_time, draw_time, status, result')
                 ->where('game_id', $gid)
-                ->where('plate_code', $plateCode)  // 鉁?娣诲姞鐩樺彛绛涢€?
-                ->where('status', 3)  // 3=宸插紑濂?
-                ->order('draw_time', 'desc')  // 闄嶅簭锛屽彇鏈€鏂扮殑
+                ->where('plate_code', $plateCode)
+                ->where('status', 3)  // 3=已开奖
+                ->order('draw_time', 'desc')
                 ->find();
         }
 
         if (!$issue) {
-                    trace("No solution found after expansion; using best solution.", 'warning');
+            trace("[getCurrentQishu] 未找到可用期号", 'warning');
             return null;
         }
 
-        // 璋冭瘯鏃ュ織
-        trace("馃搵 鏌ヨ鍒版湡鍙锋暟鎹? " . json_encode($issue, JSON_UNESCAPED_UNICODE), 'info');
+        trace("查询到期号数据: " . json_encode($issue, JSON_UNESCAPED_UNICODE), 'info');
 
-        // 妫€鏌esult瀛楁鐨勫疄闄呭€?
         $resultValue = $issue['result'] ?? null;
-        trace("馃攳 result瀛楁鍊? [" . var_export($resultValue, true) . "] 绫诲瀷: " . gettype($resultValue), 'info');
+        trace("result 字段值: [" . var_export($resultValue, true) . "] 类型: " . gettype($resultValue), 'info');
 
-        // 杞崲鏃堕棿鎴充负鏃ユ湡鏃堕棿鏍煎紡
-        // 鉁?濮嬬粓鍖呭惈鎵€鏈夊瓧娈碉紝閬垮厤鍓嶇undefined
+        // 始终包含所有字段，避免前端 undefined。
         $result = [
             'qishu' => $issue['issue'],
             'plate_code' => $issue['plate_code'],
             'opentime' => $issue['open_time'] ? date('Y-m-d H:i:s', $issue['open_time']) : '',
             'closetime' => $issue['close_time'] ? date('Y-m-d H:i:s', $issue['close_time']) : '',
             'kjtime' => $issue['draw_time'] ? date('Y-m-d H:i:s', $issue['draw_time']) : '',
-            'status' => (int)$issue['status'],  // 鉁?鐘舵€佸瓧娈?
-            'is_opened' => ($issue['status'] == 3 && !empty($resultValue)),  // status=3涓攔esult涓嶄负绌烘墠鏄凡寮€濂?
-            'draw_numbers' => [],  // 鉁?榛樿绌烘暟缁?
-            'draw_numbers_text' => '',  // 鉁?榛樿绌哄瓧绗︿覆
+            'status' => (int)$issue['status'],
+            'is_opened' => ($issue['status'] == 3 && !empty($resultValue)),
+            'draw_numbers' => [],
+            'draw_numbers_text' => '',
         ];
 
-        // 濡傛灉result瀛楁鏈夊€硷紝瑙ｆ瀽寮€濂栧彿鐮?
+        // 如果 result 字段有值，解析开奖号码。
         if (!empty($resultValue) && is_string($resultValue)) {
-            trace("馃幇 寮€濂栧彿鐮佸師濮嬫暟鎹? " . $resultValue, 'info');
+            trace("开奖号码原始数据: " . $resultValue, 'info');
             $result['draw_numbers'] = explode(',', $resultValue);
             $result['draw_numbers_text'] = $resultValue;
         } else {
             trace("No result value or non-string result; returning empty draw numbers.", 'warning');
         }
 
-        trace("鉁?鏈€缁堣繑鍥炴暟鎹? " . json_encode($result, JSON_UNESCAPED_UNICODE), 'info');
+        trace("最终返回数据: " . json_encode($result, JSON_UNESCAPED_UNICODE), 'info');
 
         return $result;
     }
 
     /**
-     * 鏇存柊瀹為檯寮€濂栫粨鏋?
+     * 更新实际开奖结果
      *
-     * @param int $gid 娓告垙ID
-     * @param string $qishu 鏈熷彿
-     * @param int $actualNumber 瀹為檯寮€鍑虹殑鐗圭爜
+     * @param int $gid 游戏ID
+     * @param string $qishu 期号
+     * @param int $actualNumber 实际开出的特码
      * @return bool
      */
     public static function updateActualResult(int $gid, string $qishu, int $actualNumber): bool
     {
         try {
-            // 鏌ユ壘璁板綍锛堜娇鐢ㄦ柊琛?la_best_plan_history锛?
+            // 查找记录（使用新表 la_best_plan_history）。
             $record = Db::table('la_best_plan_history')
                 ->where('gid', $gid)
                 ->where('qishu', $qishu)
@@ -1850,7 +1842,7 @@ class BestPlanLogic extends BaseLogic
                 return false;
             }
 
-            // 浠嶫SON涓В鏋愯鍙风爜鐨勯娴嬪埄娑?
+            // 从 JSON 中解析该号码的预测利润。
             $details = json_decode($record['number_details'], true);
             $actualProfit = 0;
 
@@ -1861,11 +1853,11 @@ class BestPlanLogic extends BaseLogic
                 }
             }
 
-            // 鏇存柊璁板綍
+            // 更新记录。
             Db::table('la_best_plan_history')
                 ->where('id', $record['id'])
                 ->update([
-                    'status' => 1,  // 宸插紑濂?
+                    'status' => 1,  // 已开奖
                     'actual_number' => $actualNumber,
                     'actual_profit' => $actualProfit,
                 ]);
@@ -1879,13 +1871,13 @@ class BestPlanLogic extends BaseLogic
     }
 
     /**
-     * 鑾峰彇鎶曟敞姹囨€荤粺璁★紙鎸夌帺娉曞垎绫伙級
+     * 获取投注汇总统计（按玩法分类）
      *
-     * @param int $gid 娓告垙ID
-     * @param string $qishu 鏈熷彿
+     * @param int $gid 游戏ID
+     * @param string $qishu 期号
      * @return array
      */
-        public static function getBetSummaryByPlay(int $gid, string $qishu): array
+    public static function getBetSummaryByPlay(int $gid, string $qishu): array
     {
         $summary = Db::table('la_betting_record')
             ->alias('br')
@@ -1903,7 +1895,7 @@ class BestPlanLogic extends BaseLogic
     }
 
     /**
-     * ??????????????
+     * 获取号码投注分布（特码/正码/平码）
      */
     public static function getNumberBetDistribution(int $gid, string $qishu): array
     {
@@ -1915,7 +1907,7 @@ class BestPlanLogic extends BaseLogic
             ->where('br.issue', $qishu)
             ->where('br.status', 0)
             ->where('br.status', '<>', 3)
-            ->whereRaw("(pm.name LIKE '%??%' OR pm.name LIKE '%??%')")
+            ->whereRaw("(pm.name LIKE '%特码%' OR pm.name LIKE '%特碼%' OR pm.name LIKE '%正码%' OR pm.name LIKE '%正碼%' OR pm.name LIKE '%平码%' OR pm.name LIKE '%平碼%')")
             ->group('br.bet_content')
             ->order('total_amount', 'desc')
             ->select()
@@ -1925,7 +1917,7 @@ class BestPlanLogic extends BaseLogic
     }
 
     /**
-     * ????????????
+     * 执行开奖（使用最佳方案）
      */
     public static function executeDrawing(
         int $gid,
@@ -1954,13 +1946,13 @@ class BestPlanLogic extends BaseLogic
 
             if (!empty($issue['result'])) {
                 Db::rollback();
-                self::setError('鏈湡宸插紑濂栵紝涓嶈兘閲嶅鎻愪氦璁″垝');
+                self::setError('本期已开奖，不能重复提交计划');
                 return false;
             }
 
             if (!empty($issue['is_settled'])) {
                 Db::rollback();
-                self::setError('鏈湡宸茬粨绠楋紝涓嶈兘閲嶅鎻愪氦璁″垝');
+                self::setError('本期已结算，不能重复提交计划');
                 return false;
             }
 
@@ -2078,10 +2070,18 @@ class BestPlanLogic extends BaseLogic
         $betType = $order['bet_type'] ?? 'win';
 
         $allNumbers = array_merge($m1_m6, [$m7]);
-        $numberMap = ZodiacYearService::getNumberMapByYear($year);
-        $specialZodiac = $numberMap[$m7] ?? '';
 
-        if ($methodCode === 'tema' || self::containsKeyword($methodName, ['??', '??'])) {
+        $comboRule = self::getNumberComboRule($methodName, $methodCode);
+        if ($comboRule !== null) {
+            $betNumbers = self::parseNumberSelections($betContent);
+            if (count($betNumbers) !== $comboRule['select_count']) {
+                return 'lose';
+            }
+            $hitCount = count(array_intersect($betNumbers, $m1_m6));
+            return self::resolveResult($hitCount >= $comboRule['hit_count'], $betType);
+        }
+
+        if ($methodCode === 'tema' || self::containsKeyword($methodName, ['特码', '特碼'])) {
             $betNumbers = array_map('intval', $betItems);
             $hit = in_array($m7, $betNumbers, true);
             return self::resolveResult($hit, $betType);
@@ -2089,14 +2089,14 @@ class BestPlanLogic extends BaseLogic
 
         if (
             $methodCode === 'zhengma'
-            || self::containsKeyword($methodName, ['??', '??', '??', '??'])
+            || self::containsKeyword($methodName, ['正码', '正碼', '平码', '平碼'])
         ) {
             $betNumbers = array_map('intval', $betItems);
             $hit = !empty(array_intersect($betNumbers, $allNumbers));
             return self::resolveResult($hit, $betType);
         }
 
-        if ($methodCode === 'texiao' || self::containsKeyword($methodName, ['??'])) {
+        if ($methodCode === 'texiao' || self::containsKeyword($methodName, ['特肖'])) {
             if ($m7 == 49) {
                 return 'draw';
             }
@@ -2105,7 +2105,7 @@ class BestPlanLogic extends BaseLogic
                 return 'lose';
             }
 
-            // 鏀寔璺ㄥ勾浠界敓鑲栵細7th鍙风爜鍙互鍖归厤浠绘剰骞翠唤鐨勫悓鐢熻倴
+            // 支持跨年份生肖：第 7 个号码可以匹配任意年份的同生肖。
             $allPossibleZodiacs = self::getAllPossibleZodiacs($m7);
             $hit = !empty(array_intersect($betZodiacs, $allPossibleZodiacs));
             return self::resolveResult($hit, $betType);
@@ -2113,7 +2113,7 @@ class BestPlanLogic extends BaseLogic
 
         if (
             in_array($methodCode, ['sanxiao', 'sixiao', 'wuxiao', 'liuxiao'], true)
-            || self::containsKeyword($methodName, ['??', '??', '??', '??'])
+            || self::containsKeyword($methodName, ['三肖', '四肖', '五肖', '六肖'])
         ) {
             if ($m7 == 49) {
                 return 'draw';
@@ -2131,20 +2131,13 @@ class BestPlanLogic extends BaseLogic
     }
 
     /**
-     * 鑾峰彇鍙风爜鍦ㄦ墍鏈夊勾浠戒腑鍙兘鐨勭敓鑲?
+     * 获取号码在所有年份中可能对应的生肖。
      *
-     * 渚嬪锛氬彿鐮?鍦ㄤ笉鍚屽勾浠戒腑鍙兘鏄細
-     * - 1981骞寸殑楦?
-     * - 1993骞寸殑楦?
-     * - 2005骞寸殑楦?
-     * - 2017骞寸殑楦?
-     * - 2029骞寸殑楦?
+     * 这允许特肖投注在跨年份范围内生效，只要第 7 个号码的生肖在任意年份中
+     * 匹配投注的生肖即可。
      *
-     * 杩欏厑璁哥壒鑲栨姇娉ㄥ湪璺ㄥ勾浠借寖鍥村唴鐢熸晥锛?
-     * 鍙7th鍙风爜鐨勭敓鑲栧湪浠讳綍骞翠唤涓尮閰嶆姇娉ㄧ殑鐢熻倴鍗冲彲
-     *
-     * @param int $number 鍙风爜锛?-49锛?
-     * @return array 璇ュ彿鐮佸湪鎵€鏈夊勾浠戒腑瀵瑰簲鐨勭敓鑲栧垪琛紙鍘婚噸锛?
+     * @param int $number 号码（1-49）
+     * @return array 去重后的生肖列表
      */
     private static function getAllPossibleZodiacs(int $number): array
     {
@@ -2154,15 +2147,14 @@ class BestPlanLogic extends BaseLogic
 
         static $cache = [];
 
-        // 浼樺厛妫€鏌ョ紦瀛?
+        // 优先检查缓存。
         if (isset($cache[$number])) {
             return $cache[$number];
         }
 
         $zodiacs = [];
 
-        // 鎵弿涓€涓畬鏁寸殑鐢熻倴杞浆鍛ㄦ湡锛?2骞达級
-        // 鍦ㄨ繖涓懆鏈熷唴鍙互鑾峰緱璇ュ彿鐮佺殑鎵€鏈夊彲鑳界敓鑲?
+        // 扫描一个完整的生肖轮转周期（12年）。
         $baseYear = 2000;
         for ($offset = 0; $offset < 12; $offset++) {
             $year = $baseYear + $offset;
@@ -2179,10 +2171,45 @@ class BestPlanLogic extends BaseLogic
             }
         }
 
-        // 缂撳瓨缁撴灉
+        // 缓存结果。
         $cache[$number] = $zodiacs;
 
         return $zodiacs;
+    }
+
+    private static function getNumberComboRule(string $methodName, string $methodCode): ?array
+    {
+        $rules = [
+            'erzhonger' => ['select_count' => 2, 'hit_count' => 2],
+            'sanzhonger' => ['select_count' => 3, 'hit_count' => 2],
+            'sanzhongsan' => ['select_count' => 3, 'hit_count' => 3],
+        ];
+
+        if (isset($rules[$methodCode])) {
+            return $rules[$methodCode];
+        }
+
+        if (self::containsKeyword($methodName, ['二中二'])) {
+            return $rules['erzhonger'];
+        }
+        if (self::containsKeyword($methodName, ['三中二'])) {
+            return $rules['sanzhonger'];
+        }
+        if (self::containsKeyword($methodName, ['三中三'])) {
+            return $rules['sanzhongsan'];
+        }
+
+        return null;
+    }
+
+    private static function parseNumberSelections(string $content): array
+    {
+        preg_match_all('/\d{1,2}/', $content, $matches);
+        $numbers = array_map('intval', $matches[0] ?? []);
+        $numbers = array_filter($numbers, function ($number) {
+            return $number >= 1 && $number <= 49;
+        });
+        return array_values(array_unique($numbers));
     }
 
     private static function containsKeyword(string $haystack, array $keywords): bool
@@ -2211,25 +2238,25 @@ class BestPlanLogic extends BaseLogic
     }
 
     /**
-     * 鎵嬪姩鍒涘缓鏂版湡鍙?
+     * 手动创建新期号
      *
-     * @param int $gid 娓告垙ID
-     * @param string $plateCode 鐩樺彛浠ｇ爜
-     * @return array|false 杩斿洖鏂版湡鍙蜂俊鎭垨false
+     * @param int $gid 游戏ID
+     * @param string $plateCode 盘口代码
+     * @return array|false 返回新期号信息或 false
      */
     public static function manualCreateNewIssue(int $gid, string $plateCode = 'am')
     {
         try {
-            // 璋冪敤LotteryIssueService鍒涘缓鏂版湡鍙?
+            // 调用 LotteryIssueService 创建新期号。
             $newIssue = \app\common\service\LotteryIssueService::getOrCreateCurrentIssue($gid, $plateCode);
 
             if (!$newIssue) {
                 self::$error = 'Failed to create new issue.';
-                trace("鉂?鎵嬪姩鍒涘缓鏂版湡鍙峰け璐? gid=$gid, plateCode=$plateCode", 'error');
+                trace("手动创建新期号失败: gid=$gid, plateCode=$plateCode", 'error');
                 return false;
             }
 
-            trace("鉁?鎵嬪姩鍒涘缓鏂版湡鍙锋垚鍔? " . json_encode($newIssue, JSON_UNESCAPED_UNICODE), 'info');
+            trace("手动创建新期号成功: " . json_encode($newIssue, JSON_UNESCAPED_UNICODE), 'info');
 
             return [
                 'issue' => $newIssue['issue'],
@@ -2240,17 +2267,17 @@ class BestPlanLogic extends BaseLogic
                 'status_text' => self::getIssueStatusText($newIssue['status'] ?? 0),
             ];
         } catch (\Exception $e) {
-            self::$error = '鍒涘缓澶辫触: ' . $e->getMessage();
-            trace("鉂?鎵嬪姩鍒涘缓鏂版湡鍙峰紓甯? " . $e->getMessage(), 'error');
+            self::$error = '创建失败: ' . $e->getMessage();
+            trace("手动创建新期号异常: " . $e->getMessage(), 'error');
             return false;
         }
     }
 
     /**
-     * 鑾峰彇鏈熷彿鐘舵€佹枃鏈?
+     * 获取期号状态文本
      *
-     * @param int $status 鐘舵€佸€?
-     * @return string 鐘舵€佹枃鏈?
+     * @param int $status 状态值
+     * @return string 状态文本
      */
     private static function getIssueStatusText(int $status): string
     {
