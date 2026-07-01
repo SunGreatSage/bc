@@ -24,6 +24,7 @@ class PlateValidate extends BaseValidate
         'close_advance' => 'integer|egt:0',
         'status' => 'in:0,1',
         'sort' => 'integer|egt:0',
+        'sync_pending_issues' => 'in:0,1',
     ];
 
     protected $message = [
@@ -41,6 +42,7 @@ class PlateValidate extends BaseValidate
         'status.in' => '状态值错误',
         'sort.integer' => '排序值格式错误',
         'sort.egt' => '排序值不能为负数',
+        'sync_pending_issues.in' => '同步未开奖期号参数错误',
     ];
 
     /**

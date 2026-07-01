@@ -475,6 +475,29 @@ class BestPlanController extends BaseAdminController
 
 
     /**
+     * @notes 预览手动创建的新期号
+     * @return Json
+     */
+    public function previewNewIssue(): Json
+    {
+        $gid = (int)$this->request->post('gid', 200);
+        $plateCode = $this->request->post('plate_code', 'A');
+        $strategy = $this->request->post('strategy', 'plate_config');
+
+        try {
+            $result = BestPlanLogic::previewNewIssue($gid, $plateCode, $strategy);
+
+            if ($result === false) {
+                return $this->fail(BestPlanLogic::getError());
+            }
+
+            return $this->success('预览成功', $result);
+        } catch (\Exception $e) {
+            return $this->fail('预览失败: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * @notes 手动创建新期号
      * @return Json
      * @author Claude
@@ -502,9 +525,10 @@ class BestPlanController extends BaseAdminController
     {
         $gid = (int)$this->request->post('gid', 200);
         $plateCode = $this->request->post('plate_code', 'A');
+        $strategy = $this->request->post('strategy', 'plate_config');
 
         try {
-            $result = BestPlanLogic::createNewIssue($gid, $plateCode);
+            $result = BestPlanLogic::createNewIssue($gid, $plateCode, $strategy);
 
             if ($result === false) {
                 return $this->fail(BestPlanLogic::getError());

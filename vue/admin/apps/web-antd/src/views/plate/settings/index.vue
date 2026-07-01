@@ -127,6 +127,7 @@ const formData = reactive({
   status: 1,
   sort: 0,
   remark: '',
+  sync_pending_issues: false,
 });
 
 // 加载列表数据
@@ -185,13 +186,14 @@ const handleAdd = () => {
     status: 1,
     sort: 0,
     remark: '',
+    sync_pending_issues: false,
   });
   showDialog.value = true;
 };
 
 // 编辑
-const handleEdit = (item: PlateItem) => {
-  editingItem.value = item;
+const handleEdit = (item: PlateItem | Record<string, any>) => {
+  editingItem.value = item as PlateItem;
   Object.assign(formData, {
     code: item.code,
     name: item.name,
@@ -203,6 +205,7 @@ const handleEdit = (item: PlateItem) => {
     status: item.status,
     sort: item.sort,
     remark: item.remark || '',
+    sync_pending_issues: false,
   });
   showDialog.value = true;
 };
@@ -215,11 +218,16 @@ const handleSubmit = async () => {
 
     if (editingItem.value) {
       // 编辑
-      await editPlate({
+      const result = await editPlate({
         id: editingItem.value.id,
         ...formData,
+        sync_pending_issues: formData.sync_pending_issues ? 1 : 0,
       });
-      message.success('编辑成功');
+      if (formData.sync_pending_issues) {
+        message.success(`编辑成功，已同步 ${result.updated_issue_count || 0} 个未开奖期号`);
+      } else {
+        message.success('编辑成功');
+      }
     } else {
       // 新增
       await addPlate(formData);
@@ -238,7 +246,7 @@ const handleSubmit = async () => {
 };
 
 // 删除
-const handleDelete = async (item: PlateItem) => {
+const handleDelete = async (item: PlateItem | Record<string, any>) => {
   try {
     await deletePlate(item.id);
     message.success('删除成功');
@@ -249,7 +257,7 @@ const handleDelete = async (item: PlateItem) => {
 };
 
 // 状态切换
-const handleStatusChange = async (checked: boolean, item: PlateItem) => {
+const handleStatusChange = async (checked: boolean | string | number, item: PlateItem | Record<string, any>) => {
   const newStatus = checked ? 1 : 0;
 
   try {
@@ -439,6 +447,23 @@ onMounted(() => {
           </Col>
           <Col :span="24">
             <FormItem
+              v-if="editingItem"
+              label="同步期号"
+              :label-col="{ span: 3 }"
+              :wrapper-col="{ span: 20 }"
+            >
+              <Switch
+                v-model:checked="formData.sync_pending_issues"
+                checked-children="同步"
+                un-checked-children="不同步"
+              />
+              <span class="sync-hint">
+                同步到未开奖期号，不影响已开奖或已结算记录
+              </span>
+            </FormItem>
+          </Col>
+          <Col :span="24">
+            <FormItem
               label="备注"
               :label-col="{ span: 3 }"
               :wrapper-col="{ span: 20 }"
@@ -475,5 +500,10 @@ onMounted(() => {
 
 :deep(.ant-card-body) {
   padding: 24px;
+}
+
+.sync-hint {
+  margin-left: 12px;
+  color: #8c8c8c;
 }
 </style>

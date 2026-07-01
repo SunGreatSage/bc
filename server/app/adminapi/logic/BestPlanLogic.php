@@ -252,53 +252,117 @@ class BestPlanLogic extends BaseLogic
 
 
     /**
+     * @notes 预览手动创建的新期号
+     * @param int $gid 游戏ID
+     * @param string $plateCode 盘口代码
+     * @param string $strategy 创建策略
+     * @return array|false
+     */
+    public static function previewNewIssue(int $gid, string $plateCode = 'A', string $strategy = 'plate_config')
+    {
+        try {
+            $currentIssue = self::getLatestIssue($gid, $plateCode);
+            if (!self::canCreateNextIssue($currentIssue)) {
+                self::setError('无法创建新期数，必须当前期号开奖完成后才可以启动新盘口');
+                return false;
+            }
+
+            $newIssue = \app\common\service\LotteryIssueService::previewNextIssue($gid, $plateCode, $strategy);
+
+            if (!$newIssue) {
+                self::setError('预览新期号失败，请稍后重试');
+                return false;
+            }
+
+            return self::formatNewIssueResult($newIssue, $currentIssue);
+        } catch (\Exception $e) {
+            self::setError('预览失败: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * @notes 手动创建新期号
      * @param int $gid 游戏ID
      * @param string $plateCode 盘口代码
+     * @param string $strategy 创建策略
      * @return array|false
      * @author Claude
      * @date 2025/12/12
      */
-    public static function createNewIssue(int $gid, string $plateCode = 'A')
+    public static function createNewIssue(int $gid, string $plateCode = 'A', string $strategy = 'plate_config')
     {
         try {
-            // ✅ 检查当前期号是否已开奖
-            $currentIssue = Db::table('la_lottery_issue')
-                ->field('issue, status, result')
-                ->where('game_id', $gid)
-                ->where('plate_code', $plateCode)
-                ->order('id', 'desc')
-                ->find();
-
-            // 如果存在期号,检查是否已开奖
-            if ($currentIssue) {
-                // 如果status不是3(已开奖),或者result为空,则不允许创建新期号
-                if ($currentIssue['status'] != 3 || empty($currentIssue['result'])) {
-                    self::setError('无法创建新期数,必须开奖后才可以启动新盘口');
-                    return false;
-                }
+            $currentIssue = self::getLatestIssue($gid, $plateCode);
+            if (!self::canCreateNextIssue($currentIssue)) {
+                self::setError('无法创建新期数，必须当前期号开奖完成后才可以启动新盘口');
+                return false;
             }
 
             // 调用LotteryIssueService创建新期号
-            $newIssue = \app\common\service\LotteryIssueService::getOrCreateCurrentIssue($gid, $plateCode);
+            $newIssue = \app\common\service\LotteryIssueService::getOrCreateCurrentIssue($gid, $plateCode, $strategy);
 
             if (!$newIssue) {
                 self::setError('创建新期号失败,请稍后重试');
                 return false;
             }
 
-            return [
-                'issue' => $newIssue['issue'],
-                'open_time' => date('Y-m-d H:i:s', $newIssue['open_time']),
-                'close_time' => date('Y-m-d H:i:s', $newIssue['close_time']),
-                'draw_time' => date('Y-m-d H:i:s', $newIssue['draw_time']),
-                'status' => $newIssue['status'] ?? 0,
-                'status_text' => self::getIssueStatusText($newIssue['status'] ?? 0),
-            ];
+            return self::formatNewIssueResult($newIssue, $currentIssue);
         } catch (\Exception $e) {
             self::setError('创建失败: ' . $e->getMessage());
             return false;
         }
+    }
+
+    private static function getLatestIssue(int $gid, string $plateCode): ?array
+    {
+        $issue = Db::table('la_lottery_issue')
+            ->field('issue, status, result, open_time, close_time, draw_time')
+            ->where('game_id', $gid)
+            ->where('plate_code', $plateCode)
+            ->order('id', 'desc')
+            ->find();
+
+        return $issue ?: null;
+    }
+
+    private static function canCreateNextIssue(?array $currentIssue): bool
+    {
+        if (!$currentIssue) {
+            return true;
+        }
+
+        return (int)$currentIssue['status'] === 3 && !empty($currentIssue['result']);
+    }
+
+    private static function formatNewIssueResult(array $newIssue, ?array $currentIssue = null): array
+    {
+        $status = (int)($newIssue['status'] ?? 0);
+
+        $result = [
+            'issue' => $newIssue['issue'],
+            'open_time' => date('Y-m-d H:i:s', (int)$newIssue['open_time']),
+            'close_time' => date('Y-m-d H:i:s', (int)$newIssue['close_time']),
+            'draw_time' => date('Y-m-d H:i:s', (int)$newIssue['draw_time']),
+            'status' => $status,
+            'status_text' => self::getIssueStatusText($status),
+            'strategy' => $newIssue['strategy'] ?? 'plate_config',
+            'strategy_text' => self::getCreationStrategyText($newIssue['strategy'] ?? 'plate_config'),
+            'source_text' => $newIssue['source_text'] ?? '',
+        ];
+
+        if ($currentIssue) {
+            $result['current_issue'] = [
+                'issue' => $currentIssue['issue'],
+                'open_time' => date('Y-m-d H:i:s', (int)$currentIssue['open_time']),
+                'close_time' => date('Y-m-d H:i:s', (int)$currentIssue['close_time']),
+                'draw_time' => date('Y-m-d H:i:s', (int)$currentIssue['draw_time']),
+                'status' => (int)$currentIssue['status'],
+                'status_text' => self::getIssueStatusText((int)$currentIssue['status']),
+            ];
+        }
+
+        return $result;
     }
 
 
@@ -313,13 +377,24 @@ class BestPlanLogic extends BaseLogic
     {
         $statusMap = [
             0 => '待开盘',
-            1 => '待开盘',
-            2 => '投注中',
+            1 => '投注中',
+            2 => '已封盘',
             3 => '已开奖',
             4 => '已结算',
             5 => '已取消',
         ];
 
         return $statusMap[$status] ?? '未知';
+    }
+
+    private static function getCreationStrategyText(string $strategy): string
+    {
+        $strategyMap = [
+            'plate_config' => '按盘口配置时间',
+            'immediate' => '立即开盘',
+            'continuous' => '按上一期连续创建',
+        ];
+
+        return $strategyMap[$strategy] ?? $strategyMap['plate_config'];
     }
 }

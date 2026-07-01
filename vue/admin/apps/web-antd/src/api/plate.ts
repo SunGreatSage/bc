@@ -55,8 +55,12 @@ export async function editPlate(data: {
   status?: number;
   sort?: number;
   remark?: string;
+  sync_pending_issues?: boolean | number;
 }) {
-  return requestClient.post('/plate.plate/edit', data);
+  return requestClient.post<{
+    sync_pending_issues: boolean;
+    updated_issue_count: number;
+  }>('/plate.plate/edit', data);
 }
 
 /**

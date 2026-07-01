@@ -102,6 +102,30 @@ export namespace BestPlanApi {
     matched_count: number;
     matched_numbers: NumberDetail[];
   }
+
+  /** 新期号创建策略 */
+  export type CreateIssueStrategy = 'plate_config' | 'immediate' | 'continuous';
+
+  /** 新期号预览/创建结果 */
+  export interface NewIssueResult {
+    issue: string;
+    open_time: string;
+    close_time: string;
+    draw_time: string;
+    status: number;
+    status_text: string;
+    strategy: CreateIssueStrategy;
+    strategy_text: string;
+    source_text?: string;
+    current_issue?: {
+      issue: string;
+      open_time: string;
+      close_time: string;
+      draw_time: string;
+      status: number;
+      status_text: string;
+    };
+  }
 }
 
 /**
@@ -270,24 +294,39 @@ export async function executeDrawing(data: {
 }
 
 /**
+ * 预览手动创建的新期号
+ */
+export async function previewNewIssue(data: {
+  gid?: number;
+  plate_code?: string;
+  strategy?: BestPlanApi.CreateIssueStrategy;
+}) {
+  const formData = new URLSearchParams();
+  if (data.gid) formData.append('gid', String(data.gid));
+  if (data.plate_code) formData.append('plate_code', data.plate_code);
+  if (data.strategy) formData.append('strategy', data.strategy);
+
+  return requestClient.post<BestPlanApi.NewIssueResult>('/best_plan/previewNewIssue', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+}
+
+/**
  * 手动创建新期号
  */
 export async function createNewIssue(data: {
   gid?: number;
   plate_code?: string;
+  strategy?: BestPlanApi.CreateIssueStrategy;
 }) {
   const formData = new URLSearchParams();
   if (data.gid) formData.append('gid', String(data.gid));
   if (data.plate_code) formData.append('plate_code', data.plate_code);
+  if (data.strategy) formData.append('strategy', data.strategy);
 
-  return requestClient.post<{
-    issue: string;
-    open_time: string;
-    close_time: string;
-    draw_time: string;
-    status: number;
-    status_text: string;
-  }>('/best_plan/createNewIssue', formData, {
+  return requestClient.post<BestPlanApi.NewIssueResult>('/best_plan/createNewIssue', formData, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },

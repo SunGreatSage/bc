@@ -55,8 +55,8 @@ class PlateController extends BaseAdminController
     {
         $params = (new PlateValidate())->post()->goCheck('edit');
         $result = PlateLogic::edit($params);
-        if (true === $result) {
-            return $this->success('编辑成功', [], 1, 1);
+        if (false !== $result) {
+            return $this->success('编辑成功', $result, 1, 1);
         }
         return $this->fail(PlateLogic::getError());
     }

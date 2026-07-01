@@ -5,6 +5,7 @@ namespace app\adminapi\logic\plate;
 
 use app\common\logic\BaseLogic;
 use app\common\model\plate\Plate;
+use think\facade\Db;
 
 /**
  * 盘口管理逻辑
@@ -104,9 +105,9 @@ class PlateLogic extends BaseLogic
     /**
      * 编辑盘口
      * @param array $params
-     * @return bool
+     * @return array|false
      */
-    public static function edit(array $params): bool
+    public static function edit(array $params)
     {
         try {
             $plate = Plate::findOrEmpty($params['id']);
@@ -137,11 +138,85 @@ class PlateLogic extends BaseLogic
                 'remark' => $params['remark'] ?? $plate->remark,
             ]);
 
-            return true;
+            $syncCount = 0;
+            if (!empty($params['sync_pending_issues'])) {
+                $syncCount = self::syncPendingIssues(
+                    (int)$plate->game_id,
+                    (string)$plate->code,
+                    (string)$plate->open_time,
+                    (string)$plate->close_time,
+                    (string)$plate->draw_time
+                );
+            }
+
+            return [
+                'sync_pending_issues' => !empty($params['sync_pending_issues']),
+                'updated_issue_count' => $syncCount,
+            ];
         } catch (\Exception $e) {
             self::setError($e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * 同步盘口时间到未开奖、未结算的期号快照
+     */
+    private static function syncPendingIssues(int $gameId, string $plateCode, string $openTime, string $closeTime, string $drawTime): int
+    {
+        $issues = Db::table('la_lottery_issue')
+            ->field('id, issue')
+            ->where('game_id', $gameId)
+            ->where('plate_code', $plateCode)
+            ->whereIn('status', [0, 1, 2])
+            ->whereRaw("(result IS NULL OR result = '')")
+            ->whereRaw("(is_settled IS NULL OR is_settled = 0)")
+            ->select()
+            ->toArray();
+
+        $updatedCount = 0;
+        $now = time();
+
+        foreach ($issues as $issue) {
+            $issueDate = substr((string)$issue['issue'], 0, 8);
+            if (!preg_match('/^\d{8}$/', $issueDate)) {
+                continue;
+            }
+
+            [$issueOpenTime, $issueCloseTime, $issueDrawTime] = self::buildIssueTimes($issueDate, $openTime, $closeTime, $drawTime);
+
+            Db::table('la_lottery_issue')
+                ->where('id', $issue['id'])
+                ->update([
+                    'open_time' => $issueOpenTime,
+                    'close_time' => $issueCloseTime,
+                    'draw_time' => $issueDrawTime,
+                    'updated_at' => $now,
+                ]);
+
+            $updatedCount++;
+        }
+
+        return $updatedCount;
+    }
+
+    private static function buildIssueTimes(string $issueDate, string $openTime, string $closeTime, string $drawTime): array
+    {
+        $dateObj = \DateTime::createFromFormat('Ymd', $issueDate);
+        $date = $dateObj ? $dateObj->format('Y-m-d') : date('Y-m-d');
+
+        $issueOpenTime = strtotime("$date {$openTime}:00");
+        $issueCloseTime = strtotime("$date {$closeTime}:00");
+        $issueDrawTime = strtotime("$date {$drawTime}:00");
+
+        if ($issueCloseTime <= $issueOpenTime) {
+            $issueCloseTime += 86400;
+        }
+        if ($issueDrawTime <= $issueOpenTime) {
+            $issueDrawTime += 86400;
+        }
+
+        return [$issueOpenTime, $issueCloseTime, $issueDrawTime];
     }
 
     /**

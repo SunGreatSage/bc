@@ -12,6 +12,7 @@ import {
   findByTargetRate,
   executeDrawing,
   createNewIssue,
+  previewNewIssue,
   type BestPlanApi,
 } from '#/api/best-plan';
 
@@ -25,6 +26,12 @@ const tolerance = ref<number>(10);  // ✅ 默认误差范围改为10%
 const autoRefresh = ref(false);
 const selectedPlate = ref<string>('A'); // 默认选择A盘
 const plateOptions = ref<Array<{ label: string; value: string }>>([]); // 动态盘口选项
+const createIssueStrategy = ref<BestPlanApi.CreateIssueStrategy>('plate_config');
+const createIssueStrategyOptions = [
+  { label: '按盘口配置时间', value: 'plate_config' },
+  { label: '立即开盘', value: 'immediate' },
+  { label: '连续创建', value: 'continuous' },
+];
 let refreshTimer: NodeJS.Timeout | null = null;
 
 // ⏱️ 倒计时相关
@@ -582,44 +589,38 @@ async function handleSelectAndDraw(record: any) {
  * 手动创建新期号
  */
 async function handleCreateNewIssue() {
-  let confirmMessage = '';
+  let preview: BestPlanApi.NewIssueResult;
 
-  // 如果没有期号信息，说明是第一次创建
-  if (!qishuInfo.value) {
-    confirmMessage = `🆕 首次创建期号\n\n` +
-      `选择盘口：${selectedPlate.value}\n\n` +
-      `系统将使用盘口配置的默认时间创建第一个期号\n` +
-      `开盘时间：06:00\n` +
-      `封盘时间：09:30\n` +
-      `开奖时间：09:50\n\n` +
-      `是否确认创建？`;
-  } else {
-    const currentTime = new Date();
-    const currentHour = currentTime.getHours();
-    const currentMinute = currentTime.getMinutes();
-
-    // 检查今天是否已经开过奖(开奖时间是09:50)
-    const hasDrawnToday = qishuInfo.value.is_opened && currentHour >= 9 && currentMinute >= 50;
-
-    if (hasDrawnToday) {
-      confirmMessage = `⚠️ 今日已开过奖！\n\n` +
-        `当前期号：${qishuInfo.value.qishu}\n\n` +
-        `系统将在上一期开奖时间 + 30分钟作为新期开盘时间\n` +
-        `封盘和开奖时间也将 + 30分钟\n\n` +
-        `是否确认创建新期号？`;
-    } else {
-      confirmMessage = `📋 确认开设新期号\n\n` +
-        `当前期号：${qishuInfo.value.qishu}\n` +
-        `选择盘口：${selectedPlate.value}\n\n` +
-        `开盘时间：${qishuInfo.value.opentime}\n` +
-        `封盘时间：${qishuInfo.value.closetime}\n` +
-        `开奖时间：${qishuInfo.value.kjtime}\n\n` +
-        `确认信息是否正确？`;
-    }
+  loading.value = true;
+  try {
+    preview = await previewNewIssue({
+      gid: 200,
+      plate_code: selectedPlate.value,
+      strategy: createIssueStrategy.value,
+    });
+  } catch (error: any) {
+    message.error(error?.message || '预览新期号失败');
+    loading.value = false;
+    return;
+  } finally {
+    loading.value = false;
   }
 
+  const currentIssue = preview.current_issue;
+  const confirmMessage = `确认创建新期号\n\n` +
+    `选择盘口：${selectedPlate.value}\n` +
+    `创建方式：${preview.strategy_text}\n` +
+    `规则说明：${preview.source_text || '按当前选择的创建方式生成'}\n\n` +
+    `当前期号：${currentIssue?.issue || '暂无'}${currentIssue ? `（${currentIssue.status_text}）` : ''}\n` +
+    `新期号：${preview.issue}\n\n` +
+    `新开盘时间：${preview.open_time}\n` +
+    `新封盘时间：${preview.close_time}\n` +
+    `新开奖时间：${preview.draw_time}\n` +
+    `新状态：${preview.status_text}\n\n` +
+    `确认后将按以上时间写入数据库。`;
+
   Modal.confirm({
-    title: '开设新盘口',
+    title: '创建新期号',
     content: confirmMessage,
     okText: '确定',
     cancelText: '取消',
@@ -629,6 +630,7 @@ async function handleCreateNewIssue() {
         const result = await createNewIssue({
           gid: 200,
           plate_code: selectedPlate.value,
+          strategy: createIssueStrategy.value,
         });
 
         message.success(
@@ -637,7 +639,8 @@ async function handleCreateNewIssue() {
           `开盘时间：${result.open_time}\n` +
           `封盘时间：${result.close_time}\n` +
           `开奖时间：${result.draw_time}\n` +
-          `状态：${result.status_text}`,
+          `状态：${result.status_text}\n` +
+          `创建方式：${result.strategy_text}`,
           5
         );
 
@@ -726,8 +729,14 @@ onBeforeUnmount(() => {
         <Space>
           <span>选择盘口：</span>
           <Select v-model:value="selectedPlate" style="width: 120px" :options="plateOptions" />
+          <span>创建方式：</span>
+          <Select
+            v-model:value="createIssueStrategy"
+            style="width: 170px"
+            :options="createIssueStrategyOptions"
+          />
           <Button type="dashed" :loading="loading" @click="handleCreateNewIssue">
-            🆕 开设新盘口
+            🆕 创建新期号
           </Button>
         </Space>
       </div>
