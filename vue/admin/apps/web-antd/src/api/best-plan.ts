@@ -103,6 +103,49 @@ export namespace BestPlanApi {
     matched_numbers: NumberDetail[];
   }
 
+  /** 历史下单记录 */
+  export interface OrderHistoryRecord {
+    id: number;
+    sn: string;
+    user_id: number;
+    username: string;
+    nickname: string;
+    mobile: string;
+    is_agent: number;
+    user_type: 'user' | 'agent';
+    user_type_text: string;
+    game_id: number;
+    plate_code: string;
+    issue: string;
+    method_id: number;
+    method_name: string;
+    bet_type: string;
+    bet_content: string;
+    bet_amount: string;
+    bet_multiple: number;
+    total_amount: string;
+    odds: string;
+    status: number;
+    status_text: string;
+    prize_amount: string;
+    is_settled: number;
+    created_at: number;
+    created_time: string;
+  }
+
+  /** 历史下单列表 */
+  export interface OrderHistoryResult {
+    lists: OrderHistoryRecord[];
+    count: number;
+    page_no: number;
+    page_size: number;
+    summary: {
+      order_count: number;
+      total_amount: string;
+      total_prize_amount: string;
+    };
+  }
+
   /** 新期号创建策略 */
   export type CreateIssueStrategy = 'plate_config' | 'immediate' | 'continuous';
 
@@ -234,6 +277,23 @@ export async function getHistoryList(params: { gid?: number; limit?: number }) {
 export async function getDetail(id: number) {
   return requestClient.get<BestPlanApi.DetailRecord>('/best_plan/getDetail', {
     params: { id },
+  });
+}
+
+/**
+ * 获取历史下单列表
+ */
+export async function getOrderHistory(params: {
+  gid?: number;
+  page?: number;
+  limit?: number;
+  username?: string;
+  user_type?: 'user' | 'agent' | '';
+  plate_code?: string;
+  issue?: string;
+}) {
+  return requestClient.get<BestPlanApi.OrderHistoryResult>('/best_plan/getOrderHistory', {
+    params,
   });
 }
 

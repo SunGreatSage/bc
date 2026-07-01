@@ -309,6 +309,19 @@ class BestPlanController extends BaseAdminController
 
 
     /**
+     * @notes 获取用户历史下单记录
+     * @return Json
+     */
+    public function getOrderHistory(): Json
+    {
+        $params = $this->request->get();
+        $result = BestPlanLogic::getOrderHistory($params);
+
+        return $this->success('获取成功', $result);
+    }
+
+
+    /**
      * @notes 对比新旧算法(增强版 vs 原始版)
      * @return Json
      * @author Claude

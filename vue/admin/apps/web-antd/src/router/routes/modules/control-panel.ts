@@ -33,6 +33,15 @@ const routes: RouteRecordRaw[] = [
           title: '历史记录',
         },
       },
+      {
+        name: 'ControlPanelOrderHistory',
+        path: 'order-history',
+        component: () => import('#/views/control-panel/order-history/index.vue'),
+        meta: {
+          icon: 'lucide:list-ordered',
+          title: '历史下单',
+        },
+      },
     ],
   },
 ];

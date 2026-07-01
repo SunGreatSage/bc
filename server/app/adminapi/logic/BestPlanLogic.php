@@ -228,6 +228,134 @@ class BestPlanLogic extends BaseLogic
 
 
     /**
+     * @notes 获取用户历史下单记录
+     * @param array $params 查询参数
+     * @return array
+     */
+    public static function getOrderHistory(array $params): array
+    {
+        $gid = (int)($params['gid'] ?? 200);
+        $page = max(1, (int)($params['page'] ?? 1));
+        $limit = (int)($params['limit'] ?? 20);
+        $limit = $limit > 0 ? min($limit, 100) : 20;
+        $username = trim((string)($params['username'] ?? ''));
+        $userType = trim((string)($params['user_type'] ?? ''));
+        $plateCode = trim((string)($params['plate_code'] ?? ''));
+        $issue = trim((string)($params['issue'] ?? ''));
+
+        $lists = self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue)
+            ->field([
+                'b.id',
+                'b.sn',
+                'b.user_id',
+                'IFNULL(u.username, "") as username',
+                'IFNULL(u.nickname, "") as nickname',
+                'IFNULL(u.mobile, "") as mobile',
+                'IFNULL(ue.is_agent, 0) as is_agent',
+                'b.game_id',
+                'b.plate_code',
+                'b.issue',
+                'b.method_id',
+                'b.method_name',
+                'b.bet_type',
+                'b.bet_content',
+                'b.bet_amount',
+                'b.bet_multiple',
+                'b.total_amount',
+                'b.odds',
+                'b.status',
+                'b.prize_amount',
+                'b.is_settled',
+                'b.created_at',
+                'b.updated_at',
+            ])
+            ->order('b.id', 'desc')
+            ->page($page, $limit)
+            ->select()
+            ->toArray();
+
+        foreach ($lists as &$item) {
+            $item['is_agent'] = (int)($item['is_agent'] ?? 0);
+            $item['user_type'] = $item['is_agent'] === 1 ? 'agent' : 'user';
+            $item['user_type_text'] = $item['is_agent'] === 1 ? '代理用户' : '普通用户';
+            $item['bet_amount'] = number_format((float)$item['bet_amount'], 2, '.', '');
+            $item['total_amount'] = number_format((float)$item['total_amount'], 2, '.', '');
+            $item['prize_amount'] = number_format((float)$item['prize_amount'], 2, '.', '');
+            $item['created_time'] = !empty($item['created_at']) ? date('Y-m-d H:i:s', (int)$item['created_at']) : '';
+            $item['status_text'] = self::getBetStatusText((int)($item['status'] ?? 0));
+        }
+        unset($item);
+
+        $summary = self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue)
+            ->field([
+                'COUNT(b.id) as order_count',
+                'IFNULL(SUM(b.total_amount), 0) as total_amount',
+                'IFNULL(SUM(b.prize_amount), 0) as total_prize_amount',
+            ])
+            ->find();
+
+        return [
+            'lists' => $lists,
+            'count' => self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue)->count('b.id'),
+            'page_no' => $page,
+            'page_size' => $limit,
+            'summary' => [
+                'order_count' => (int)($summary['order_count'] ?? 0),
+                'total_amount' => number_format((float)($summary['total_amount'] ?? 0), 2, '.', ''),
+                'total_prize_amount' => number_format((float)($summary['total_prize_amount'] ?? 0), 2, '.', ''),
+            ],
+        ];
+    }
+
+    /**
+     * @notes 构造历史下单查询，列表/总数/汇总分别调用，避免 field/order/page 状态互相污染
+     * @param int $gid 游戏ID
+     * @param string $username 用户名/昵称
+     * @param string $userType 用户类型
+     * @param string $plateCode 盘口代码
+     * @param string $issue 期号
+     * @return \think\db\Query
+     */
+    private static function buildOrderHistoryQuery(
+        int $gid,
+        string $username,
+        string $userType,
+        string $plateCode,
+        string $issue
+    ) {
+        $query = Db::table('la_betting_record')
+            ->alias('b')
+            ->leftJoin('la_user u', 'u.id = b.user_id')
+            ->leftJoin('la_user_extend ue', 'ue.user_id = b.user_id')
+            ->where('b.game_id', $gid);
+
+        if ($username !== '') {
+            $query->where(function ($query) use ($username) {
+                $keyword = '%' . $username . '%';
+                $query->where('u.username', 'like', $keyword)
+                    ->whereOr('u.nickname', 'like', $keyword);
+            });
+        }
+
+        if ($userType === 'agent') {
+            $query->where('ue.is_agent', 1);
+        } elseif ($userType === 'user') {
+            $query->whereRaw('IFNULL(ue.is_agent, 0) = 0');
+        }
+
+        if ($plateCode !== '') {
+            $query->where('b.plate_code', $plateCode);
+        }
+
+        if ($issue !== '') {
+            $query->where('b.issue', 'like', '%' . $issue . '%');
+        }
+
+        return $query;
+    }
+
+
+    /**
      * @notes 执行开奖（使用最佳方案）
      * @param int $gid 游戏ID
      * @param string $qishu 期号
@@ -382,6 +510,18 @@ class BestPlanLogic extends BaseLogic
             3 => '已开奖',
             4 => '已结算',
             5 => '已取消',
+        ];
+
+        return $statusMap[$status] ?? '未知';
+    }
+
+    private static function getBetStatusText(int $status): string
+    {
+        $statusMap = [
+            0 => '待开奖',
+            1 => '已中奖',
+            2 => '未中奖',
+            3 => '已撤单',
         ];
 
         return $statusMap[$status] ?? '未知';
