@@ -14,6 +14,7 @@ import {
   customDrawing,
   createNewIssue,
   previewNewIssue,
+  clearTodayData,
   type BestPlanApi,
 } from '#/api/best-plan';
 
@@ -35,6 +36,7 @@ const createIssueStrategyOptions = [
 ];
 const customDrawVisible = ref(false);
 const customDrawSubmitting = ref(false);
+const clearTodaySubmitting = ref(false);
 const customDrawNumbers = ref<Array<number | undefined>>([undefined, undefined, undefined, undefined, undefined, undefined, undefined]);
 let refreshTimer: NodeJS.Timeout | null = null;
 
@@ -784,6 +786,53 @@ async function handleCreateNewIssue() {
   });
 }
 
+async function handleClearTodayData() {
+  const plate = selectedPlate.value || 'A';
+  const confirmMessage =
+    `确认清空今日期数？\n\n` +
+    `盘口：${plate}\n` +
+    `日期：${new Date().toLocaleDateString('zh-CN')}\n\n` +
+    `此操作会删除当前盘口今日的期号、开奖/待开奖信息、今日下单记录、中奖记录、账户流水和分析历史。\n` +
+    `系统会先按投注状态回滚用户余额、冻结金额、累计投注和累计派奖。\n\n` +
+    `此操作不可撤销，确认继续？`;
+
+  Modal.confirm({
+    title: '清空今日期数',
+    content: confirmMessage,
+    okText: '确认清空',
+    okButtonProps: { danger: true },
+    cancelText: '取消',
+    onOk: async () => {
+      clearTodaySubmitting.value = true;
+      loading.value = true;
+      try {
+        const result = await clearTodayData({
+          gid: 200,
+          plate_code: plate,
+        });
+
+        message.success(
+          `清空完成！\n` +
+          `日期：${result.date}\n` +
+          `盘口：${result.plate_code}\n` +
+          `删除期号：${result.issue_count}个\n` +
+          `删除订单：${result.betting_count}笔\n` +
+          `影响用户：${result.affected_users}个`,
+          8
+        );
+
+        analyzeResult.value = null;
+        await fetchCurrentQishu();
+      } catch (error: any) {
+        message.error(error?.message || '清空今日期数失败');
+      } finally {
+        clearTodaySubmitting.value = false;
+        loading.value = false;
+      }
+    },
+  });
+}
+
 // 组件卸载时清理定时器
 onBeforeUnmount(() => {
   if (refreshTimer) {
@@ -899,6 +948,14 @@ onBeforeUnmount(() => {
           @click="openCustomDrawModal"
         >
           自定义开奖
+        </Button>
+        <Button
+          danger
+          size="large"
+          :loading="clearTodaySubmitting"
+          @click="handleClearTodayData"
+        >
+          清空今日期数
         </Button>
       </Space>
 

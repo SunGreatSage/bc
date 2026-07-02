@@ -37,7 +37,7 @@ class LotteryBetLogic
             $method = Db::name('play_method')->where(['game_id' => $gameId, 'name' => $methodName, 'is_enabled' => 1])->find();
             if (!$method) throw new Exception('玩法不存在');
 
-            $odds = $method['odds_default'];
+            $odds = self::resolveBetOdds($method, (string)$betContent);
 
             // 3. 锁定用户账户
             $account = Db::name('user_account')->where('user_id', $userId)->lock(true)->find();
@@ -188,6 +188,17 @@ class LotteryBetLogic
             $allNumbers[] = $specialNumber;
         }
         $allNumbers = array_values(array_unique($allNumbers));
+        $missRule = self::getNumberMissRule($methodName);
+        if ($missRule) {
+            $betNumbers = self::parseNumberSelections($betContent);
+            if (count($betNumbers) !== $missRule['select_count']) {
+                return 'lose';
+            }
+
+            $hitCount = count(array_intersect($betNumbers, $allNumbers));
+            return self::resolveResult($hitCount === 0, $betType);
+        }
+
         $comboRule = self::getNumberComboRule($methodName);
 
         if ($comboRule) {
@@ -214,6 +225,15 @@ class LotteryBetLogic
             case '平码':
             case '平碼':
                 $hit = in_array((int)$betContent, $allNumbers);
+                return self::resolveResult($hit, $betType);
+
+            case '平肖':
+                $betZodiacs = ZodiacService::normalizeZodiacSelections(explode(',', $betContent), $year);
+                if (empty($betZodiacs)) {
+                    return 'lose';
+                }
+                $drawnZodiacs = ZodiacService::convertNumbersToZodiacsWithYear($allNumbers, $year);
+                $hit = count(array_intersect($betZodiacs, $drawnZodiacs)) > 0;
                 return self::resolveResult($hit, $betType);
 
             case '特肖':
@@ -410,6 +430,54 @@ class LotteryBetLogic
     }
 
     /**
+     * 解析数字不中规则：五到十不中=选对应数量号码，全部7个开奖号码都没出现才中奖。
+     */
+    private static function getNumberMissRule(string $methodName, string $methodCode = ''): ?array
+    {
+        $codeMap = [
+            'wubuzhong' => 5,
+            'liubuzhong' => 6,
+            'qibuzhong' => 7,
+            'babuzhong' => 8,
+            'jiubuzhong' => 9,
+            'shibuzhong' => 10,
+        ];
+
+        $methodCode = strtolower(trim($methodCode));
+        if (isset($codeMap[$methodCode])) {
+            return [
+                'select_count' => $codeMap[$methodCode],
+                'hit_count' => 0,
+                'judge_scope' => 'all7',
+            ];
+        }
+
+        $nameMap = [
+            '五不中' => 5,
+            '六不中' => 6,
+            '七不中' => 7,
+            '八不中' => 8,
+            '九不中' => 9,
+            '十不中' => 10,
+        ];
+
+        $normalized = str_replace([' ', '　', '-', '_'], '', trim($methodName));
+        foreach ($nameMap as $keyword => $selectCount) {
+            if (!preg_match('/' . $keyword . '/u', $normalized)) {
+                continue;
+            }
+
+            return [
+                'select_count' => $selectCount,
+                'hit_count' => 0,
+                'judge_scope' => 'all7',
+            ];
+        }
+
+        return null;
+    }
+
+    /**
      * 解析投注号码，兼容逗号、中文逗号、空格、短横线分隔。
      */
     private static function parseNumberSelections(string $betContent): array
@@ -441,17 +509,19 @@ class LotteryBetLogic
     private static function validateBetContent(array $playMethod, string $betContent, int $index): void
     {
         $comboRule = self::getNumberComboRule((string)$playMethod['name'], (string)($playMethod['code'] ?? ''));
-        if (!$comboRule) {
+        $missRule = self::getNumberMissRule((string)$playMethod['name'], (string)($playMethod['code'] ?? ''));
+        $rule = $missRule ?: $comboRule;
+        if (!$rule) {
             return;
         }
 
         $numbers = self::parseNumberSelections($betContent);
-        if (count($numbers) !== $comboRule['select_count']) {
+        if (count($numbers) !== $rule['select_count']) {
             throw new \Exception(sprintf(
                 '第%d注投注失败: %s玩法必须选择%d个不重复号码',
                 $index + 1,
                 $playMethod['name'],
-                $comboRule['select_count']
+                $rule['select_count']
             ));
         }
     }
@@ -547,6 +617,11 @@ class LotteryBetLogic
 
             // 根据玩法类型返回不同的数据
             $playCode = $playMethod['code'];
+            $missRule = self::getNumberMissRule($playName, $playCode);
+            if ($missRule) {
+                return self::getComboNumberOptions($playName, $playMethod, $year, $plateCode, $missRule, 'miss');
+            }
+
             $comboRule = self::getNumberComboRule($playName, $playCode);
 
             if ($comboRule) {
@@ -559,7 +634,7 @@ class LotteryBetLogic
             }
 
             // 特肖、一肖、二肖、三肖、四肖、五肖、六肖、七肖：返回12生肖
-            if (in_array($playCode, ['texiao', 'yixiao', 'erxiao', 'sanxiao', 'sixiao', 'wuxiao', 'liuxiao', 'qixiao'])) {
+            if (in_array($playCode, ['texiao', 'pingxiao', 'yixiao', 'erxiao', 'sanxiao', 'sixiao', 'wuxiao', 'liuxiao', 'qixiao'])) {
                 return self::getZodiacOptions($playName, $playMethod, $year, $plateCode);
             }
 
@@ -619,15 +694,24 @@ class LotteryBetLogic
     /**
      * 获取数字连码选项（1-49，组合成一注）
      */
-    private static function getComboNumberOptions($playName, $playMethod, $year, $plateCode, array $comboRule)
+    private static function getComboNumberOptions($playName, $playMethod, $year, $plateCode, array $comboRule, string $mode = 'combo')
     {
         $result = self::getNumberOptions($playName, $playMethod, $year, $plateCode);
         $result['play_type'] = 'combo_number';
         $result['select_count'] = $comboRule['select_count'];
         $result['hit_count'] = $comboRule['hit_count'];
-        $result['special_rules'] = [
-            'regular_only' => '只按前6个正码判奖，特码不参与命中计算',
-        ];
+        $result['combo_mode'] = $mode;
+        if ($mode === 'miss') {
+            $result['miss_count'] = $comboRule['select_count'];
+            $result['special_rules'] = [
+                'judge_scope' => '按全部7个开奖号码判断',
+                'win_rule' => '所选号码全部没有开出即中奖',
+            ];
+        } else {
+            $result['special_rules'] = [
+                'regular_only' => '只按前6个正码判奖，特码不参与命中计算',
+            ];
+        }
 
         return $result;
     }
@@ -637,43 +721,16 @@ class LotteryBetLogic
      */
     private static function getZodiacOptions($playName, $playMethod, $year, $plateCode = '')
     {
-        // 加载生肖配置
         $zodiacConfig = config('zodiac_base_year');
-        $baseYear = $zodiacConfig['base_year'];
-        $baseTable = $zodiacConfig['base_table'];
         $zodiacOrder = $zodiacConfig['zodiac_order'];
-
-        // 计算年份偏移
-        $yearOffset = $year - $baseYear;
-
-        // 获取当年生肖表
-        $currentYearTable = [];
-        foreach ($baseTable as $zodiac => $numbers) {
-            // 生肖向前移动
-            $newNumbers = [];
-            foreach ($numbers as $num) {
-                $newNum = $num - $yearOffset;
-                // 处理循环（1-49范围）
-                while ($newNum <= 0) {
-                    $newNum += 12;
-                }
-                while ($newNum > 49) {
-                    $newNum -= 12;
-                }
-                $newNumbers[] = $newNum;
-            }
-            sort($newNumbers);
-            $currentYearTable[$zodiac] = $newNumbers;
-        }
-
-        // 获取当年生肖
-        $yearZodiacIndex = ($year - $zodiacConfig['year_offset']) % 12;
-        $currentYearZodiac = $zodiacOrder[$yearZodiacIndex];
+        $currentYearTable = ZodiacYearService::getZodiacTableByYear((int)$year);
+        $currentYearZodiac = ZodiacYearService::getYearZodiac((int)$year);
 
         // 计算赔率
         $oddsDefault = (float)$playMethod['odds_default'];
         $oddsWin = number_format($oddsDefault, 4, '.', '');          // 赔率（包本金,用户投注使用）
         $oddsNotWin = number_format($oddsDefault - 1, 4, '.', '');   // 历史遗留字段(已废弃)
+        $isPingXiao = self::isPingXiaoPlay((string)$playName, (string)($playMethod['code'] ?? ''));
 
         // 生成生肖选项
         $options = [];
@@ -686,12 +743,16 @@ class LotteryBetLogic
             $domesticZodiacs = ['牛', '马', '羊', '鸡', '狗', '猪'];
             $category = in_array($zodiac, $domesticZodiacs) ? 'domestic' : 'wild';
 
+            $optionOdds = self::getOptionOdds($playMethod, $zodiac);
+            $optionOddsWin = number_format($optionOdds, 4, '.', '');
+            $optionOddsNotWin = number_format($optionOdds - 1, 4, '.', '');
+
             $options[] = [
                 'value' => $zodiac,
                 'label' => $zodiac,
-                'odds' => $oddsWin,              // 赔率（包本金,用户投注使用）
-                'odds_win' => $oddsWin,          // 中赔率（包本金）
-                'odds_not_win' => $oddsNotWin,   // 历史遗留字段(已废弃)
+                'odds' => $optionOddsWin,              // 赔率（包本金,用户投注使用）
+                'odds_win' => $optionOddsWin,          // 中赔率（包本金）
+                'odds_not_win' => $optionOddsNotWin,   // 历史遗留字段(已废弃)
                 'numbers' => array_map(function($n) {
                     return str_pad($n, 2, '0', STR_PAD_LEFT);
                 }, $numbers),
@@ -752,10 +813,67 @@ class LotteryBetLogic
                 ['type' => 'win', 'label' => '中', 'odds' => $oddsWin],
                 ['type' => 'not_win', 'label' => '不中(已废弃)', 'odds' => $oddsNotWin],
             ],
-            'special_rules' => [
-                'rule_49' => '开出49号视为和局,投注金额退还',
-            ],
+            'special_rules' => $isPingXiao
+                ? [
+                    'judge_scope' => '按全部7个开奖号码判断',
+                    'win_rule' => '任意一个开奖号码对应所选生肖即中奖',
+                ]
+                : [
+                    'rule_49' => '开出49号视为和局,投注金额退还',
+                ],
         ];
+    }
+
+    private static function isPingXiaoPlay(string $methodName, string $methodCode = ''): bool
+    {
+        return strtolower(trim($methodCode)) === 'pingxiao'
+            || self::containsAnyKeyword($methodName, ['平肖']);
+    }
+
+    private static function resolveBetOdds(array $playMethod, string $betContent): float
+    {
+        $odds = self::getOptionOdds($playMethod, $betContent);
+        return $odds > 0 ? $odds : (float)($playMethod['odds_default'] ?? 0);
+    }
+
+    private static function getOptionOdds(array $playMethod, string $optionValue): float
+    {
+        $defaultOdds = (float)($playMethod['odds_default'] ?? 0);
+        $config = self::decodePrizeConfig($playMethod['prize_config'] ?? null);
+        $optionOdds = $config['option_odds'] ?? [];
+        $normalizedOption = self::normalizeZodiacAlias($optionValue);
+
+        foreach ($optionOdds as $option => $odds) {
+            if (self::normalizeZodiacAlias((string)$option) === $normalizedOption) {
+                return (float)$odds;
+            }
+        }
+
+        if (isset($config['default_odds'])) {
+            return (float)$config['default_odds'];
+        }
+
+        return $defaultOdds;
+    }
+
+    private static function decodePrizeConfig($raw): array
+    {
+        if (!is_string($raw) || trim($raw) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($raw, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    private static function normalizeZodiacAlias(string $value): string
+    {
+        return strtr(trim($value), [
+            '馬' => '马',
+            '雞' => '鸡',
+            '龍' => '龙',
+            '豬' => '猪',
+        ]);
     }
 
     /**
@@ -763,32 +881,7 @@ class LotteryBetLogic
      */
     private static function getZodiacByNumber($number, $year)
     {
-        // 加载生肖配置
-        $zodiacConfig = config('zodiac_base_year');
-        $baseYear = $zodiacConfig['base_year'];
-        $baseTable = $zodiacConfig['base_table'];
-
-        // 计算年份偏移
-        $yearOffset = $year - $baseYear;
-
-        // 查找号码对应的生肖
-        foreach ($baseTable as $zodiac => $numbers) {
-            foreach ($numbers as $baseNum) {
-                $currentNum = $baseNum - $yearOffset;
-                // 处理循环
-                while ($currentNum <= 0) {
-                    $currentNum += 12;
-                }
-                while ($currentNum > 49) {
-                    $currentNum -= 12;
-                }
-                if ($currentNum == $number) {
-                    return $zodiac;
-                }
-            }
-        }
-
-        return '';
+        return ZodiacYearService::getZodiacByNumberAndYear((int)$number, (int)$year) ?? '';
     }
 
     /**
@@ -925,7 +1018,7 @@ class LotteryBetLogic
                     throw new \Exception('第' . ($index + 1) . '注投注失败: 玩法不存在或已停用');
                 }
 
-                $odds = $playMethod['odds_default'];
+                $odds = self::resolveBetOdds($playMethod, (string)$order['bet_content']);
 
                 if ($odds <= 0) {
                     throw new \Exception('第' . ($index + 1) . '注投注失败: 赔率配置错误');

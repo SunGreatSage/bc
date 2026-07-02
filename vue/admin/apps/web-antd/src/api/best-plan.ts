@@ -169,6 +169,19 @@ export namespace BestPlanApi {
       status_text: string;
     };
   }
+
+  /** 清空今日期号和订单结果 */
+  export interface ClearTodayDataResult {
+    date: string;
+    plate_code: string;
+    issue_count: number;
+    betting_count: number;
+    winning_count: number;
+    account_log_count: number;
+    commission_count: number;
+    history_count: number;
+    affected_users: number;
+  }
 }
 
 /**
@@ -430,6 +443,24 @@ export async function createNewIssue(data: {
   if (data.strategy) formData.append('strategy', data.strategy);
 
   return requestClient.post<BestPlanApi.NewIssueResult>('/best_plan/createNewIssue', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+}
+
+/**
+ * 清空当前盘口今日测试期号和今日下单数据
+ */
+export async function clearTodayData(data: {
+  gid?: number;
+  plate_code?: string;
+}) {
+  const formData = new URLSearchParams();
+  if (data.gid) formData.append('gid', String(data.gid));
+  if (data.plate_code) formData.append('plate_code', data.plate_code);
+
+  return requestClient.post<BestPlanApi.ClearTodayDataResult>('/best_plan/clearTodayData', formData, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },

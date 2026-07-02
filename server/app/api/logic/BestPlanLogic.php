@@ -2235,6 +2235,16 @@ class BestPlanLogic extends BaseLogic
 
         $allNumbers = array_merge($m1_m6, [$m7]);
 
+        $missRule = self::getNumberMissRule($methodName, $methodCode);
+        if ($missRule !== null) {
+            $betNumbers = self::parseNumberSelections($betContent);
+            if (count($betNumbers) !== $missRule['select_count']) {
+                return 'lose';
+            }
+            $hitCount = count(array_intersect($betNumbers, $allNumbers));
+            return self::resolveResult($hitCount === 0, $betType);
+        }
+
         $comboRule = self::getNumberComboRule($methodName, $methodCode);
         if ($comboRule !== null) {
             $betNumbers = self::parseNumberSelections($betContent);
@@ -2272,6 +2282,16 @@ class BestPlanLogic extends BaseLogic
             // 支持跨年份生肖：第 7 个号码可以匹配任意年份的同生肖。
             $allPossibleZodiacs = self::getAllPossibleZodiacs($m7);
             $hit = !empty(array_intersect($betZodiacs, $allPossibleZodiacs));
+            return self::resolveResult($hit, $betType);
+        }
+
+        if ($methodCode === 'pingxiao' || self::containsKeyword($methodName, ['平肖'])) {
+            $betZodiacs = ZodiacService::normalizeZodiacSelections($betItems, $year);
+            if (empty($betZodiacs)) {
+                return 'lose';
+            }
+            $drawnZodiacs = ZodiacService::convertNumbersToZodiacsWithYear($allNumbers, $year);
+            $hit = !empty(array_intersect($betZodiacs, $drawnZodiacs));
             return self::resolveResult($hit, $betType);
         }
 
@@ -2361,6 +2381,39 @@ class BestPlanLogic extends BaseLogic
         }
         if (self::containsKeyword($methodName, ['三中三'])) {
             return $rules['sanzhongsan'];
+        }
+
+        return null;
+    }
+
+    private static function getNumberMissRule(string $methodName, string $methodCode): ?array
+    {
+        $rules = [
+            'wubuzhong' => ['select_count' => 5, 'hit_count' => 0],
+            'liubuzhong' => ['select_count' => 6, 'hit_count' => 0],
+            'qibuzhong' => ['select_count' => 7, 'hit_count' => 0],
+            'babuzhong' => ['select_count' => 8, 'hit_count' => 0],
+            'jiubuzhong' => ['select_count' => 9, 'hit_count' => 0],
+            'shibuzhong' => ['select_count' => 10, 'hit_count' => 0],
+        ];
+
+        if (isset($rules[$methodCode])) {
+            return $rules[$methodCode];
+        }
+
+        $nameMap = [
+            '五不中' => 'wubuzhong',
+            '六不中' => 'liubuzhong',
+            '七不中' => 'qibuzhong',
+            '八不中' => 'babuzhong',
+            '九不中' => 'jiubuzhong',
+            '十不中' => 'shibuzhong',
+        ];
+
+        foreach ($nameMap as $keyword => $ruleKey) {
+            if (self::containsKeyword($methodName, [$keyword])) {
+                return $rules[$ruleKey];
+            }
         }
 
         return null;

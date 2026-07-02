@@ -55,12 +55,12 @@
               {{ getAverageOdds('win') }}
             </span>
             <span v-if="playType === 'combo_number'" class="text-sm text-gray-600">
-              选{{ comboSelectCount }}个号码，中{{ comboHitCount }}个即中奖（只算正码）
+              {{ comboRuleText }}
             </span>
           </div>
         </div>
 
-        <!-- 号码类玩法 (特碼、正碼/平码) -->
+        <!-- 号码类玩法 (特碼、平码) -->
         <div v-if="playType === 'number' || playType === 'combo_number'" class="grid grid-cols-5 justify-items-center gap-2 mb-6">
           <button
             v-for="option in orderedBetNumbers"
@@ -104,10 +104,13 @@
             <!-- 生肖名称 - 上方居中显示 -->
             <div class="text-sm font-bold text-center mb-1">{{ option.label }}</div>
 
-            <!-- 所有生肖玩法都显示号码列表(不显示赔率,因为上方已有统一的中/不中赔率) -->
-            <div v-if="option.numbers && option.numbers.length > 0" class="text-xs text-center leading-tight">
-              {{ option.numbers.join(',') }}
-            </div>
+              <div v-if="isPingXiaoPlay" class="text-xs text-red-600 font-semibold mb-0.5">
+                {{ option.odds_win || option.odds }}
+              </div>
+              <!-- 所有生肖玩法都显示号码列表 -->
+              <div v-if="option.numbers && option.numbers.length > 0" class="text-xs text-center leading-tight">
+                {{ option.numbers.join(',') }}
+              </div>
           </button>
         </div>
 
@@ -161,7 +164,7 @@
       </div>
 
       <!-- 49号特殊规则提示 - 所有生肖玩法都显示 -->
-      <div v-if="playType === 'zodiac'" class="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
+      <div v-if="playType === 'zodiac' && !isPingXiaoPlay" class="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
         <div class="flex items-start gap-2">
           <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
@@ -230,8 +233,8 @@
             </thead>
             <!-- 表格内容 -->
             <tbody>
-              <!-- 生肖/数字组合类游戏：单行显示整组投注 -->
-              <tr v-if="playType === 'zodiac' || playType === 'combo_number'" class="hover:bg-gray-50">
+              <!-- 连肖/数字组合类游戏：单行显示整组投注 -->
+              <tr v-if="isGroupedBetPlay" class="hover:bg-gray-50">
                 <!-- 明细列 -->
                 <td class="border border-gray-300 px-4 py-2 text-sm text-gray-900">
                   {{ getDetailText() }}
@@ -259,7 +262,7 @@
                   </div>
                 </td>
               </tr>
-              <!-- 数字类游戏：每个号码一行 -->
+              <!-- 数字类、特肖、平肖：每个号码/生肖一行 -->
               <template v-else>
                 <tr v-for="(num, index) in selectedNumbers" :key="num" class="hover:bg-gray-50">
                   <!-- 明细列 -->
@@ -305,7 +308,8 @@
             <tfoot>
               <tr :class="currentTheme === 'gold' ? 'bg-amber-100' : 'bg-purple-100'" class="font-semibold">
                 <td class="border border-gray-300 px-4 py-2 text-sm text-gray-900" colspan="2">
-                  <span v-if="playType === 'zodiac'">选中生肖: {{ selectedNumbers.length }}</span>
+                  <span v-if="playType === 'zodiac' && isSingleZodiacPlay">注数: {{ selectedNumbers.length }}</span>
+                  <span v-else-if="playType === 'zodiac'">选中生肖: {{ selectedNumbers.length }}</span>
                   <span v-else-if="playType === 'combo_number'">组合: 1 注（已选 {{ selectedNumbers.length }} 个号码）</span>
                   <span v-else>注数: {{ selectedNumbers.length }}</span>
                 </td>
@@ -361,6 +365,7 @@ const playType = ref('number') // 玩法类型：number、zodiac 或 combo_numbe
 const currentYear = ref(new Date().getFullYear()) // 当前年份
 const comboSelectCount = ref(0)
 const comboHitCount = ref(0)
+const comboMode = ref('combo')
 
 // 六肖快速选择状态
 const isDomesticAnimalsSelected = ref(false)
@@ -375,6 +380,15 @@ const wildAnimals = ['鼠', '虎', '兔', '龍', '蛇', '猴']
 
 // 判断是否可以投注（seconds_to_close > 0 时可以投注）
 const canBet = computed(() => secondsToClose.value > 0)
+const isPingXiaoPlay = computed(() => playType.value === 'zodiac' && playName.value.includes('平肖'))
+const isSingleZodiacPlay = computed(() => playType.value === 'zodiac' && (playName.value === '特肖' || isPingXiaoPlay.value))
+const isGroupedBetPlay = computed(() => playType.value === 'combo_number' || (playType.value === 'zodiac' && !isSingleZodiacPlay.value))
+const comboRuleText = computed(() => {
+  if (comboMode.value === 'miss' || comboHitCount.value === 0) {
+    return `选${comboSelectCount.value}个号码，7个开奖号码全部不中即中奖`
+  }
+  return `选${comboSelectCount.value}个号码，中${comboHitCount.value}个即中奖（只算正码）`
+})
 
 // 获取全局选中的彩种ID
 const getSelectedLotteryType = () => {
@@ -429,6 +443,7 @@ const fetchBetNumbers = async () => {
       playType.value = responsePlayType || (isZodiacGame ? 'zodiac' : 'number')
       comboSelectCount.value = parseInt(result.data.select_count || 0)
       comboHitCount.value = parseInt(result.data.hit_count || 0)
+      comboMode.value = result.data.combo_mode || 'combo'
 
       // 如果是生肖玩法，清空选中的号码和快速选择状态
       if (playType.value === 'zodiac' || playType.value === 'combo_number') {
@@ -454,7 +469,12 @@ const totalAmount = computed(() => {
 
 const modalTotalAmount = computed(() => {
   if (playType.value === 'zodiac') {
-    // 生肖类游戏：单个金额 × 选中生肖数量
+    if (isSingleZodiacPlay.value) {
+      return modalBetAmounts.value.reduce((total, amount) => {
+        return total + (parseFloat(amount) || 0)
+      }, 0)
+    }
+    // 连肖类游戏：单个金额 × 选中生肖数量
     const amount = parseFloat(modalBetAmounts.value[0]) || 0
     return amount * selectedNumbers.value.length
   } else if (playType.value === 'combo_number') {
@@ -480,13 +500,23 @@ const getOdds = (value) => {
 const getAverageOdds = (type = 'win') => {
   if (betNumbersData.value.length === 0) return '0.0000'
 
-  const totalOdds = betNumbersData.value.reduce((sum, option) => {
+  if (isPingXiaoPlay.value && selectedNumbers.value.length === 0) {
+    return '马1.8000 / 其他2.0000'
+  }
+
+  const oddsSource = selectedNumbers.value.length > 0
+    ? betNumbersData.value.filter(option => selectedNumbers.value.includes(option.value))
+    : betNumbersData.value
+
+  if (oddsSource.length === 0) return '0.0000'
+
+  const totalOdds = oddsSource.reduce((sum, option) => {
     // 只使用 odds_win 字段,因为用户只能投注"中"
     const odds = parseFloat(option.odds_win) || parseFloat(option.odds) || 0
     return sum + odds
   }, 0)
 
-  return (totalOdds / betNumbersData.value.length).toFixed(4)
+  return (totalOdds / oddsSource.length).toFixed(4)
 }
 
 // 按纵向顺序重新排列号码数据
@@ -785,7 +815,7 @@ const confirmBet = () => {
   }
 
   // 验证连肖玩法的选择数量
-  if (playType.value === 'zodiac' && playName.value !== '特肖') {
+  if (playType.value === 'zodiac' && !isSingleZodiacPlay.value) {
     const requiredCount = {
       '六肖': 6,
       '五肖': 5,
@@ -808,11 +838,11 @@ const confirmBet = () => {
     }
   }
 
-  if (playType.value === 'zodiac' || playType.value === 'combo_number') {
-    // 生肖游戏：单行显示，只有一个金额输入
+  if (isGroupedBetPlay.value) {
+    // 连肖/数字组合：单行显示，只有一个金额输入
     modalBetAmounts.value = [betAmount.value.toString()]
   } else {
-    // 数字游戏：每个号码一行
+    // 数字、特肖、平肖：每个号码/生肖一行
     modalBetAmounts.value = selectedNumbers.value.map(() => betAmount.value.toString())
   }
 
@@ -857,16 +887,20 @@ const submitBet = async () => {
         return
       }
 
-      if (playName.value === '特肖') {
-        // 特肖：为每个选中的生肖单独创建订单，支持中/不中
-        selectedNumbers.value.forEach(zodiacValue => {
+      if (isSingleZodiacPlay.value) {
+        // 特肖/平肖：为每个选中的生肖单独创建订单
+        selectedNumbers.value.forEach((zodiacValue, index) => {
+          const itemAmount = parseFloat(modalBetAmounts.value[index]) || 0
+          if (itemAmount <= 0) {
+            return
+          }
           const option = betNumbersData.value.find(item => item.value === zodiacValue)
           const zodiacName = option ? option.label : zodiacValue
 
           orders.push({
             pid: currentPid.value,
             bet_content: zodiacName,  // 生肖名称，如"鼠"
-            bet_amount: parseInt(betAmount),
+            bet_amount: parseInt(itemAmount),
             bet_type: 'win'  // 固定为'win',用户只能投注"中"
           })
         })

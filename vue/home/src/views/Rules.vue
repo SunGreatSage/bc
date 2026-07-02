@@ -257,10 +257,10 @@ const playTypes = [
     ]
   },
   {
-    title: '正码 / 平码',
+    title: '平码',
     badge: '中赔率',
     accent: 'accent-green',
-    summary: '预测 6 个正码区域（m1-m6）之中的任意号码。',
+    summary: '预测前 6 个开奖区域（m1-m6）之中的任意号码。',
     winText: '所选号码出现在正码列表中即可中奖。',
     bullets: ['每期正码不重复，共 6 个号码。'],
     examples: [

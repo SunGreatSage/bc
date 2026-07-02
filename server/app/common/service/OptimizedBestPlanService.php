@@ -12,7 +12,8 @@ class OptimizedBestPlanService
 {
     private const KEYWORDS_SPECIAL_NUMBER = ['特码', '特碼', '特号', '特號'];
     private const KEYWORDS_NORMAL_NUMBER = ['正码', '正碼', '平码', '平碼'];
-    private const KEYWORDS_SPECIAL_ZODIAC = ['特肖', '特肖连', '平特肖'];
+    private const KEYWORDS_SPECIAL_ZODIAC = ['特肖', '特肖连'];
+    private const KEYWORDS_ANY_ZODIAC = ['平肖'];
     private const KEYWORDS_MULTI_ZODIAC = ['三肖', '四肖', '五肖', '六肖'];
     private const KEYWORDS_POSITIVE_ZODIAC = ['正肖'];
     private const KEYWORDS_SPECIAL_ODD_EVEN = ['特码单双', '特碼單雙', '特碼单双'];
@@ -51,7 +52,9 @@ class OptimizedBestPlanService
     protected array $specialNumberBets = [];
     protected array $normalNumberBets = [];
     protected array $numberComboBets = [];
+    protected array $numberMissBets = [];
     protected array $specialZodiacBets = [];
+    protected array $anyZodiacBets = [];
     protected array $positiveZodiacBets = [];
     protected array $multiZodiacBets = [];
     protected array $otherBets = [];
@@ -80,7 +83,9 @@ class OptimizedBestPlanService
         $this->specialNumberBets = [];
         $this->normalNumberBets = [];
         $this->numberComboBets = [];
+        $this->numberMissBets = [];
         $this->specialZodiacBets = [];
+        $this->anyZodiacBets = [];
         $this->positiveZodiacBets = [];
         $this->multiZodiacBets = [];
         $this->otherBets = [];
@@ -115,6 +120,18 @@ class OptimizedBestPlanService
                 continue;
             }
 
+            $missRule = $this->getNumberMissRule($methodName);
+            if ($missRule) {
+                $numbers = $this->parseNumberSelections($content);
+                if (count($numbers) === $missRule['select_count']) {
+                    $this->numberMissBets[] = $base + [
+                        'numbers' => $numbers,
+                        'select_count' => $missRule['select_count'],
+                    ];
+                }
+                continue;
+            }
+
             $comboRule = $this->getNumberComboRule($methodName);
             if ($comboRule) {
                 $numbers = $this->parseNumberSelections($content);
@@ -124,6 +141,14 @@ class OptimizedBestPlanService
                         'select_count' => $comboRule['select_count'],
                         'hit_count' => $comboRule['hit_count'],
                     ];
+                }
+                continue;
+            }
+
+            if ($this->containsKeyword($methodName, self::KEYWORDS_ANY_ZODIAC)) {
+                $zodiacs = ZodiacService::normalizeZodiacSelections($items, $this->year);
+                if (!empty($zodiacs)) {
+                    $this->anyZodiacBets[] = $base + ['zodiacs' => $zodiacs];
                 }
                 continue;
             }
@@ -271,11 +296,31 @@ class OptimizedBestPlanService
                 continue;
             }
 
+            $missRule = $this->getNumberMissRule($methodName);
+            if ($missRule) {
+                $betNumbers = $this->parseNumberSelections($content);
+                foreach ($betNumbers as $num) {
+                    $this->normalCodeWeights[$num] -= $direction * $weightedAmount;
+                    $this->specialCodeWeights[$num] -= $direction * $weightedAmount;
+                }
+                continue;
+            }
+
             $comboRule = $this->getNumberComboRule($methodName);
             if ($comboRule) {
                 $betNumbers = $this->parseNumberSelections($content);
                 foreach ($betNumbers as $num) {
                     $this->normalCodeWeights[$num] += $direction * $weightedAmount;
+                }
+                continue;
+            }
+
+            if ($this->containsKeyword($methodName, self::KEYWORDS_ANY_ZODIAC)) {
+                $betZodiacs = ZodiacService::normalizeZodiacSelections($items, $this->year);
+                $numbers = $this->expandZodiacsToNumbers($betZodiacs);
+                foreach ($numbers as $num) {
+                    $this->normalCodeWeights[$num] += $direction * $weightedAmount;
+                    $this->specialCodeWeights[$num] += $direction * $weightedAmount;
                 }
                 continue;
             }
@@ -530,8 +575,20 @@ class OptimizedBestPlanService
             $this->accumulatePrize($result, $bet['amount'], $bet['odds'], $totalPrize);
         }
 
+        foreach ($this->numberMissBets as $bet) {
+            $hitCount = count(array_intersect($bet['numbers'], $all7Numbers));
+            $result = $this->resolveResult($hitCount === 0, $bet['bet_type']);
+            $this->accumulatePrize($result, $bet['amount'], $bet['odds'], $totalPrize);
+        }
+
         foreach ($this->specialZodiacBets as $bet) {
             $hit = $specialZodiac !== '' && in_array($specialZodiac, $bet['zodiacs'], true);
+            $result = $this->resolveResult($hit, $bet['bet_type']);
+            $this->accumulatePrize($result, $bet['amount'], $bet['odds'], $totalPrize);
+        }
+
+        foreach ($this->anyZodiacBets as $bet) {
+            $hit = !empty(array_intersect($bet['zodiacs'], $all7Zodiacs));
             $result = $this->resolveResult($hit, $bet['bet_type']);
             $this->accumulatePrize($result, $bet['amount'], $bet['odds'], $totalPrize);
         }
@@ -593,6 +650,16 @@ class OptimizedBestPlanService
             return $this->resolveResult($hit, $betType);
         }
 
+        $missRule = $this->getNumberMissRule($methodName);
+        if ($missRule) {
+            $betNumbers = $this->parseNumberSelections($content);
+            if (count($betNumbers) !== $missRule['select_count']) {
+                return 'lose';
+            }
+            $hitCount = count(array_intersect($betNumbers, $allNumbers));
+            return $this->resolveResult($hitCount === 0, $betType);
+        }
+
         $comboRule = $this->getNumberComboRule($methodName);
         if ($comboRule) {
             $betNumbers = $this->parseNumberSelections($content);
@@ -610,6 +677,16 @@ class OptimizedBestPlanService
                 return 'lose';
             }
             $hit = $specialZodiac !== '' && in_array($specialZodiac, $betZodiacs, true);
+            return $this->resolveResult($hit, $betType);
+        }
+
+        if ($this->containsKeyword($methodName, self::KEYWORDS_ANY_ZODIAC)) {
+            $betZodiacs = ZodiacService::normalizeZodiacSelections($rawItems, $this->year);
+            if (empty($betZodiacs)) {
+                return 'lose';
+            }
+            $drawnZodiacs = ZodiacService::convertNumbersToZodiacsWithYear($allNumbers, $this->year);
+            $hit = !empty(array_intersect($betZodiacs, $drawnZodiacs));
             return $this->resolveResult($hit, $betType);
         }
 
@@ -714,6 +791,32 @@ class OptimizedBestPlanService
             'select_count' => $selectCount,
             'hit_count' => $hitCount,
         ];
+    }
+
+    protected function getNumberMissRule(string $methodName): ?array
+    {
+        $nameMap = [
+            '五不中' => 5,
+            '六不中' => 6,
+            '七不中' => 7,
+            '八不中' => 8,
+            '九不中' => 9,
+            '十不中' => 10,
+        ];
+
+        $normalized = str_replace([' ', '　', '-', '_'], '', trim($methodName));
+        foreach ($nameMap as $keyword => $selectCount) {
+            if (!preg_match('/' . $keyword . '/u', $normalized)) {
+                continue;
+            }
+
+            return [
+                'select_count' => $selectCount,
+                'hit_count' => 0,
+            ];
+        }
+
+        return null;
     }
 
     protected function parseNumberSelections(string $content): array

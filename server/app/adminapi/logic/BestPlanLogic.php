@@ -464,6 +464,212 @@ class BestPlanLogic extends BaseLogic
         }
     }
 
+    public static function clearTodayData(int $gid, string $plateCode = 'A', int $operatorId = 0)
+    {
+        $plateCode = trim($plateCode) ?: 'A';
+        $today = date('Ymd');
+        $dayStart = strtotime(date('Y-m-d 00:00:00'));
+        $dayEnd = strtotime(date('Y-m-d 23:59:59'));
+
+        Db::startTrans();
+        try {
+            $issues = Db::table('la_lottery_issue')
+                ->where('game_id', $gid)
+                ->where('plate_code', $plateCode)
+                ->where('issue', 'like', $today . '%')
+                ->lock(true)
+                ->select()
+                ->toArray();
+
+            $issueIds = array_values(array_unique(array_map('intval', array_column($issues, 'id'))));
+            $issueNos = array_values(array_unique(array_map('strval', array_column($issues, 'issue'))));
+
+            $betQuery = Db::table('la_betting_record')
+                ->where('game_id', $gid)
+                ->where('plate_code', $plateCode)
+                ->where(function ($query) use ($today, $dayStart, $dayEnd) {
+                    $query->where('issue', 'like', $today . '%')
+                        ->whereOr(function ($subQuery) use ($dayStart, $dayEnd) {
+                            $subQuery->where('created_at', '>=', $dayStart)
+                                ->where('created_at', '<=', $dayEnd);
+                        });
+                })
+                ->lock(true);
+
+            $bets = $betQuery->select()->toArray();
+            $betIds = array_values(array_unique(array_map('intval', array_column($bets, 'id'))));
+            $betSns = array_values(array_unique(array_filter(array_map('strval', array_column($bets, 'sn')))));
+
+            $userSummaries = [];
+            foreach ($bets as $bet) {
+                $userId = (int)$bet['user_id'];
+                if ($userId <= 0) {
+                    continue;
+                }
+
+                if (!isset($userSummaries[$userId])) {
+                    $userSummaries[$userId] = [
+                        'balance_delta' => 0.0,
+                        'frozen_delta' => 0.0,
+                        'total_bet_delta' => 0.0,
+                        'total_prize_delta' => 0.0,
+                    ];
+                }
+
+                $totalAmount = (float)$bet['total_amount'];
+                $prizeAmount = (float)($bet['prize_amount'] ?? 0);
+                $status = (int)$bet['status'];
+
+                $userSummaries[$userId]['total_bet_delta'] += $totalAmount;
+                if ($status === 0) {
+                    $userSummaries[$userId]['balance_delta'] += $totalAmount;
+                    $userSummaries[$userId]['frozen_delta'] += $totalAmount;
+                } elseif ($status === 1) {
+                    $userSummaries[$userId]['balance_delta'] += $totalAmount - $prizeAmount;
+                    $userSummaries[$userId]['total_prize_delta'] += $prizeAmount;
+                } elseif ($status === 2) {
+                    $userSummaries[$userId]['balance_delta'] += $totalAmount;
+                }
+            }
+
+            foreach ($userSummaries as $userId => $summary) {
+                Db::table('la_user_account')->where('user_id', $userId)->lock(true)->find();
+                Db::table('la_user_account')
+                    ->where('user_id', $userId)
+                    ->update([
+                        'balance' => Db::raw('balance + ' . self::formatDecimal($summary['balance_delta'])),
+                        'frozen_amount' => Db::raw('GREATEST(frozen_amount - ' . self::formatDecimal($summary['frozen_delta']) . ', 0)'),
+                        'total_bet' => Db::raw('GREATEST(total_bet - ' . self::formatDecimal($summary['total_bet_delta']) . ', 0)'),
+                        'total_prize' => Db::raw('GREATEST(total_prize - ' . self::formatDecimal($summary['total_prize_delta']) . ', 0)'),
+                        'version' => Db::raw('version + 1'),
+                        'updated_at' => time(),
+                    ]);
+            }
+
+            $commissionCount = 0;
+            if (!empty($betIds)) {
+                $commissions = Db::table('la_agent_commission')
+                    ->whereIn('betting_id', $betIds)
+                    ->lock(true)
+                    ->select()
+                    ->toArray();
+
+                $commissionSummaries = [];
+                foreach ($commissions as $commission) {
+                    $agentId = (int)$commission['user_id'];
+                    if ($agentId <= 0) {
+                        continue;
+                    }
+                    if (!isset($commissionSummaries[$agentId])) {
+                        $commissionSummaries[$agentId] = 0.0;
+                    }
+                    $commissionSummaries[$agentId] += (float)$commission['commission_amount'];
+                }
+
+                foreach ($commissionSummaries as $agentId => $amount) {
+                    Db::table('la_user_account')->where('user_id', $agentId)->lock(true)->find();
+                    Db::table('la_user_account')
+                        ->where('user_id', $agentId)
+                        ->update([
+                            'balance' => Db::raw('balance - ' . self::formatDecimal($amount)),
+                            'total_commission' => Db::raw('GREATEST(total_commission - ' . self::formatDecimal($amount) . ', 0)'),
+                            'version' => Db::raw('version + 1'),
+                            'updated_at' => time(),
+                        ]);
+                }
+
+                $commissionCount = Db::table('la_agent_commission')
+                    ->whereIn('betting_id', $betIds)
+                    ->delete();
+            }
+
+            $winningCount = 0;
+            if (!empty($betIds)) {
+                $winningCount = Db::table('la_winning_record')
+                    ->whereIn('betting_id', $betIds)
+                    ->delete();
+            }
+
+            $accountLogCount = 0;
+            if (!empty($betSns)) {
+                $accountLogCount = Db::table('la_account_log')
+                    ->whereIn('related_sn', $betSns)
+                    ->delete();
+            }
+
+            $bettingCount = 0;
+            if (!empty($betIds)) {
+                $bettingCount = Db::table('la_betting_record')
+                    ->whereIn('id', $betIds)
+                    ->delete();
+            }
+
+            $historyCount = 0;
+            if (!empty($issueNos)) {
+                $historyCount = Db::table('la_best_plan_history')
+                    ->where('gid', $gid)
+                    ->where('plate_code', $plateCode)
+                    ->whereIn('qishu', $issueNos)
+                    ->delete();
+            }
+
+            $issueCount = 0;
+            if (!empty($issueIds)) {
+                $issueCount = Db::table('la_lottery_issue')
+                    ->whereIn('id', $issueIds)
+                    ->delete();
+            }
+
+            Db::table('la_operation_log')->insert([
+                'admin_id' => $operatorId,
+                'admin_name' => '',
+                'account' => '',
+                'action' => '清空今日期数',
+                'type' => 'POST',
+                'url' => request()->url(true),
+                'params' => json_encode([
+                    'gid' => $gid,
+                    'plate_code' => $plateCode,
+                    'date' => $today,
+                ], JSON_UNESCAPED_UNICODE),
+                'result' => json_encode([
+                    'issue_count' => $issueCount,
+                    'betting_count' => $bettingCount,
+                    'winning_count' => $winningCount,
+                    'account_log_count' => $accountLogCount,
+                    'commission_count' => $commissionCount,
+                    'history_count' => $historyCount,
+                    'affected_users' => count($userSummaries),
+                ], JSON_UNESCAPED_UNICODE),
+                'ip' => request()->ip(),
+                'create_time' => time(),
+            ]);
+
+            Db::commit();
+
+            return [
+                'date' => $today,
+                'plate_code' => $plateCode,
+                'issue_count' => $issueCount,
+                'betting_count' => $bettingCount,
+                'winning_count' => $winningCount,
+                'account_log_count' => $accountLogCount,
+                'commission_count' => $commissionCount,
+                'history_count' => $historyCount,
+                'affected_users' => count($userSummaries),
+            ];
+        } catch (\Throwable $e) {
+            Db::rollback();
+            self::setError('清空失败: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    private static function formatDecimal(float $value): string
+    {
+        return number_format($value, 2, '.', '');
+    }
+
     private static function getLatestIssue(int $gid, string $plateCode): ?array
     {
         $issue = Db::table('la_lottery_issue')

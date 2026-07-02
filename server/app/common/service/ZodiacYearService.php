@@ -76,34 +76,23 @@ class ZodiacYearService
     public static function getZodiacTableByYear(int $year): array
     {
         $config = self::getConfig();
-        $baseYear = $config['base_year'];
-        $baseTable = $config['base_table'];
         $zodiacOrder = $config['zodiac_order'];
+        $yearOffset = $config['year_offset'];
 
-        // 如果是基准年份,直接返回
-        if ($year === $baseYear) {
-            return $baseTable;
+        // 当年生肖对应 1,13,25,37,49；号码每加1，生肖按顺序向前回退一位。
+        $yearZodiacIndex = ($year - $yearOffset) % 12;
+        if ($yearZodiacIndex < 0) {
+            $yearZodiacIndex += 12;
+        }
+        $newTable = [];
+        foreach ($zodiacOrder as $zodiac) {
+            $newTable[$zodiac] = [];
         }
 
-        // 计算年份差
-        $yearDiff = $year - $baseYear;
-
-        // 生肖向前移动yearDiff位
-        $newTable = [];
-
-        foreach ($baseTable as $zodiac => $numbers) {
-            // 找到当前生肖在顺序中的位置
-            $currentIndex = array_search($zodiac, $zodiacOrder);
-
-            // 计算新生肖位置 (向前移动yearDiff位)
-            // 向前移动 = 索引减小,需要处理负数和循环
-            $newIndex = (($currentIndex - $yearDiff) % 12 + 12) % 12;
-
-            // 获取新生肖
-            $newZodiac = $zodiacOrder[$newIndex];
-
-            // 号码不变,生肖改变
-            $newTable[$newZodiac] = $numbers;
+        for ($number = 1; $number <= 49; $number++) {
+            $offset = ($number - 1) % 12;
+            $zodiacIndex = (($yearZodiacIndex - $offset) % 12 + 12) % 12;
+            $newTable[$zodiacOrder[$zodiacIndex]][] = $number;
         }
 
         return $newTable;

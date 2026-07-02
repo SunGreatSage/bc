@@ -106,14 +106,14 @@
           </div>
         </div>
 
-        <!-- 正码/平码玩法 -->
+        <!-- 平码玩法 -->
         <div class="play-type-card">
           <div class="play-header">
-            <h3 class="play-title play-title-normal">2. 正码/平码（Normal Code）</h3>
+            <h3 class="play-title play-title-normal">2. 平码（Normal Code）</h3>
             <span class="badge badge-normal">中等赔率</span>
           </div>
           <div class="play-body">
-            <p class="mb-3"><strong class="text-highlight">规则：</strong>预测开奖的前6个号码（正码 m1-m6）中包含的号码</p>
+            <p class="mb-3"><strong class="text-highlight">规则：</strong>预测开奖的前6个号码（m1-m6）中包含的号码</p>
             <p class="mb-3"><strong class="text-highlight">中奖条件：</strong>投注的号码在正码（m1-m6）中出现</p>
             <p class="mb-3"><strong class="text-highlight">示例：</strong></p>
             <div class="example-box">

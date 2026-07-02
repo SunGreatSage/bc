@@ -602,4 +602,26 @@ class BestPlanController extends BaseAdminController
             return $this->fail('创建失败: ' . $e->getMessage());
         }
     }
+
+    /**
+     * @notes 清空当前盘口今日测试期号和今日下单数据
+     * @return Json
+     */
+    public function clearTodayData(): Json
+    {
+        $gid = (int)$this->request->post('gid', 200);
+        $plateCode = $this->request->post('plate_code', 'A');
+
+        try {
+            $result = BestPlanLogic::clearTodayData($gid, $plateCode, $this->adminId);
+
+            if ($result === false) {
+                return $this->fail(BestPlanLogic::getError());
+            }
+
+            return $this->success('今日数据已清空', $result);
+        } catch (\Exception $e) {
+            return $this->fail('清空失败: ' . $e->getMessage());
+        }
+    }
 }
