@@ -11,6 +11,7 @@ import {
   analyzeAndSave,
   findByTargetRate,
   executeDrawing,
+  customDrawing,
   createNewIssue,
   previewNewIssue,
   type BestPlanApi,
@@ -32,6 +33,9 @@ const createIssueStrategyOptions = [
   { label: '立即开盘', value: 'immediate' },
   { label: '连续创建', value: 'continuous' },
 ];
+const customDrawVisible = ref(false);
+const customDrawSubmitting = ref(false);
+const customDrawNumbers = ref<Array<number | undefined>>([undefined, undefined, undefined, undefined, undefined, undefined, undefined]);
 let refreshTimer: NodeJS.Timeout | null = null;
 
 // ⏱️ 倒计时相关
@@ -134,6 +138,38 @@ function formatFixed(value: unknown, digits = 2, fallback = 0) {
   return toFiniteNumber(value, fallback).toFixed(digits);
 }
 
+function normalizeDrawNumbers(values: Array<number | undefined>): number[] {
+  return values
+    .map((value) => Number(value))
+    .filter((value) => Number.isInteger(value));
+}
+
+function validateDrawNumbers(numbers: number[]): string | null {
+  if (numbers.length !== 7) {
+    return '请填写完整的7个开奖号码';
+  }
+  const invalid = numbers.find((number) => number < 1 || number > 49);
+  if (invalid !== undefined) {
+    return '号码范围必须在1-49之间';
+  }
+  if (new Set(numbers).size !== numbers.length) {
+    return '开奖号码不能重复';
+  }
+  return null;
+}
+
+function formatDrawNumber(number: number) {
+  return String(number).padStart(2, '0');
+}
+
+function isBeforeCloseTime() {
+  if (!qishuInfo.value?.closetime) {
+    return false;
+  }
+  const closeTime = new Date(qishuInfo.value.closetime).getTime();
+  return Number.isFinite(closeTime) && Date.now() < closeTime;
+}
+
 // 获取盘口列表
 async function fetchPlateList() {
   try {
@@ -145,8 +181,9 @@ async function fetchPlateList() {
     }));
     console.log('📊 [盘口列表] 转换后的选项:', plateOptions.value);
     // 默认选择第一个盘口
-    if (plates.length > 0 && !selectedPlate.value) {
-      selectedPlate.value = plates[0].code;
+    const firstPlate = plates[0];
+    if (firstPlate && !selectedPlate.value) {
+      selectedPlate.value = firstPlate.code;
     }
     console.log('📊 [盘口列表] 当前选中:', selectedPlate.value);
   } catch (error) {
@@ -585,6 +622,98 @@ async function handleSelectAndDraw(record: any) {
   }
 }
 
+function openCustomDrawModal() {
+  if (!qishuInfo.value?.qishu) {
+    message.warning('请先获取当前期号');
+    return;
+  }
+  if (qishuInfo.value.is_opened) {
+    message.warning('当前期号已开奖');
+    return;
+  }
+  if (isBeforeCloseTime()) {
+    message.warning('当前期号尚未封盘，不能自定义开奖');
+    return;
+  }
+  customDrawNumbers.value = [undefined, undefined, undefined, undefined, undefined, undefined, undefined];
+  customDrawVisible.value = true;
+}
+
+async function handleCustomDrawOk() {
+  if (!qishuInfo.value?.qishu) {
+    message.warning('请先获取当前期号');
+    return;
+  }
+  if (isBeforeCloseTime()) {
+    message.warning('当前期号尚未封盘，不能自定义开奖');
+    return;
+  }
+
+  const numbers = normalizeDrawNumbers(customDrawNumbers.value);
+  const errorText = validateDrawNumbers(numbers);
+  if (errorText) {
+    message.warning(errorText);
+    return;
+  }
+
+  const normalNumbers = numbers.slice(0, 6);
+  const specialNumber = numbers[6] as number;
+  const confirmText =
+    `确认自定义开奖？\n\n` +
+    `期号：${qishuInfo.value.qishu}\n` +
+    `盘口：${selectedPlate.value}\n` +
+    `正码(m1-m6)：${normalNumbers.map(formatDrawNumber).join(', ')}\n` +
+    `特码(m7)：${formatDrawNumber(specialNumber)}\n\n` +
+    `此操作不可撤销！`;
+
+  if (!window.confirm(confirmText)) {
+    return;
+  }
+
+  customDrawSubmitting.value = true;
+  loading.value = true;
+  try {
+    const result = await customDrawing({
+      gid: 200,
+      qishu: qishuInfo.value.qishu,
+      plate_code: selectedPlate.value,
+      draw_numbers: numbers,
+      year: new Date().getFullYear(),
+    });
+
+    const totalOrders = toFiniteNumber((result as any)?.total_orders ?? (result as any)?.data?.total_orders);
+    const winCount = toFiniteNumber((result as any)?.win_count ?? (result as any)?.data?.win_count);
+    const loseCount = toFiniteNumber((result as any)?.lose_count ?? (result as any)?.data?.lose_count);
+    const drawCount = toFiniteNumber((result as any)?.draw_count ?? (result as any)?.data?.draw_count);
+    const totalPayout = toFiniteNumber(
+      (result as any)?.total_payout ??
+      (result as any)?.total_win_amount ??
+      (result as any)?.data?.total_payout ??
+      (result as any)?.data?.total_win_amount
+    );
+    const platformProfit = toFiniteNumber((result as any)?.platform_profit ?? (result as any)?.data?.platform_profit);
+
+    message.success(
+      `自定义开奖并结算成功！\n` +
+      `开奖号码：${numbers.map(formatDrawNumber).join(', ')}\n` +
+      `总订单：${totalOrders}笔\n` +
+      `中奖：${winCount}笔，和局：${drawCount}笔，派奖¥${formatFixed(totalPayout)}\n` +
+      `未中奖：${loseCount}笔\n` +
+      `平台利润：¥${formatFixed(platformProfit)}`,
+      10
+    );
+
+    customDrawVisible.value = false;
+    analyzeResult.value = null;
+    await fetchCurrentQishu();
+  } catch (error: any) {
+    message.error(error?.message || '自定义开奖失败');
+  } finally {
+    customDrawSubmitting.value = false;
+    loading.value = false;
+  }
+}
+
 /**
  * 手动创建新期号
  */
@@ -762,6 +891,15 @@ onBeforeUnmount(() => {
         >
           🎯 用此方案开奖
         </Button>
+        <Button
+          danger
+          size="large"
+          :loading="customDrawSubmitting"
+          :disabled="!qishuInfo?.qishu || qishuInfo?.is_opened || isBeforeCloseTime()"
+          @click="openCustomDrawModal"
+        >
+          自定义开奖
+        </Button>
       </Space>
 
       <div class="mt-4">
@@ -904,5 +1042,54 @@ onBeforeUnmount(() => {
         row-key="number"
       />
     </Card>
+
+    <Modal
+      v-model:open="customDrawVisible"
+      title="自定义开奖"
+      ok-text="确定开奖"
+      cancel-text="取消"
+      :confirm-loading="customDrawSubmitting"
+      @ok="handleCustomDrawOk"
+    >
+      <div v-if="qishuInfo" class="space-y-4">
+        <div class="text-sm text-gray-600">
+          <div>期号：<span class="font-medium text-gray-900">{{ qishuInfo.qishu }}</span></div>
+          <div>盘口：<span class="font-medium text-gray-900">{{ selectedPlate }}</span></div>
+        </div>
+
+        <div>
+          <div class="mb-2 text-sm font-medium text-gray-700">正码 m1-m6</div>
+          <div class="grid grid-cols-3 gap-3">
+            <div v-for="index in 6" :key="`normal-${index}`">
+              <div class="mb-1 text-xs text-gray-500">m{{ index }}</div>
+              <InputNumber
+                v-model:value="customDrawNumbers[index - 1]"
+                :min="1"
+                :max="49"
+                :precision="0"
+                style="width: 100%;"
+                placeholder="1-49"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="mb-2 text-sm font-medium text-gray-700">特码 m7</div>
+          <InputNumber
+            v-model:value="customDrawNumbers[6]"
+            :min="1"
+            :max="49"
+            :precision="0"
+            style="width: 100%;"
+            placeholder="1-49"
+          />
+        </div>
+
+        <div class="rounded border border-orange-200 bg-orange-50 p-3 text-sm text-orange-700">
+          前 6 个号码按正码计算，第 7 个号码按特码计算；号码必须为 1-49 且不能重复。
+        </div>
+      </div>
+    </Modal>
   </div>
 </template>

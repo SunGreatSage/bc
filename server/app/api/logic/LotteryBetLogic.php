@@ -835,11 +835,15 @@ class LotteryBetLogic
                     $userId = $order['user_id'];
                     $gid = $order['gid'];
                     $issue = $order['qishu'];
+                    $plateCode = $order['plate_code'] ?? 'A';
                 }
 
                 // 验证参数一致性
                 if ($order['user_id'] != $userId || $order['gid'] != $gid || $order['qishu'] != $issue) {
                     throw new \Exception('第' . ($index + 1) . '注投注失败: 订单参数不一致');
+                }
+                if (($order['plate_code'] ?? 'A') !== $plateCode) {
+                    throw new \Exception('第' . ($index + 1) . '注投注失败: 盘口参数不一致');
                 }
 
                 $totalAmount += $order['bet_amount'];
@@ -850,6 +854,7 @@ class LotteryBetLogic
                 ->where('game_id', $gid)
                 ->where('issue', $issue)
                 ->where('plate_code', $plateCode)
+                ->lock(true)
                 ->find();
 
             if (!$issueModel) {
@@ -1164,10 +1169,11 @@ class LotteryBetLogic
             }
 
             $now = time();
-            $canReveal = $drawTimeTs > 0 ? ($now >= $drawTimeTs) : true;
+            $isOpened = ((int)($issue['status'] ?? 0) === 3) && !empty($issue['result']);
+            $canReveal = $isOpened || ($drawTimeTs > 0 ? ($now >= $drawTimeTs) : true);
 
             $numbers = [];
-            // 安全策略：未到 draw_time 一律不返回号码（防止封盘阶段预写入/误写入导致提前开奖）
+            // 安全策略：planned_result 仍不公开；只有已正式开奖(status=3)或到达 draw_time 才返回 result。
             if ($canReveal && !empty($issue['result'])) {
                 $allNums = explode(',', (string)$issue['result']);
                 $allNums = array_values(array_filter(array_map('trim', $allNums), 'strlen'));

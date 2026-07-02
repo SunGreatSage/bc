@@ -2047,6 +2047,170 @@ class BestPlanLogic extends BaseLogic
         }
     }
 
+    /**
+     * 自定义开奖号码并立即开奖结算
+     */
+    public static function customDrawing(
+        int $gid,
+        string $qishu,
+        string $plateCode,
+        array $drawNumbers,
+        int $year,
+        int $operatorId = 0
+    )
+    {
+        try {
+            Db::startTrans();
+
+            $issue = Db::table('la_lottery_issue')
+                ->where('game_id', $gid)
+                ->where('issue', $qishu)
+                ->where('plate_code', $plateCode)
+                ->lock(true)
+                ->find();
+
+            if (!$issue) {
+                Db::rollback();
+                self::setError('期号不存在或盘口不匹配，请检查参数');
+                return false;
+            }
+
+            if (!empty($issue['result']) || (int)$issue['status'] === 3) {
+                Db::rollback();
+                self::setError('本期已开奖，不能重复开奖');
+                return false;
+            }
+
+            if (!empty($issue['is_settled'])) {
+                Db::rollback();
+                self::setError('本期已结算，不能重复开奖');
+                return false;
+            }
+
+            $closeTime = is_numeric($issue['close_time'] ?? 0)
+                ? (int)$issue['close_time']
+                : (int)strtotime((string)($issue['close_time'] ?? ''));
+            if ($closeTime > 0 && time() < $closeTime) {
+                Db::rollback();
+                self::setError('当前期号尚未封盘，不能自定义开奖');
+                return false;
+            }
+
+            $numbers = array_values(array_map('intval', $drawNumbers));
+            if (count($numbers) !== 7) {
+                Db::rollback();
+                self::setError('开奖号码数量必须为7个');
+                return false;
+            }
+            if (count(array_unique($numbers)) !== 7) {
+                Db::rollback();
+                self::setError('开奖号码不能重复');
+                return false;
+            }
+            foreach ($numbers as $num) {
+                if ($num < 1 || $num > 49) {
+                    Db::rollback();
+                    self::setError('号码范围必须在1-49之间');
+                    return false;
+                }
+            }
+
+            $orders = Db::table('la_betting_record')
+                ->where('game_id', $gid)
+                ->where('issue_id', $issue['id'])
+                ->where('issue', $qishu)
+                ->where('plate_code', $plateCode)
+                ->where('status', 0)
+                ->select()
+                ->toArray();
+
+            $winCount = 0;
+            $loseCount = 0;
+            $drawCount = 0;
+            $totalWinAmount = 0.0;
+            $totalBetAmount = 0.0;
+
+            foreach ($orders as $order) {
+                $totalBetAmount += (float)$order['total_amount'];
+
+                $resultType = LotteryBetLogic::checkWin(
+                    (string)($order['method_name'] ?? ''),
+                    (string)($order['bet_content'] ?? ''),
+                    $numbers,
+                    $year,
+                    (string)($order['bet_type'] ?? 'win')
+                );
+                $isWin = $resultType === 'win';
+                $isDraw = $resultType === 'draw';
+                $winAmount = $isWin ? $order['total_amount'] * $order['odds'] : ($isDraw ? $order['total_amount'] : 0);
+
+                if ($isWin) {
+                    $winCount++;
+                    $totalWinAmount += $winAmount;
+                } elseif ($isDraw) {
+                    $drawCount++;
+                    $totalWinAmount += (float)$order['total_amount'];
+                } else {
+                    $loseCount++;
+                }
+            }
+
+            $now = time();
+            Db::table('la_lottery_issue')
+                ->where('id', $issue['id'])
+                ->update([
+                    'result' => implode(',', $numbers),
+                    'planned_result' => implode(',', $numbers),
+                    'planned_at' => $now,
+                    'planned_source' => 1,
+                    'planned_operator_id' => max(0, (int)$operatorId),
+                    'status' => 3,
+                    'updated_at' => $now,
+                ]);
+
+            LotteryBetLogic::settleBetting((int)$issue['id'], $numbers);
+
+            $pendingCount = Db::table('la_betting_record')
+                ->where('issue_id', $issue['id'])
+                ->where('status', 0)
+                ->count();
+
+            if ($pendingCount > 0) {
+                throw new \Exception('仍有未结算订单，请检查用户账户或投注记录');
+            }
+
+            Db::table('la_lottery_issue')
+                ->where('id', $issue['id'])
+                ->update([
+                    'is_settled' => 1,
+                    'settled_at' => $now,
+                    'updated_at' => time(),
+                ]);
+
+            Db::commit();
+
+            return [
+                'issue' => $qishu,
+                'plate_code' => $plateCode,
+                'numbers' => $numbers,
+                'draw_numbers' => $numbers,
+                'win_count' => $winCount,
+                'lose_count' => $loseCount,
+                'draw_count' => $drawCount,
+                'total_orders' => count($orders),
+                'total_bet_amount' => round($totalBetAmount, 2),
+                'total_payout' => round($totalWinAmount, 2),
+                'total_win_amount' => round($totalWinAmount, 2),
+                'platform_profit' => round($totalBetAmount - $totalWinAmount, 2),
+                'settled_at' => $now,
+            ];
+        } catch (\Exception $e) {
+            Db::rollback();
+            self::setError($e->getMessage());
+            return false;
+        }
+    }
+
     private static function checkWin(array $order, array $m1_m6, int $m7, int $year): string
     {
         static $methodCache = [];

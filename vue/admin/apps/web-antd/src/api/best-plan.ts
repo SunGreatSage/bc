@@ -354,6 +354,49 @@ export async function executeDrawing(data: {
 }
 
 /**
+ * 自定义开奖号码并立即开奖结算
+ */
+export async function customDrawing(data: {
+  gid?: number;
+  qishu: string;
+  plate_code?: string;
+  draw_numbers: number[] | string;
+  year?: number;
+}) {
+  const formData = new URLSearchParams();
+  if (data.gid) formData.append('gid', String(data.gid));
+  formData.append('qishu', data.qishu);
+  if (data.plate_code) formData.append('plate_code', data.plate_code);
+
+  const numbers = Array.isArray(data.draw_numbers)
+    ? data.draw_numbers.join(',')
+    : data.draw_numbers;
+  formData.append('draw_numbers', numbers);
+
+  if (data.year) formData.append('year', String(data.year));
+
+  return requestClient.post<{
+    issue: string;
+    plate_code: string;
+    numbers: number[];
+    draw_numbers: number[];
+    total_orders: number;
+    win_count: number;
+    lose_count: number;
+    draw_count: number;
+    total_bet_amount: number;
+    total_payout: number;
+    total_win_amount: number;
+    platform_profit: number;
+    settled_at: number;
+  }>('/best_plan/customDrawing', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+}
+
+/**
  * 预览手动创建的新期号
  */
 export async function previewNewIssue(data: {

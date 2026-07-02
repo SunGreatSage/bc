@@ -85,6 +85,7 @@ class LotteryBetController extends BaseApiController
         // 获取请求参数
         $gid = $this->request->param('gid/d', 0);
         $qishu = $this->request->param('qishu', '');
+        $plateCode = $this->request->param('plate_code', 'A');
         $orders = $this->request->param('orders/a', []);  // 订单数组
 
         // 参数验证
@@ -144,6 +145,7 @@ class LotteryBetController extends BaseApiController
                 'user_id' => $userId,
                 'gid' => $gid,
                 'qishu' => $qishu,
+                'plate_code' => $plateCode,
                 'pid' => $pid,
                 'bet_content' => $betContent,
                 'bet_amount' => $betAmount,

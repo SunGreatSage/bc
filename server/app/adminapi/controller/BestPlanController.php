@@ -486,6 +486,56 @@ class BestPlanController extends BaseAdminController
         return $this->success('提交计划成功', $result);
     }
 
+    /**
+     * @notes 自定义开奖号码并立即开奖结算
+     * @return Json
+     */
+    public function customDrawing(): Json
+    {
+        $gid = (int)$this->request->post('gid', 200);
+        $qishu = $this->request->post('qishu', '');
+        $plateCode = $this->request->post('plate_code', 'A');
+        $drawNumbers = $this->request->post('draw_numbers', '');
+        $year = $this->request->post('year');
+
+        if (empty($qishu)) {
+            return $this->fail('期号不能为空');
+        }
+
+        if (empty($drawNumbers)) {
+            return $this->fail('开奖号码不能为空');
+        }
+
+        if (is_string($drawNumbers)) {
+            $drawNumbers = explode(',', $drawNumbers);
+        }
+        $drawNumbers = array_map('intval', $drawNumbers);
+
+        if (count($drawNumbers) !== 7) {
+            return $this->fail('必须提供7个开奖号码');
+        }
+
+        if (count(array_unique($drawNumbers)) !== 7) {
+            return $this->fail('开奖号码不能重复');
+        }
+
+        foreach ($drawNumbers as $num) {
+            if ($num < 1 || $num > 49) {
+                return $this->fail('号码必须在1-49之间');
+            }
+        }
+
+        $year = $year ? (int)$year : (int)date('Y');
+
+        $result = BestPlanLogic::customDrawing($gid, $qishu, $plateCode, $drawNumbers, $year, $this->adminId);
+
+        if ($result === false) {
+            return $this->fail(BestPlanLogic::getError());
+        }
+
+        return $this->success('自定义开奖成功', $result);
+    }
+
 
     /**
      * @notes 预览手动创建的新期号

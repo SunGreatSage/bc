@@ -378,6 +378,28 @@ class BestPlanLogic extends BaseLogic
         return \app\api\logic\BestPlanLogic::executeDrawing($gid, $qishu, $plateCode, $bestNumbers, $year, $operatorId);
     }
 
+    /**
+     * @notes 自定义开奖号码并立即开奖结算
+     * @param int $gid 游戏ID
+     * @param string $qishu 期号
+     * @param string $plateCode 盘口代码
+     * @param array $drawNumbers 7个开奖号码 [m1,m2,m3,m4,m5,m6,m7]
+     * @param int $year 年份
+     * @param int $operatorId 操作员ID
+     * @return array|false
+     */
+    public static function customDrawing(
+        int $gid,
+        string $qishu,
+        string $plateCode,
+        array $drawNumbers,
+        int $year,
+        int $operatorId = 0
+    )
+    {
+        return \app\api\logic\BestPlanLogic::customDrawing($gid, $qishu, $plateCode, $drawNumbers, $year, $operatorId);
+    }
+
 
     /**
      * @notes 预览手动创建的新期号
