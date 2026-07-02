@@ -28,5 +28,32 @@ Route::rule('pc/:any', function () {
 
 //定时任务
 Route::rule('crontab', function () {
-    Console::call('crontab');
+    $startedAt = microtime(true);
+
+    try {
+        $output = Console::call('crontab');
+        $content = trim($output->fetch());
+
+        return json([
+            'code' => 1,
+            'show' => 0,
+            'msg' => '定时任务执行完成',
+            'data' => [
+                'time' => date('Y-m-d H:i:s'),
+                'duration' => round(microtime(true) - $startedAt, 3),
+                'output' => $content,
+                'lines' => $content === '' ? [] : preg_split('/\r\n|\r|\n/', $content),
+            ],
+        ]);
+    } catch (\Throwable $e) {
+        return json([
+            'code' => 0,
+            'show' => 1,
+            'msg' => '定时任务执行失败：' . $e->getMessage(),
+            'data' => [
+                'time' => date('Y-m-d H:i:s'),
+                'duration' => round(microtime(true) - $startedAt, 3),
+            ],
+        ], 500);
+    }
 });

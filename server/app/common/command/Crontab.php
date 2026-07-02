@@ -37,11 +37,20 @@ class Crontab extends Command
 
     protected function execute(Input $input, Output $output)
     {
+        $output->writeln('Start crontab runner...');
+
         $lists = CrontabModel::where('status', CrontabEnum::START)->select()->toArray();
         if (empty($lists)) {
-            return false;
+            $output->writeln('No active crontab tasks');
+            return;
         }
+
         $time =  time();
+        $initialized = 0;
+        $skipped = 0;
+        $executed = 0;
+        $failed = 0;
+
         foreach ($lists as $item) {
             if (empty($item['last_time'])) {
                 $lastTime = (new CronExpression($item['expression']))
@@ -50,6 +59,14 @@ class Crontab extends Command
                 CrontabModel::where('id', $item['id'])->update([
                     'last_time' => $lastTime,
                 ]);
+                $initialized++;
+                $output->writeln(sprintf(
+                    'Init task #%s %s command=%s next_run=%s',
+                    $item['id'],
+                    $item['name'] ?? '',
+                    $item['command'] ?? '',
+                    date('Y-m-d H:i:s', $lastTime)
+                ));
                 continue;
             }
 
@@ -58,27 +75,85 @@ class Crontab extends Command
                 ->getTimestamp();
             if ($nextTime > $time) {
                 // 未到时间，不执行
+                $skipped++;
+                $output->writeln(sprintf(
+                    'Skip task #%s %s command=%s next_run=%s',
+                    $item['id'],
+                    $item['name'] ?? '',
+                    $item['command'] ?? '',
+                    date('Y-m-d H:i:s', $nextTime)
+                ));
                 continue;
             }
             // 开始执行
-            self::start($item);
+            $result = self::start($item);
+            $executed++;
+            if (empty($result['success'])) {
+                $failed++;
+            }
+
+            $output->writeln(sprintf(
+                'Run task #%s %s command=%s status=%s duration=%ss',
+                $item['id'],
+                $item['name'] ?? '',
+                $item['command'] ?? '',
+                empty($result['success']) ? 'failed' : 'success',
+                $result['duration'] ?? 0
+            ));
+
+            if (!empty($result['output'])) {
+                $output->writeln('Command output:');
+                foreach (preg_split('/\r\n|\r|\n/', trim($result['output'])) as $line) {
+                    $output->writeln('  ' . $line);
+                }
+            }
+
+            if (!empty($result['error'])) {
+                $output->writeln('Command error: ' . $result['error']);
+            }
         }
+
+        $output->writeln(sprintf(
+            'Crontab runner completed: active=%d initialized=%d skipped=%d executed=%d failed=%d',
+            count($lists),
+            $initialized,
+            $skipped,
+            $executed,
+            $failed
+        ));
     }
 
     public static function start($item)
     {
         // 开始执行
         $startTime = microtime(true);
+        $result = [
+            'success' => true,
+            'output' => '',
+            'error' => '',
+            'duration' => 0,
+        ];
+
         try {
-            $params = explode(' ', $item['params']);
-            if (is_array($params) && !empty($item['params'])) {
-                Console::call($item['command'], $params);
-            } else {
-                Console::call($item['command']);
+            $params = [];
+            if (!empty($item['params'])) {
+                $params = preg_split('/\s+/', trim($item['params'])) ?: [];
             }
+
+            if (!empty($params)) {
+                $commandOutput = Console::call($item['command'], $params);
+            } else {
+                $commandOutput = Console::call($item['command']);
+            }
+
+            $result['output'] = trim($commandOutput->fetch());
+
             // 清除错误信息
             CrontabModel::where('id', $item['id'])->update(['error' => '']);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            $result['success'] = false;
+            $result['error'] = $e->getMessage();
+
             // 记录错误信息
             CrontabModel::where('id', $item['id'])->update([
                 'error' => $e->getMessage(),
@@ -96,6 +171,10 @@ class Crontab extends Command
                 'time' => $useTime,
                 'max_time' => $maxTime
             ]);
+
+            $result['duration'] = $useTime;
         }
+
+        return $result;
     }
 }
