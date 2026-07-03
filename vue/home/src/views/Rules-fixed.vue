@@ -151,22 +151,21 @@
             <span class="badge badge-multi">组合玩法</span>
           </div>
           <div class="play-body">
-            <p class="mb-3"><strong class="text-highlight">规则：</strong>选择3-6个生肖进行组合投注</p>
-            <p class="mb-3"><strong class="text-highlight">支持类型：</strong>三肖、四肖、五肖、六肖</p>
-            <p class="mb-3"><strong class="text-highlight">中奖条件：</strong>7个开奖号码（m1-m7）的所有生肖，都必须包含在投注的生肖中</p>
+            <p class="mb-3"><strong class="text-highlight">规则：</strong>三肖、四肖、五肖按原组合规则投注；6肖中特选择6个生肖，只看特码</p>
+            <p class="mb-3"><strong class="text-highlight">支持类型：</strong>三肖、四肖、五肖、6肖中特</p>
+            <p class="mb-3"><strong class="text-highlight">6肖中特中奖条件：</strong>特码对应生肖命中所选6个生肖中的任意一个即中奖；特码开49打和退本金</p>
             <p class="mb-3"><strong class="text-highlight">示例（以2025年为例）：</strong></p>
             <div class="example-box">
-              <div class="mb-2">开奖号码：01(蛇), 12(马), 08(狗), 15(兔), 20(牛), 32(狗), <strong class="text-red">26(龙)</strong></div>
-              <div class="mb-2">开奖生肖集合：<strong class="text-highlight">蛇、马、狗、兔、牛、龙</strong>（共6个不同生肖）</div>
+              <div class="mb-2">开奖特码：<strong class="text-red">26(龙)</strong></div>
               <div class="mt-2">
-                <div class="text-success mb-1">✓ 投注"鼠、牛、虎、兔、龙、蛇、马、狗"（六肖） → 中奖</div>
-                <div class="text-success mb-1">✓ 投注"牛、兔、龙、蛇、马、狗"（六肖） → 中奖</div>
-                <div class="text-muted">✗ 投注"鼠、牛、虎、兔、龙"（五肖） → 不中奖（缺少蛇、马、狗）</div>
+                <div class="text-success mb-1">✓ 投注"鼠、牛、虎、兔、龙、蛇"（6肖中特） → 中奖</div>
+                <div class="text-muted mb-1">✗ 投注"鼠、牛、虎、兔、蛇、马"（6肖中特） → 不中奖</div>
+                <div class="text-warning">特码开49 → 和局退本金</div>
               </div>
             </div>
             <p class="mt-3 text-warning">
               <i class="fas fa-lightbulb mr-2"></i>
-              <strong>提示：</strong>7个开奖号码的生肖可能有重复（如上例中狗出现2次），判奖时只看生肖集合
+              <strong>提示：</strong>6肖中特赔率为1.95（含本金），只以第7个开奖号特码判奖
             </p>
           </div>
         </div>
@@ -521,17 +520,16 @@ const faqData = {
     answer: `
       <p>多肖玩法的判奖逻辑：</p>
       <ol class="notice-list mt-2">
-        <li>获取全部7个开奖号码（m1-m7）的生肖</li>
-        <li>去除重复，得到生肖集合（最多7个，可能有重复）</li>
-        <li>检查开奖生肖集合是否全部包含在投注生肖中</li>
-        <li>如果是，则中奖；否则不中奖</li>
+        <li>三肖、四肖、五肖按原组合规则判断</li>
+        <li>6肖中特只取第7个开奖号作为特码</li>
+        <li>特码生肖命中所选6个生肖中的任意一个，即为中奖</li>
+        <li>特码开49时打和，退还本金</li>
       </ol>
       <div class="example-box mt-3">
         <p class="font-semibold mb-2">示例（2025年）：</p>
-        <p class="mb-1">开奖：01(蛇), 12(马), 08(狗), 15(兔), 20(牛), 32(狗), 26(龙)</p>
-        <p class="mb-1">开奖生肖集合：{蛇, 马, 狗, 兔, 牛, 龙}（6个不同生肖）</p>
-        <p class="text-success mt-2">✓ 投注{牛,兔,龙,蛇,马,狗}（六肖）→ 中奖</p>
-        <p class="text-muted">✗ 投注{鼠,牛,虎,兔,龙}（五肖）→ 不中奖（缺少蛇,马,狗）</p>
+        <p class="mb-1">开奖特码：26(龙)</p>
+        <p class="text-success mt-2">✓ 投注{鼠,牛,虎,兔,龙,蛇}（6肖中特）→ 中奖</p>
+        <p class="text-muted">✗ 投注{鼠,牛,虎,兔,蛇,马}（6肖中特）→ 不中奖</p>
       </div>
     `
   },

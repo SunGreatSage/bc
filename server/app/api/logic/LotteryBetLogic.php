@@ -6,6 +6,7 @@ use think\facade\Db;
 use think\Exception;
 use app\common\service\ZodiacYearService;
 use app\common\service\ZodiacService;
+use app\common\service\LotteryPlayRuleService;
 use app\common\service\OrderSnService;
 use app\common\model\lottery\AccountLog;
 use app\common\model\lottery\WinningRecord;
@@ -180,6 +181,11 @@ class LotteryBetLogic
      */
     public static function checkWin($methodName, $betContent, $drawnNumbers, $year, $betType = 'win')
     {
+        $extendedResult = LotteryPlayRuleService::determineResult((string)$methodName, '', (string)$betContent, $drawnNumbers, (int)$year, (string)$betType);
+        if ($extendedResult !== null) {
+            return $extendedResult;
+        }
+
         $special = $drawnNumbers[7] ?? $drawnNumbers[6]; // 特码，兼容第8个或第7个元素
         $specialNumber = (int)$special;
         $regularNumbers = array_map('intval', array_slice($drawnNumbers, 0, 6)); // 前6个正码
@@ -508,6 +514,11 @@ class LotteryBetLogic
      */
     private static function validateBetContent(array $playMethod, string $betContent, int $index): void
     {
+        $extendedError = LotteryPlayRuleService::validateBetContent($playMethod, $betContent);
+        if ($extendedError !== null) {
+            throw new \Exception(sprintf('第%d注投注失败: %s', $index + 1, $extendedError));
+        }
+
         $comboRule = self::getNumberComboRule((string)$playMethod['name'], (string)($playMethod['code'] ?? ''));
         $missRule = self::getNumberMissRule((string)$playMethod['name'], (string)($playMethod['code'] ?? ''));
         $rule = $missRule ?: $comboRule;
@@ -626,6 +637,21 @@ class LotteryBetLogic
 
             if ($comboRule) {
                 return self::getComboNumberOptions($playName, $playMethod, $year, $plateCode, $comboRule);
+            }
+
+            $lianXiaoRule = LotteryPlayRuleService::getLianXiaoRule($playName, $playCode);
+            if ($lianXiaoRule) {
+                return LotteryPlayRuleService::getLianXiaoOptions($playName, $playMethod, (int)$year, $plateCode);
+            }
+
+            $sixSpecialZodiacRule = LotteryPlayRuleService::getSixSpecialZodiacRule($playName, $playCode);
+            if ($sixSpecialZodiacRule) {
+                return LotteryPlayRuleService::getSixSpecialZodiacOptions($playName, $playMethod, (int)$year, $plateCode);
+            }
+
+            $specialOptionPlay = LotteryPlayRuleService::getSpecialOptionPlay($playName, $playCode);
+            if ($specialOptionPlay) {
+                return LotteryPlayRuleService::getSpecialOptionResponse($playName, $playMethod, (int)$year, $plateCode);
             }
 
             // 特码、正码、平码：返回1-49号码
@@ -832,6 +858,11 @@ class LotteryBetLogic
 
     private static function resolveBetOdds(array $playMethod, string $betContent): float
     {
+        $extendedOdds = LotteryPlayRuleService::resolveBetOdds($playMethod, $betContent);
+        if ($extendedOdds !== null && $extendedOdds > 0) {
+            return $extendedOdds;
+        }
+
         $odds = self::getOptionOdds($playMethod, $betContent);
         return $odds > 0 ? $odds : (float)($playMethod['odds_default'] ?? 0);
     }
@@ -841,10 +872,10 @@ class LotteryBetLogic
         $defaultOdds = (float)($playMethod['odds_default'] ?? 0);
         $config = self::decodePrizeConfig($playMethod['prize_config'] ?? null);
         $optionOdds = $config['option_odds'] ?? [];
-        $normalizedOption = self::normalizeZodiacAlias($optionValue);
+        $normalizedOption = LotteryPlayRuleService::normalizeOption(self::normalizeZodiacAlias($optionValue));
 
         foreach ($optionOdds as $option => $odds) {
-            if (self::normalizeZodiacAlias((string)$option) === $normalizedOption) {
+            if (LotteryPlayRuleService::normalizeOption(self::normalizeZodiacAlias((string)$option)) === $normalizedOption) {
                 return (float)$odds;
             }
         }

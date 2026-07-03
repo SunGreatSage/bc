@@ -5,6 +5,7 @@ namespace app\api\logic;
 
 use app\common\logic\BaseLogic;
 use app\common\service\BestPlanService;
+use app\common\service\LotteryPlayRuleService;
 use app\common\service\ZodiacService;
 use app\common\service\ZodiacYearService;
 use think\facade\Db;
@@ -2234,6 +2235,17 @@ class BestPlanLogic extends BaseLogic
         $betType = $order['bet_type'] ?? 'win';
 
         $allNumbers = array_merge($m1_m6, [$m7]);
+        $extendedResult = LotteryPlayRuleService::determineResult(
+            $methodName,
+            $methodCode,
+            $betContent,
+            $allNumbers,
+            $year,
+            $betType
+        );
+        if ($extendedResult !== null) {
+            return $extendedResult;
+        }
 
         $missRule = self::getNumberMissRule($methodName, $methodCode);
         if ($missRule !== null) {

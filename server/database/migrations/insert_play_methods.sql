@@ -16,11 +16,11 @@ INSERT INTO `la_play_method` (`game_id`, `name`, `code`, `odds_default`, `odds_m
 (200, '特肖', 'texiao', 11.75, 10.00, 13.00, 1, 4, UNIX_TIMESTAMP()),
 (200, '一肖', 'yixiao', 11.75, 10.00, 13.00, 1, 5, UNIX_TIMESTAMP()),
 
--- 连肖玩法（仅保留三肖、四肖、五肖、六肖）
+-- 多肖玩法（6肖中特只看特码）
 (200, '三肖', 'sanxiao', 3.60, 3.00, 4.00, 1, 6, UNIX_TIMESTAMP()),
 (200, '四肖', 'sixiao', 2.80, 2.50, 3.20, 1, 7, UNIX_TIMESTAMP()),
 (200, '五肖', 'wuxiao', 2.00, 1.80, 2.30, 1, 8, UNIX_TIMESTAMP()),
-(200, '六肖', 'liuxiao', 1.90, 1.70, 2.10, 1, 9, UNIX_TIMESTAMP()),
+(200, '6肖中特', 'liuxiao', 1.95, 1.95, 1.95, 1, 9, UNIX_TIMESTAMP()),
 
 -- 数字连码
 (200, '二中二', 'erzhonger', 60.00, 1.00, 999.00, 1, 10, UNIX_TIMESTAMP()),

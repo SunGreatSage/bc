@@ -14,7 +14,7 @@ class OptimizedBestPlanService
     private const KEYWORDS_NORMAL_NUMBER = ['正码', '正碼', '平码', '平碼'];
     private const KEYWORDS_SPECIAL_ZODIAC = ['特肖', '特肖连'];
     private const KEYWORDS_ANY_ZODIAC = ['平肖'];
-    private const KEYWORDS_MULTI_ZODIAC = ['三肖', '四肖', '五肖', '六肖'];
+    private const KEYWORDS_MULTI_ZODIAC = ['三肖', '四肖', '五肖'];
     private const KEYWORDS_POSITIVE_ZODIAC = ['正肖'];
     private const KEYWORDS_SPECIAL_ODD_EVEN = ['特码单双', '特碼單雙', '特碼单双'];
     private const KEYWORDS_DIGIT_ODD_EVEN = ['合数单双', '合數單雙', '合數单双'];
@@ -40,6 +40,7 @@ class OptimizedBestPlanService
     protected array $zodiacMap = [];
     protected array $zodiacTable = [];
     protected array $playNameCache = [];
+    protected array $playCodeCache = [];
     protected array $specialCodeWeights = [];
     protected array $normalCodeWeights = [];
 
@@ -92,6 +93,7 @@ class OptimizedBestPlanService
 
         foreach ($this->allBets as $bet) {
             $methodName = $bet['method_name'] ?? ($this->playNameCache[$bet['bid']] ?? '');
+            $methodCode = $this->playCodeCache[$bet['bid']] ?? '';
             $betType = $bet['bet_type'] ?? 'win';
             $amount = (float)$bet['je'];
             $odds = (float)$bet['peilv1'];
@@ -103,6 +105,15 @@ class OptimizedBestPlanService
                 'odds' => $odds,
                 'bet_type' => $betType,
             ];
+
+            if (
+                LotteryPlayRuleService::getSpecialOptionPlay($methodName, $methodCode)
+                || LotteryPlayRuleService::getLianXiaoRule($methodName, $methodCode)
+                || LotteryPlayRuleService::getSixSpecialZodiacRule($methodName, $methodCode)
+            ) {
+                $this->otherBets[] = $bet;
+                continue;
+            }
 
             if ($this->containsKeyword($methodName, self::KEYWORDS_SPECIAL_NUMBER)) {
                 $numbers = array_values(array_unique(array_map('intval', $items)));
@@ -249,6 +260,7 @@ class OptimizedBestPlanService
 
         foreach ($playMethods as $method) {
             $this->playNameCache[$method['id']] = $method['name'];
+            $this->playCodeCache[$method['id']] = $method['code'] ?? '';
         }
     }
 
@@ -264,6 +276,7 @@ class OptimizedBestPlanService
 
         foreach ($this->allBets as $bet) {
             $methodName = $bet['method_name'] ?? ($this->playNameCache[$bet['bid']] ?? '');
+            $methodCode = $this->playCodeCache[$bet['bid']] ?? '';
             $betType = $bet['bet_type'] ?? 'win';
             $amount = (float)$bet['je'];
             $odds = (float)$bet['peilv1'];
@@ -275,6 +288,10 @@ class OptimizedBestPlanService
             $content = (string)($bet['content'] ?? '');
             $items = array_values(array_filter(array_map('trim', explode(',', $content)), 'strlen'));
             $direction = $betType === 'not_win' ? -1 : 1;
+
+            if (LotteryPlayRuleService::applyWeights($methodName, $methodCode, $content, $weightedAmount, $betType, $this->year, $this->normalCodeWeights, $this->specialCodeWeights)) {
+                continue;
+            }
 
             if ($this->containsKeyword($methodName, self::KEYWORDS_SPECIAL_NUMBER)) {
                 $betNumbers = array_map('intval', $items);
@@ -634,9 +651,22 @@ class OptimizedBestPlanService
     protected function determineBetResult(array $bet, array $normalCodes, int $specialCode, string $specialZodiac, array $allNumbers): string
     {
         $methodName = $bet['method_name'] ?? ($this->playNameCache[$bet['bid']] ?? '');
+        $methodCode = $this->playCodeCache[$bet['bid']] ?? '';
         $betType = $bet['bet_type'] ?? 'win';
         $content = (string)($bet['content'] ?? '');
         $rawItems = array_values(array_filter(array_map('trim', explode(',', $content)), 'strlen'));
+
+        $extendedResult = LotteryPlayRuleService::determineResult(
+            $methodName,
+            $methodCode,
+            $content,
+            array_merge($normalCodes, [$specialCode]),
+            $this->year,
+            $betType
+        );
+        if ($extendedResult !== null) {
+            return $extendedResult;
+        }
 
         if ($this->containsKeyword($methodName, self::KEYWORDS_SPECIAL_NUMBER)) {
             $betNumbers = array_map('intval', $rawItems);

@@ -526,8 +526,18 @@ class BestPlanService
             $betType = $bet['bet_type'] ?? 'win';  // 获取投注类型
             $resultType = 'lose';
             $comboRule = $this->getNumberComboRule($playName);
+            $extendedResult = LotteryPlayRuleService::determineResult(
+                $playName,
+                '',
+                (string)$bet['content'],
+                $all7Numbers,
+                $this->year,
+                $betType
+            );
 
-            if ($comboRule) {
+            if ($extendedResult !== null) {
+                $resultType = $extendedResult;
+            } elseif ($comboRule) {
                 $numberSelections = $this->parseNumberSelections((string)$bet['content']);
                 if (count($numberSelections) === $comboRule['select_count']) {
                     $hitCount = count(array_intersect($numberSelections, $normalCodes));
