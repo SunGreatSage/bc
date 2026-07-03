@@ -242,8 +242,9 @@ class BestPlanLogic extends BaseLogic
         $userType = trim((string)($params['user_type'] ?? ''));
         $plateCode = trim((string)($params['plate_code'] ?? ''));
         $issue = trim((string)($params['issue'] ?? ''));
+        $status = trim((string)($params['status'] ?? ''));
 
-        $lists = self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue)
+        $lists = self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue, $status)
             ->field([
                 'b.id',
                 'b.sn',
@@ -265,6 +266,7 @@ class BestPlanLogic extends BaseLogic
                 'b.odds',
                 'b.status',
                 'b.prize_amount',
+                '(b.total_amount - b.prize_amount) as profit_amount',
                 'b.is_settled',
                 'b.created_at',
                 'b.updated_at',
@@ -281,28 +283,31 @@ class BestPlanLogic extends BaseLogic
             $item['bet_amount'] = number_format((float)$item['bet_amount'], 2, '.', '');
             $item['total_amount'] = number_format((float)$item['total_amount'], 2, '.', '');
             $item['prize_amount'] = number_format((float)$item['prize_amount'], 2, '.', '');
+            $item['profit_amount'] = number_format((float)$item['profit_amount'], 2, '.', '');
             $item['created_time'] = !empty($item['created_at']) ? date('Y-m-d H:i:s', (int)$item['created_at']) : '';
             $item['status_text'] = self::getBetStatusText((int)($item['status'] ?? 0));
         }
         unset($item);
 
-        $summary = self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue)
+        $summary = self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue, $status)
             ->field([
                 'COUNT(b.id) as order_count',
                 'IFNULL(SUM(b.total_amount), 0) as total_amount',
                 'IFNULL(SUM(b.prize_amount), 0) as total_prize_amount',
+                'IFNULL(SUM(b.total_amount - b.prize_amount), 0) as total_profit_amount',
             ])
             ->find();
 
         return [
             'lists' => $lists,
-            'count' => self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue)->count('b.id'),
+            'count' => self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue, $status)->count('b.id'),
             'page_no' => $page,
             'page_size' => $limit,
             'summary' => [
                 'order_count' => (int)($summary['order_count'] ?? 0),
                 'total_amount' => number_format((float)($summary['total_amount'] ?? 0), 2, '.', ''),
                 'total_prize_amount' => number_format((float)($summary['total_prize_amount'] ?? 0), 2, '.', ''),
+                'total_profit_amount' => number_format((float)($summary['total_profit_amount'] ?? 0), 2, '.', ''),
             ],
         ];
     }
@@ -314,6 +319,7 @@ class BestPlanLogic extends BaseLogic
      * @param string $userType 用户类型
      * @param string $plateCode 盘口代码
      * @param string $issue 期号
+     * @param string $status 中奖状态
      * @return \think\db\Query
      */
     private static function buildOrderHistoryQuery(
@@ -321,7 +327,8 @@ class BestPlanLogic extends BaseLogic
         string $username,
         string $userType,
         string $plateCode,
-        string $issue
+        string $issue,
+        string $status
     ) {
         $query = Db::table('la_betting_record')
             ->alias('b')
@@ -349,6 +356,10 @@ class BestPlanLogic extends BaseLogic
 
         if ($issue !== '') {
             $query->where('b.issue', 'like', '%' . $issue . '%');
+        }
+
+        if ($status !== '' && in_array($status, ['1', '2'], true)) {
+            $query->where('b.status', (int)$status);
         }
 
         return $query;

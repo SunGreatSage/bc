@@ -128,6 +128,7 @@ export namespace BestPlanApi {
     status: number;
     status_text: string;
     prize_amount: string;
+    profit_amount: string;
     is_settled: number;
     created_at: number;
     created_time: string;
@@ -143,6 +144,7 @@ export namespace BestPlanApi {
       order_count: number;
       total_amount: string;
       total_prize_amount: string;
+      total_profit_amount: string;
     };
   }
 
@@ -304,6 +306,7 @@ export async function getOrderHistory(params: {
   user_type?: 'user' | 'agent' | '';
   plate_code?: string;
   issue?: string;
+  status?: '' | '1' | '2';
 }) {
   return requestClient.get<BestPlanApi.OrderHistoryResult>('/best_plan/getOrderHistory', {
     params,

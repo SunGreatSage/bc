@@ -1127,6 +1127,8 @@ class LotteryBetLogic
         $gameId = $params['gid'] ?? 0;
         $status = $params['z'] ?? '';
         $plateCode = $params['plate_code'] ?? '';
+        $startDate = trim((string)($params['start_date'] ?? ''));
+        $endDate = trim((string)($params['end_date'] ?? ''));
 
         // 构建查询条件
         $where = [];
@@ -1148,11 +1150,25 @@ class LotteryBetLogic
             $where[] = ['b.plate_code', '=', $plateCode];
         }
 
+        if ($startDate !== '') {
+            $startTimestamp = strtotime($startDate . ' 00:00:00');
+            if ($startTimestamp !== false) {
+                $where[] = ['b.created_at', '>=', $startTimestamp];
+            }
+        }
+
+        if ($endDate !== '') {
+            $endTimestamp = strtotime($endDate . ' 23:59:59');
+            if ($endTimestamp !== false) {
+                $where[] = ['b.created_at', '<=', $endTimestamp];
+            }
+        }
+
         // 查询投注记录（新表）
         $list = Db::table('la_betting_record')
             ->alias('b')
             ->leftJoin('la_play_method p', 'b.method_id = p.id')
-            ->field('b.id, b.sn, b.issue, b.game_id, b.plate_code, b.method_id, b.method_name, b.bet_type, b.bet_content, b.bet_amount, b.total_amount, b.odds, b.status, b.prize_amount, b.created_at, b.updated_at, p.name as play_name')
+            ->field('b.id, b.sn, b.issue, b.game_id, b.plate_code, b.method_id, b.method_name, b.bet_type, b.bet_content, b.bet_amount, b.total_amount, b.odds, b.status, b.prize_amount, (b.prize_amount - b.total_amount) as profit_amount, b.created_at, b.updated_at, p.name as play_name')
             ->where($where)
             ->order('b.id', 'desc')
             ->page($page, $limit)
@@ -1196,6 +1212,8 @@ class LotteryBetLogic
                 $item['prize'] = '0.00';
             }
 
+            $item['profit_amount'] = number_format($item['profit_amount'], 2, '.', '');
+
             // 格式化金额
             $item['bet_amount'] = number_format($item['bet_amount'], 2, '.', '');
             $item['total_amount'] = number_format($item['total_amount'], 2, '.', '');
@@ -1214,11 +1232,26 @@ class LotteryBetLogic
             ->where($where)
             ->count();
 
+        $summary = Db::table('la_betting_record')
+            ->alias('b')
+            ->where($where)
+            ->field([
+                'IFNULL(SUM(b.total_amount), 0) as total_amount',
+                'IFNULL(SUM(b.prize_amount), 0) as total_prize_amount',
+                'IFNULL(SUM(b.prize_amount - b.total_amount), 0) as total_profit_amount',
+            ])
+            ->find();
+
         return [
             'list' => $list,
             'total' => $total,
             'page' => $page,
             'limit' => $limit,
+            'summary' => [
+                'total_amount' => number_format((float)($summary['total_amount'] ?? 0), 2, '.', ''),
+                'total_prize_amount' => number_format((float)($summary['total_prize_amount'] ?? 0), 2, '.', ''),
+                'total_profit_amount' => number_format((float)($summary['total_profit_amount'] ?? 0), 2, '.', ''),
+            ],
         ];
     }
 

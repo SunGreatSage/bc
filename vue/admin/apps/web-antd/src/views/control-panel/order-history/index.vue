@@ -36,6 +36,7 @@ const searchParams = reactive({
   user_type: '' as '' | 'user' | 'agent',
   plate_code: '',
   issue: '',
+  status: '' as '' | '1' | '2',
 });
 
 const pagination = reactive({
@@ -48,6 +49,7 @@ const summary = reactive({
   order_count: 0,
   total_amount: '0.00',
   total_prize_amount: '0.00',
+  total_profit_amount: '0.00',
 });
 
 const columns: TableColumnsType = [
@@ -131,7 +133,14 @@ const columns: TableColumnsType = [
     align: 'right',
   },
   {
-    title: '状态',
+    title: '盈利',
+    dataIndex: 'profit_amount',
+    key: 'profit_amount',
+    width: 120,
+    align: 'right',
+  },
+  {
+    title: '中奖状态',
     dataIndex: 'status_text',
     key: 'status_text',
     width: 100,
@@ -168,6 +177,7 @@ async function loadData() {
       user_type: searchParams.user_type || undefined,
       plate_code: searchParams.plate_code || undefined,
       issue: searchParams.issue || undefined,
+      status: searchParams.status || undefined,
     });
 
     tableData.value = result.lists || [];
@@ -175,6 +185,7 @@ async function loadData() {
     summary.order_count = result.summary?.order_count || 0;
     summary.total_amount = result.summary?.total_amount || '0.00';
     summary.total_prize_amount = result.summary?.total_prize_amount || '0.00';
+    summary.total_profit_amount = result.summary?.total_profit_amount || '0.00';
   } catch (error: any) {
     message.error(error?.message || '获取历史下单失败');
   } finally {
@@ -192,6 +203,7 @@ function handleReset() {
   searchParams.user_type = '';
   searchParams.plate_code = '';
   searchParams.issue = '';
+  searchParams.status = '';
   pagination.current = 1;
   loadData();
 }
@@ -207,6 +219,13 @@ function getStatusColor(status: number) {
   if (status === 2) return 'default';
   if (status === 3) return 'red';
   return 'processing';
+}
+
+function getProfitClass(value: string | number) {
+  const amount = Number(value);
+  if (amount > 0) return 'profit-positive';
+  if (amount < 0) return 'profit-negative';
+  return 'muted-text';
 }
 
 onMounted(() => {
@@ -257,6 +276,17 @@ onMounted(() => {
             @press-enter="handleSearch"
           />
         </FormItem>
+        <FormItem label="中奖状态">
+          <Select
+            v-model:value="searchParams.status"
+            allow-clear
+            placeholder="全部"
+            style="width: 140px"
+          >
+            <SelectOption value="1">已中奖</SelectOption>
+            <SelectOption value="2">未中奖</SelectOption>
+          </Select>
+        </FormItem>
         <FormItem>
           <Space>
             <Button type="primary" :loading="loading" @click="handleSearch">
@@ -268,14 +298,23 @@ onMounted(() => {
       </Form>
 
       <Row :gutter="24" class="summary-row">
-        <Col :span="8">
+        <Col :span="6">
           <Statistic title="订单数" :value="summary.order_count" suffix="笔" />
         </Col>
-        <Col :span="8">
+        <Col :span="6">
           <Statistic title="投注总额" :value="Number(summary.total_amount)" prefix="¥" :precision="2" />
         </Col>
-        <Col :span="8">
+        <Col :span="6">
           <Statistic title="派奖总额" :value="Number(summary.total_prize_amount)" prefix="¥" :precision="2" />
+        </Col>
+        <Col :span="6">
+          <Statistic
+            title="总盈利"
+            :value="Number(summary.total_profit_amount)"
+            prefix="¥"
+            :precision="2"
+            :value-style="{ color: Number(summary.total_profit_amount) >= 0 ? '#16a34a' : '#dc2626' }"
+          />
         </Col>
       </Row>
 
@@ -291,7 +330,7 @@ onMounted(() => {
           showTotal: (total) => `共 ${total} 条记录`,
           pageSizeOptions: ['10', '20', '50', '100'],
         }"
-        :scroll="{ x: 1780 }"
+        :scroll="{ x: 1900 }"
         row-key="id"
         @change="handleTableChange"
       >
@@ -316,6 +355,11 @@ onMounted(() => {
           </template>
           <template v-else-if="column.key === 'prize_amount'">
             ¥{{ Number(record.prize_amount).toFixed(2) }}
+          </template>
+          <template v-else-if="column.key === 'profit_amount'">
+            <span :class="getProfitClass(record.profit_amount)">
+              ¥{{ Number(record.profit_amount).toFixed(2) }}
+            </span>
           </template>
           <template v-else-if="column.key === 'status_text'">
             <Tag :color="getStatusColor(record.status)">
@@ -345,5 +389,15 @@ onMounted(() => {
 .bet-content {
   white-space: normal;
   word-break: break-all;
+}
+
+.profit-positive {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.profit-negative {
+  color: #dc2626;
+  font-weight: 600;
 }
 </style>

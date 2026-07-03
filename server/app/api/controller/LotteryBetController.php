@@ -249,6 +249,8 @@ class LotteryBetController extends BaseApiController
         $gid = $this->request->param('gid/d', 0);
         $z = $this->request->param('z', '');
         $plateCode = $this->request->param('plate_code', '');
+        $startDate = $this->request->param('start_date', '');
+        $endDate = $this->request->param('end_date', '');
 
         // 调用查询逻辑
         $result = LotteryBetLogic::getBetList($userId, [
@@ -258,6 +260,8 @@ class LotteryBetController extends BaseApiController
             'gid' => $gid,
             'z' => $z,
             'plate_code' => $plateCode,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
         ]);
 
         return $this->success('获取成功', $result);
