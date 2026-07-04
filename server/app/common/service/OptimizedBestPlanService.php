@@ -588,6 +588,70 @@ class OptimizedBestPlanService
         ];
     }
 
+    public function isSpecialNumberOnlyBets(): bool
+    {
+        return $this->getBetCount() > 0
+            && count($this->specialNumberBets) === $this->getBetCount();
+    }
+
+    public function buildSpecialOutcomeSolutions(?int $maxConsecutive = null): array
+    {
+        $solutions = [];
+        for ($specialCode = 1; $specialCode <= 49; $specialCode++) {
+            $normalCodes = $this->buildRepresentativeNormalCodes($specialCode, $maxConsecutive);
+            if ($normalCodes === null) {
+                continue;
+            }
+
+            $solution = $this->buildSolutionFromNumbers($normalCodes, $specialCode, $maxConsecutive);
+            if ($solution === null) {
+                continue;
+            }
+
+            $solution['strategy'] = 'special_outcome';
+            $solution['source'] = 'special_outcome';
+            $solutions[] = $solution;
+        }
+        return $solutions;
+    }
+
+    protected function buildRepresentativeNormalCodes(int $specialCode, ?int $maxConsecutive = null): ?array
+    {
+        $preferred = [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 40, 43, 46];
+
+        $weighted = $this->normalCodeWeights;
+        asort($weighted, SORT_ASC);
+        $weightedNumbers = array_keys($weighted);
+
+        $pool = array_values(array_unique(array_merge($preferred, $weightedNumbers, range(1, 49))));
+        $pool = array_values(array_filter(array_map('intval', $pool), function ($num) use ($specialCode) {
+            return $num >= 1 && $num <= 49 && $num !== $specialCode;
+        }));
+
+        $poolCount = count($pool);
+        for ($offset = 0; $offset < $poolCount; $offset++) {
+            $combo = [];
+            for ($i = 0; $i < $poolCount; $i++) {
+                $num = $pool[($offset + $i) % $poolCount];
+                if (in_array($num, $combo, true)) {
+                    continue;
+                }
+                $candidate = $combo;
+                $candidate[] = $num;
+                sort($candidate);
+                if (!$this->isComboWithinMaxConsecutive($candidate, $specialCode, $maxConsecutive)) {
+                    continue;
+                }
+                $combo = $candidate;
+                if (count($combo) === 6) {
+                    return $combo;
+                }
+            }
+        }
+
+        return null;
+    }
+
     protected function calculateCombinedProfit(array $normalCodes, int $specialCode): array
     {
         $totalPrize = 0.0;

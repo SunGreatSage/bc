@@ -306,6 +306,19 @@ class BestPlanLogic extends BaseLogic
                 }
                 $topSolutions = self::filterSolutionsByMaxConsecutive($topSolutions, $maxConsecutive);
             }
+            if ($service->isSpecialNumberOnlyBets()) {
+                $specialOutcomeSolutions = $service->buildSpecialOutcomeSolutions($maxConsecutive);
+                if (!$includeNegative) {
+                    $specialOutcomeSolutions = self::filterSolutionsByNonNegative($specialOutcomeSolutions);
+                }
+                if ($maxConsecutive !== null) {
+                    $specialOutcomeSolutions = self::filterSolutionsByMaxConsecutive($specialOutcomeSolutions, $maxConsecutive);
+                }
+                if (!empty($specialOutcomeSolutions)) {
+                    $allSolutions = self::mergeSolutionsByActualOutcome($allSolutions ?? $topSolutions, $specialOutcomeSolutions);
+                    $topSolutions = self::mergeSolutionsByActualOutcome($topSolutions, $specialOutcomeSolutions);
+                }
+            }
             if ($allSolutions !== null) {
                 $result['all_solutions'] = $allSolutions;
             }
@@ -313,8 +326,9 @@ class BestPlanLogic extends BaseLogic
 
             $bucketSource = $allSolutions ?? $topSolutions;
             if ($maxConsecutive !== null) {
-                $bucketSource = self::fillSolutionsToMinimum($service, $bucketSource, 100, $maxConsecutive);
+                $bucketSource = self::fillSolutionsToMinimum($service, $bucketSource, 100, $maxConsecutive, $includeNegative);
             }
+            $bucketSource = self::dedupeSolutionsByActualOutcome($bucketSource);
             $rateBuckets = self::buildRateBuckets($bucketSource, $year, $maxConsecutive, false);
             $positivePlans = self::buildRepresentativePlans($bucketSource, [10, 20, 30, 40, 50, 60, 70, 80, 90, 100], $year, $maxConsecutive, false);
             $negativePlans = $includeNegative
@@ -323,13 +337,14 @@ class BestPlanLogic extends BaseLogic
 
             // 如果指定了目标利润率，使用智能扩展搜索。
             $searchResult = null;
-            if ($targetRate !== null && !empty($result['top_solutions'])) {
+            $targetSearchSolutions = self::dedupeSolutionsByActualOutcome($bucketSource);
+            if ($targetRate !== null && !empty($targetSearchSolutions)) {
                 trace("目标利润率: {$targetRate}%, 初始误差: ±{$tolerance}%", 'info');
-                trace("生成方案数量: " . count($result['top_solutions']), 'info');
+                trace("生成方案数量: " . count($targetSearchSolutions), 'info');
 
                 // 第一次尝试：使用当前方案库搜索。
                 $searchResult = self::findTargetRateSolutionByExpansion(
-                    $result['top_solutions'],
+                    $targetSearchSolutions,
                     $targetRate,
                     $tolerance
                 );
@@ -340,7 +355,7 @@ class BestPlanLogic extends BaseLogic
                     trace("No solution found after expansion; using best solution.", 'warning');
 
                     // 检查当前方案的覆盖范围。
-                    $rates = array_column($result['top_solutions'], 'profit_rate');
+                    $rates = array_column($targetSearchSolutions, 'profit_rate');
                     $minRate = min($rates);
                     $maxRate = max($rates);
                     $coverageRange = $maxRate - $minRate;
@@ -362,7 +377,7 @@ class BestPlanLogic extends BaseLogic
                         if (!empty($result['top_solutions'])) {
                             trace("扩展后方案数: " . count($result['top_solutions']), 'info');
                             $searchResult = self::findTargetRateSolutionByExpansion(
-                                $result['top_solutions'],
+                                self::dedupeSolutionsByActualOutcome($result['top_solutions']),
                                 $targetRate,
                                 $tolerance
                             );
@@ -475,6 +490,8 @@ class BestPlanLogic extends BaseLogic
             }
             if ($includeNegative) {
                 $topSolutions = self::mergeRepresentativePlans($topSolutions, $positivePlans, $negativePlans);
+            } else {
+                $topSolutions = self::dedupeSolutionsByActualOutcome($topSolutions);
             }
 
             return [
@@ -1116,6 +1133,11 @@ class BestPlanLogic extends BaseLogic
                 'strategy' => $solution['strategy'] ?? null,
                 'distance_to_target' => isset($solution['distance_to_target']) ? (float)$solution['distance_to_target'] : null,
             ];
+            foreach (['target_rate', 'rate_type', 'target_exact_match', 'closest_available', 'target_note', 'source', 'outcome_key'] as $field) {
+                if (array_key_exists($field, $solution)) {
+                    $item[$field] = $solution[$field];
+                }
+            }
             $wipeoutType = self::getWipeoutPlanType($item);
             $item['is_wipeout_plan'] = $wipeoutType !== '';
             $item['wipeout_type'] = $wipeoutType;
@@ -1155,50 +1177,40 @@ class BestPlanLogic extends BaseLogic
             return [];
         }
 
-        $plans = [];
-        $used = [];
-        foreach ($targets as $target) {
-            $target = (float)$target;
-            $candidates = array_values(array_filter($normalized, function ($solution) use ($negativeOnly) {
-                $rate = (float)($solution['profit_rate'] ?? 0);
-                return $negativeOnly ? $rate < 0 : $rate >= 0;
-            }));
-            if (empty($candidates)) {
+        $uniqueOutcomes = [];
+        foreach ($normalized as $solution) {
+            $rate = (float)($solution['profit_rate'] ?? 0);
+            if ($negativeOnly ? $rate >= 0 : $rate < 0) {
                 continue;
             }
-
-            usort($candidates, function ($a, $b) use ($target) {
-                $distA = abs((float)$a['profit_rate'] - $target);
-                $distB = abs((float)$b['profit_rate'] - $target);
-                if ($distA !== $distB) {
-                    return $distA <=> $distB;
-                }
-                if ((float)$a['profit_rate'] !== (float)$b['profit_rate']) {
-                    return (float)$b['profit_rate'] <=> (float)$a['profit_rate'];
-                }
-                return (float)$b['total_profit'] <=> (float)$a['total_profit'];
-            });
-
-            $selected = null;
-            foreach ($candidates as $candidate) {
-                $key = $candidate['solution_key'] ?? self::buildSolutionKey($candidate['m1_m6'], (int)$candidate['m7']);
-                if (isset($used[$key])) {
-                    continue;
-                }
-                $selected = $candidate;
-                $used[$key] = true;
-                break;
+            $outcomeKey = self::buildActualOutcomeKey($solution);
+            if (!isset($uniqueOutcomes[$outcomeKey])) {
+                $uniqueOutcomes[$outcomeKey] = $solution;
             }
-            if ($selected === null) {
-                $selected = $candidates[0];
-            }
+        }
 
+        $plans = [];
+        foreach ($uniqueOutcomes as $selected) {
+            $target = self::findClosestTargetRate((float)($selected['profit_rate'] ?? 0), $targets);
             $plan = self::formatBucketSolutions([$selected])[0];
             $plan['target_rate'] = $target;
             $plan['rate_type'] = $negativeOnly ? 'negative' : 'positive';
             $plan['distance_to_target'] = round(abs((float)$plan['profit_rate'] - $target), 2);
+            $plan['target_exact_match'] = $plan['distance_to_target'] < 0.01;
+            $plan['closest_available'] = !$plan['target_exact_match'];
+            $plan['target_note'] = $plan['target_exact_match']
+                ? ''
+                : sprintf('目标%s无精确方案，最近实际%s', self::formatRateValue($target, 0), self::formatRateValue((float)$plan['profit_rate']));
+            $plan['outcome_key'] = self::buildActualOutcomeKey($plan);
             $plans[] = $plan;
         }
+
+        usort($plans, function ($a, $b) {
+            if ((float)$a['profit_rate'] !== (float)$b['profit_rate']) {
+                return (float)$b['profit_rate'] <=> (float)$a['profit_rate'];
+            }
+            return (float)$b['total_profit'] <=> (float)$a['total_profit'];
+        });
 
         return $plans;
     }
@@ -1215,16 +1227,16 @@ class BestPlanLogic extends BaseLogic
                 }
                 $m1m6 = array_values(array_map('intval', $m1m6));
                 sort($m1m6);
-                $key = self::buildSolutionKey($m1m6, (int)$m7);
-                if (isset($merged[$key])) {
-                    continue;
-                }
                 $solution['m1_m6'] = $m1m6;
                 $solution['m7'] = (int)$m7;
                 if (!isset($solution['numbers'])) {
                     $solution['numbers'] = array_merge($m1m6, [(int)$m7]);
                 }
-                $merged[$key] = $solution;
+                $solution['outcome_key'] = self::buildActualOutcomeKey($solution);
+                if (isset($merged[$solution['outcome_key']])) {
+                    continue;
+                }
+                $merged[$solution['outcome_key']] = $solution;
             }
         }
 
@@ -1365,7 +1377,8 @@ class BestPlanLogic extends BaseLogic
         \app\common\service\OptimizedBestPlanService $service,
         array $solutions,
         int $minCount,
-        ?int $maxConsecutive = null
+        ?int $maxConsecutive = null,
+        bool $includeNegative = false
     ): array {
         if ($minCount <= 0) {
             return $solutions;
@@ -1390,7 +1403,7 @@ class BestPlanLogic extends BaseLogic
             if ($maxConsecutive !== null && self::getMaxConsecutive($comboNumbers) > $maxConsecutive) {
                 continue;
             }
-            if (self::getSolutionTotalProfit($solution) < 0) {
+            if (!$includeNegative && self::getSolutionTotalProfit($solution) < 0) {
                 continue;
             }
             sort($m1_m6);
@@ -1421,7 +1434,7 @@ class BestPlanLogic extends BaseLogic
                 $attempts++;
                 continue;
             }
-            if (self::getSolutionTotalProfit($built) < 0) {
+            if (!$includeNegative && self::getSolutionTotalProfit($built) < 0) {
                 $attempts++;
                 continue;
             }
@@ -1444,6 +1457,92 @@ class BestPlanLogic extends BaseLogic
             return (float)$solution['profit'];
         }
         return 0.0;
+    }
+
+    private static function getSolutionTotalPrize(array $solution): float
+    {
+        if (array_key_exists('total_prize', $solution)) {
+            return (float)$solution['total_prize'];
+        }
+        if (array_key_exists('prize_amount', $solution)) {
+            return (float)$solution['prize_amount'];
+        }
+        return 0.0;
+    }
+
+    private static function buildActualOutcomeKey(array $solution): string
+    {
+        $rate = round((float)($solution['profit_rate'] ?? 0), 2);
+        $profit = round(self::getSolutionTotalProfit($solution), 2);
+        $prize = round(self::getSolutionTotalPrize($solution), 2);
+        return number_format($rate, 2, '.', '')
+            . '|'
+            . number_format($profit, 2, '.', '')
+            . '|'
+            . number_format($prize, 2, '.', '');
+    }
+
+    private static function formatRateValue(float $value, int $digits = 2): string
+    {
+        return number_format($value, $digits, '.', '') . '%';
+    }
+
+    private static function findClosestTargetRate(float $rate, array $targets): float
+    {
+        $closest = (float)($targets[0] ?? 0);
+        $closestDistance = abs($rate - $closest);
+        foreach ($targets as $target) {
+            $target = (float)$target;
+            $distance = abs($rate - $target);
+            if ($distance < $closestDistance) {
+                $closest = $target;
+                $closestDistance = $distance;
+            }
+        }
+        return $closest;
+    }
+
+    private static function mergeSolutionsByActualOutcome(array ...$groups): array
+    {
+        $merged = [];
+        foreach ($groups as $solutions) {
+            foreach ($solutions as $solution) {
+                if (!is_array($solution)) {
+                    continue;
+                }
+                $key = self::buildActualOutcomeKey($solution);
+                if (!isset($merged[$key]) || self::shouldReplaceOutcomeRepresentative($solution, $merged[$key])) {
+                    $solution['outcome_key'] = $key;
+                    $merged[$key] = $solution;
+                }
+            }
+        }
+        return array_values($merged);
+    }
+
+    private static function dedupeSolutionsByActualOutcome(array $solutions): array
+    {
+        return self::mergeSolutionsByActualOutcome($solutions);
+    }
+
+    private static function shouldReplaceOutcomeRepresentative(array $candidate, array $current): bool
+    {
+        $candidateHasTarget = array_key_exists('target_rate', $candidate);
+        $currentHasTarget = array_key_exists('target_rate', $current);
+        if ($candidateHasTarget !== $currentHasTarget) {
+            return $candidateHasTarget;
+        }
+
+        $candidateSource = (string)($candidate['source'] ?? '');
+        $currentSource = (string)($current['source'] ?? '');
+        if ($candidateSource === 'special_outcome' && $currentSource !== 'special_outcome') {
+            return false;
+        }
+        if ($candidateSource !== 'special_outcome' && $currentSource === 'special_outcome') {
+            return true;
+        }
+
+        return false;
     }
 
     private static function filterSolutionsByNonNegative(array $solutions): array

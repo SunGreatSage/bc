@@ -82,6 +82,11 @@ export namespace BestPlanApi {
     target_rate?: number;
     rate_type?: 'positive' | 'negative';
     distance_to_target?: number;
+    target_exact_match?: boolean;
+    closest_available?: boolean;
+    target_note?: string;
+    source?: string;
+    outcome_key?: string;
     is_wipeout_plan?: boolean;
     wipeout_type?: 'full' | 'near' | '';
   }

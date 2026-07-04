@@ -74,7 +74,7 @@ const columns: TableColumnsType = [
     title: '目标/实际',
     dataIndex: 'strategy',
     key: 'strategy',
-    width: 180,
+    width: 240,
     align: 'center',
   },
   {
@@ -564,7 +564,15 @@ const tableData = computed(() => {
       (solution.rate_type === 'negative' || solution.rate_type === 'positive')
       && solution.target_rate !== undefined
     ) {
-      strategyName = `目标${formatRatePercent(solution.target_rate, 0)} / 实际${formatRatePercent(solution.profit_rate)}`;
+      if (solution.target_note) {
+        strategyName = solution.target_note;
+      } else if (solution.closest_available) {
+        strategyName = `目标${formatRatePercent(solution.target_rate, 0)} / 最近${formatRatePercent(solution.profit_rate)}`;
+      } else {
+        strategyName = `目标${formatRatePercent(solution.target_rate, 0)} / 实际${formatRatePercent(solution.profit_rate)}`;
+      }
+    } else if (solution.source === 'special_outcome') {
+      strategyName = `实际可选 ${formatRatePercent(solution.profit_rate)}`;
     }
     if (wipeoutType) {
       strategyName = `${getWipeoutPlanLabel(wipeoutType)} | ${strategyName}`;
