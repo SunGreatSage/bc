@@ -48,11 +48,11 @@ let countdownTimer: NodeJS.Timeout | null = null;
 // 表格列定义
 const columns: TableColumnsType = [
   {
-    title: '7个号码组合',
+    title: '正码 + 特码',
     dataIndex: 'numbers',
     key: 'numbers',
-    width: 220,
-    align: 'center',
+    width: 360,
+    align: 'left',
   },
   {
     title: '利润（元）',
@@ -235,6 +235,14 @@ function validateDrawNumbers(numbers: number[]): string | null {
 
 function formatDrawNumber(number: number) {
   return String(number).padStart(2, '0');
+}
+
+function formatPlanNumber(number: unknown) {
+  const value = Number(number);
+  if (!Number.isFinite(value)) {
+    return String(number ?? '');
+  }
+  return String(value).padStart(2, '0');
 }
 
 function isBeforeCloseTime() {
@@ -534,8 +542,8 @@ const tableData = computed(() => {
 
   // 1. 先转换数据
   const formattedData = analyzeResult.value.top_solutions.map((solution, index) => {
-    // 合并7个号码
-    const numbers = [...solution.m1_m6, solution.m7].sort((a, b) => a - b);
+    const normalNumbers = [...solution.m1_m6];
+    const specialNumber = solution.m7;
 
     // 判断风险等级
     const totalPayout = toFiniteNumber(solution.total_prize ?? (solution as any).prize_amount);
@@ -580,7 +588,9 @@ const tableData = computed(() => {
 
     return {
       key: index,
-      numbers: numbers.join(', '),
+      numbers: [...normalNumbers, specialNumber].join(', '),
+      normal_numbers: normalNumbers,
+      special_number: specialNumber,
       profit: solution.total_profit ?? 0,
       profit_rate: solution.profit_rate ?? 0,
       strategy: strategyName,
@@ -1120,7 +1130,38 @@ onBeforeUnmount(() => {
           </div>
         </Col>
       </Row>
-      <div v-else class="text-gray-400">暂无期号信息</div>
+      <div
+        v-if="qishuInfo && qishuInfo.has_planned_result && qishuInfo.planned_numbers && qishuInfo.planned_numbers.length === 7"
+        class="mt-4 rounded border border-purple-200 bg-purple-50 px-4 py-3"
+      >
+        <div class="mb-2 flex items-center gap-2">
+          <Tag color="purple">已选方案</Tag>
+          <span v-if="qishuInfo.planned_at" class="text-xs text-gray-500">
+            锁定时间：{{ qishuInfo.planned_at }}
+          </span>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="text-sm text-gray-500">正码(m1-m6)：</span>
+          <Space :size="4" wrap>
+            <Tag
+              v-for="(num, index) in qishuInfo.planned_numbers.slice(0, 6)"
+              :key="`planned-normal-${index}`"
+              color="blue"
+              style="font-size: 14px; font-weight: bold; padding: 2px 8px;"
+            >
+              {{ formatPlanNumber(num) }}
+            </Tag>
+          </Space>
+          <span class="ml-2 text-sm text-gray-500">特码(m7)：</span>
+          <Tag
+            color="volcano"
+            style="font-size: 15px; font-weight: bold; padding: 3px 10px;"
+          >
+            {{ formatPlanNumber(qishuInfo.planned_numbers[6]) }}
+          </Tag>
+        </div>
+      </div>
+      <div v-if="!qishuInfo" class="text-gray-400">暂无期号信息</div>
     </Card>
 
     <!-- 操作按钮 -->
@@ -1292,15 +1333,35 @@ onBeforeUnmount(() => {
         row-key="key"
       >
         <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'numbers'">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs text-gray-500">正码</span>
+              <Space :size="4" wrap>
+                <Tag
+                  v-for="(num, index) in record.normal_numbers"
+                  :key="`normal-${record.key}-${index}`"
+                  color="blue"
+                  style="font-weight: bold;"
+                >
+                  {{ formatPlanNumber(num) }}
+                </Tag>
+              </Space>
+              <span class="ml-1 text-xs text-gray-500">特码</span>
+              <Tag color="volcano" style="font-weight: bold;">
+                {{ formatPlanNumber(record.special_number) }}
+              </Tag>
+            </div>
+          </template>
+
           <!-- 风险等级列 - 使用Tag组件显示 -->
-          <template v-if="column.key === 'risk_level'">
+          <template v-else-if="column.key === 'risk_level'">
             <Tag :color="record.wipeout_type ? 'error' : record.risk_level === 0 ? 'success' : record.risk_level === 1 ? 'warning' : 'error'">
               {{ record.wipeout_type ? getWipeoutPlanLabel(record.wipeout_type) : record.risk_level === 0 ? '✅ 安全' : record.risk_level === 1 ? '⚠️ 注意' : '🔴 危险' }}
             </Tag>
           </template>
 
           <!-- 操作列 - 显示"选中此方案"按钮 -->
-          <template v-if="column.key === 'action'">
+          <template v-else-if="column.key === 'action'">
             <Button
               type="primary"
               size="small"

@@ -97,6 +97,7 @@ class BestPlanLogic extends BaseLogic
 
         // 检查result字段的值
         $resultValue = $issue['result'] ?? '';
+        $plannedResultValue = $issue['planned_result'] ?? '';
 
         // 转换时间戳为日期时间格式
         // ✅ 始终包含所有字段，避免前端undefined
@@ -112,9 +113,17 @@ class BestPlanLogic extends BaseLogic
             'planned_source' => (int)($issue['planned_source'] ?? 0),
             'planned_at' => !empty($issue['planned_at']) ? date('Y-m-d H:i:s', (int)$issue['planned_at']) : '',
             'planned_operator_id' => (int)($issue['planned_operator_id'] ?? 0),
+            'planned_numbers' => [],  // 后台展示已锁定方案
+            'planned_numbers_text' => '',
             'draw_numbers' => [],  // ✅ 默认空数组
             'draw_numbers_text' => '',  // ✅ 默认空字符串
         ];
+
+        // 后台允许查看已锁定但未公开的人工计划，方便总管理核对选定方案
+        if (!empty($plannedResultValue) && is_string($plannedResultValue)) {
+            $result['planned_numbers'] = explode(',', $plannedResultValue);
+            $result['planned_numbers_text'] = $plannedResultValue;
+        }
 
         // 如果result字段有值，解析开奖号码
         if (!empty($resultValue) && is_string($resultValue)) {

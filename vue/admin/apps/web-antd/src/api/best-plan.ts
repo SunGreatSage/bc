@@ -20,6 +20,8 @@ export namespace BestPlanApi {
     draw_numbers?: string[];  // 开奖号码数组 ["01", "13", "25", "37", "42", "49", "07"]
     draw_numbers_text?: string;  // 开奖号码文本 "01,13,25,37,42,49,07"
     has_planned_result?: boolean;
+    planned_numbers?: string[];  // 后台已锁定的人工计划号码，前6个正码，第7个特码
+    planned_numbers_text?: string;
     planned_source?: number;
     planned_at?: string;
     planned_operator_id?: number;
