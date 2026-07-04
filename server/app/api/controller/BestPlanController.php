@@ -45,6 +45,7 @@ class BestPlanController extends BaseApiController
      * 请求参数：
      * - gid: 游戏ID（默认200=新澳门六合彩）
      * - qishu: 期号
+     * - plate_code: 盘口代码（默认A）
      * - year: 年份（可选，默认当前年份）
      *
      * 返回示例：
@@ -72,6 +73,7 @@ class BestPlanController extends BaseApiController
 
         $gid = (int)$this->request->post('gid', 200);
         $qishu = $this->request->post('qishu', '');
+        $plateCode = $this->request->post('plate_code', 'A');
         $year = $this->request->post('year');
 
         if (empty($qishu)) {
@@ -80,7 +82,7 @@ class BestPlanController extends BaseApiController
 
         $year = $year ? (int)$year : null;
 
-        $result = BestPlanLogic::analyze($gid, $qishu, $year);
+        $result = BestPlanLogic::analyze($gid, $qishu, $plateCode, $year);
 
         if ($result === false) {
             return $this->fail(BestPlanLogic::getError());
@@ -98,6 +100,7 @@ class BestPlanController extends BaseApiController
      * 请求参数：
      * - gid: 游戏ID（默认200）
      * - qishu: 期号
+     * - plate_code: 盘口代码（默认A）
      * - year: 年份（可选）
      * - target_rate: 目标利润率（可选，如10表示10%，为空则最大化利润）
      * - tolerance: 允许误差（可选，默认5%）
@@ -110,6 +113,7 @@ class BestPlanController extends BaseApiController
 
         $gid = (int)$this->request->post('gid', 200);
         $qishu = $this->request->post('qishu', '');
+        $plateCode = $this->request->post('plate_code', 'A');
         $year = $this->request->post('year');
         $targetRate = $this->request->post('target_rate');  // 新增：目标利润率
         $tolerance = $this->request->post('tolerance');      // 新增：误差范围
@@ -122,7 +126,7 @@ class BestPlanController extends BaseApiController
         $targetRate = $targetRate !== '' && $targetRate !== null ? (float)$targetRate : null;
         $tolerance = $tolerance !== '' && $tolerance !== null ? (float)$tolerance : 5.0;
 
-        $result = BestPlanLogic::calculateRealtime($gid, $qishu, $year, $targetRate, $tolerance);
+        $result = BestPlanLogic::calculateRealtime($gid, $qishu, $plateCode, $year, $targetRate, $tolerance);
 
         if ($result === false) {
             return $this->fail(BestPlanLogic::getError());
@@ -140,6 +144,7 @@ class BestPlanController extends BaseApiController
      * 请求参数：
      * - gid: 游戏ID
      * - qishu: 期号
+     * - plate_code: 盘口代码（默认A）
      * - target_rate: 目标利润率（如10表示10%）
      * - tolerance: 允许误差（默认1，表示±1%）
      */
@@ -151,6 +156,7 @@ class BestPlanController extends BaseApiController
 
         $gid = (int)$this->request->post('gid', 200);
         $qishu = $this->request->post('qishu', '');
+        $plateCode = $this->request->post('plate_code', 'A');
         $targetRate = (float)$this->request->post('target_rate', 10.0);
         $tolerance = (float)$this->request->post('tolerance', 1.0);
         $year = $this->request->post('year');
@@ -161,7 +167,7 @@ class BestPlanController extends BaseApiController
 
         $year = $year ? (int)$year : null;
 
-        $result = BestPlanLogic::findByTargetRate($gid, $qishu, $targetRate, $tolerance, $year);
+        $result = BestPlanLogic::findByTargetRate($gid, $qishu, $plateCode, $targetRate, $tolerance, $year);
 
         if ($result === false) {
             return $this->fail(BestPlanLogic::getError());

@@ -99,12 +99,20 @@ class LotteryBetLogic
         if (!$issue) throw new Exception('期次不存在');
 
         $year = (int)substr($issue['issue'], 0, 4);
-        $bettings = Db::name('betting_record')->where(['issue_id' => $issueId, 'status' => 0])->select();
+        $bettings = Db::table('la_betting_record')
+            ->alias('b')
+            ->leftJoin('la_play_method pm', 'b.method_id = pm.id')
+            ->field('b.*, pm.name as play_method_name, pm.code as method_code')
+            ->where('b.issue_id', $issueId)
+            ->where('b.status', 0)
+            ->select();
 
         foreach ($bettings as $bet) {
             // 读取投注类型
             $betType = $bet['bet_type'] ?? 'win';
-            $resultType = self::checkWin($bet['method_name'], $bet['bet_content'], $drawnNumbers, $year, $betType);
+            $methodName = $bet['play_method_name'] ?: $bet['method_name'];
+            $methodCode = (string)($bet['method_code'] ?? '');
+            $resultType = self::checkWin($methodName, $bet['bet_content'], $drawnNumbers, $year, $betType, $methodCode);
             $isWin = $resultType === 'win';
             $isDraw = $resultType === 'draw';
             $prizeAmount = $isWin ? $bet['total_amount'] * $bet['odds'] : ($isDraw ? $bet['total_amount'] : 0);
@@ -179,9 +187,10 @@ class LotteryBetLogic
      *                        - 'not_win': 号码未命中即中奖(历史遗留,不再使用)
      * @return string win|lose|draw
      */
-    public static function checkWin($methodName, $betContent, $drawnNumbers, $year, $betType = 'win')
+    public static function checkWin($methodName, $betContent, $drawnNumbers, $year, $betType = 'win', $methodCode = '')
     {
-        $extendedResult = LotteryPlayRuleService::determineResult((string)$methodName, '', (string)$betContent, $drawnNumbers, (int)$year, (string)$betType);
+        $methodCode = strtolower(trim((string)$methodCode));
+        $extendedResult = LotteryPlayRuleService::determineResult((string)$methodName, $methodCode, (string)$betContent, $drawnNumbers, (int)$year, (string)$betType);
         if ($extendedResult !== null) {
             return $extendedResult;
         }
@@ -194,7 +203,7 @@ class LotteryBetLogic
             $allNumbers[] = $specialNumber;
         }
         $allNumbers = array_values(array_unique($allNumbers));
-        $missRule = self::getNumberMissRule($methodName);
+        $missRule = self::getNumberMissRule($methodName, $methodCode);
         if ($missRule) {
             $betNumbers = self::parseNumberSelections($betContent);
             if (count($betNumbers) !== $missRule['select_count']) {
@@ -205,7 +214,7 @@ class LotteryBetLogic
             return self::resolveResult($hitCount === 0, $betType);
         }
 
-        $comboRule = self::getNumberComboRule($methodName);
+        $comboRule = self::getNumberComboRule($methodName, $methodCode);
 
         if ($comboRule) {
             $betNumbers = self::parseNumberSelections($betContent);

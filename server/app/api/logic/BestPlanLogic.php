@@ -5,7 +5,9 @@ namespace app\api\logic;
 
 use app\common\logic\BaseLogic;
 use app\common\service\BestPlanService;
+use app\common\service\DrawPlanEvaluationService;
 use app\common\service\LotteryPlayRuleService;
+use app\common\service\OperationLogContentService;
 use app\common\service\ZodiacService;
 use app\common\service\ZodiacYearService;
 use think\facade\Db;
@@ -234,7 +236,8 @@ class BestPlanLogic extends BaseLogic
         float $tolerance = 5.0,
         ?string $sortBy = null,
         ?int $limit = null,
-        ?int $maxConsecutive = null
+        ?int $maxConsecutive = null,
+        bool $includeNegative = true
     ) {
         try {
             $year = $year ?? (int)date('Y');
@@ -248,88 +251,55 @@ class BestPlanLogic extends BaseLogic
             // 使用优化版算法，统一处理中/不中投注。
             $service = new \app\common\service\OptimizedBestPlanService($gid, $qishu, $year, $plateCode);
 
-            // 如果没有投注数据，生成随机方案。
+            $issue = Db::table('la_lottery_issue')
+                ->field('close_time, draw_time, status, result')
+                ->where('game_id', $gid)
+                ->where('issue', $qishu)
+                ->where('plate_code', $plateCode)
+                ->find();
+            if ($issue) {
+                $closeTime = self::normalizeTimestamp($issue['close_time'] ?? 0);
+                if ($closeTime > 0 && time() < $closeTime) {
+                    self::setError('当前期号尚未封盘，封盘后才生成开奖方案');
+                    return false;
+                }
+            }
+
+            // 如果没有投注数据，不提前生成随机计划；到开奖时间由定时任务自动随机开奖并续期。
             if ($service->getBetCount() === 0) {
-                $randomLimit = $limit ?? 20;
-                if ($randomLimit > self::MAX_TOP_SOLUTION_LIMIT) {
-                    $randomLimit = self::MAX_TOP_SOLUTION_LIMIT;
-                }
-                $randomSolutions = self::generateRandomSolutions($randomLimit, $maxConsecutive);
-
-                if (empty($randomSolutions)) {
-                    if ($maxConsecutive !== null) {
-                        $randomSolutions = self::generateRandomSolutions(1, $maxConsecutive);
-                        if (empty($randomSolutions)) {
-                            self::setError('Unable to generate random solution within max consecutive constraint.');
-                            return false;
-                        }
-                        $bestSolution = $randomSolutions[0];
-                    } else {
-                        $randomNumbers = range(1, 49);
-                        shuffle($randomNumbers);
-                        $selectedNumbers = array_slice($randomNumbers, 0, 7);
-                        sort($selectedNumbers);
-
-                        $m1_m6 = array_slice($selectedNumbers, 0, 6);
-                        $m7 = $selectedNumbers[6];
-
-                        $bestSolution = [
-                            'm1_m6' => $m1_m6,
-                            'm7' => $m7,
-                            'total_profit' => 0,
-                            'profit_rate' => 100.0,
-                            'bet_amount' => 0,
-                            'prize_amount' => 0,
-                        ];
-
-                        $randomSolutions = [$bestSolution];
-                    }
-                } else {
-                    $bestSolution = $randomSolutions[0];
-                }
-
-                $sortKey = self::normalizeSortBy($sortBy);
-                $randomSolutions = self::sortSolutions($randomSolutions, $sortKey);
-                $bestSolution = $randomSolutions[0];
-                if ($maxConsecutive !== null) {
-                    $bestSolutionWithConstraint = self::pickBestSolutionWithMaxConsecutive($randomSolutions, $maxConsecutive);
-                    if ($bestSolutionWithConstraint !== null) {
-                        $bestSolution = $bestSolutionWithConstraint;
-                    }
-                }
-                $selectedNumbers = array_merge($bestSolution['m1_m6'], [$bestSolution['m7']]);
-
-                $rateBuckets = self::buildRateBuckets($randomSolutions, $year, $maxConsecutive);
-
                 return [
                     'summary' => [
                         'total_bets' => 0,
                         'total_orders' => 0,
-                        'best_numbers' => $selectedNumbers,
-                        'best_m7' => $bestSolution['m7'],
-                        'best_m1_m6' => $bestSolution['m1_m6'],
+                        'best_numbers' => [],
+                        'best_m7' => 0,
+                        'best_m1_m6' => [],
                         'best_profit' => 0,
-                        'best_profit_rate' => 100.0,
+                        'best_profit_rate' => 0.0,
                         'has_bets' => false,
                     ],
-                    'best_solution' => $bestSolution,
-                    'top_solutions' => $randomSolutions,
-                    'rate_buckets' => $rateBuckets,
+                    'best_solution' => null,
+                    'top_solutions' => [],
+                    'rate_buckets' => [],
+                    'positive_plans' => [],
+                    'negative_plans' => [],
                     'risk_assessment' => [
                         'risk_level' => 'safe',
-                        'description' => 'No bets: no risk.',
+                        'description' => '本期暂无投注。',
                     ],
-                    'recommendations' => ['No bets: random numbers generated for draw.'],
-                    'strategy_used' => 'random',
-                    'message' => 'No bets: random draw generated.',
+                    'recommendations' => ['本期暂无投注，到开奖时间系统会自动随机开奖并创建下一期。'],
+                    'strategy_used' => 'no_bets',
+                    'message' => '本期暂无投注，到开奖时间系统会自动随机开奖。',
                 ];
             }
             $result = $service->findBest7Numbers(null, 5.0, true, $maxConsecutive);
 
             $allSolutions = array_key_exists('all_solutions', $result)
-                ? self::filterSolutionsByNonNegative($result['all_solutions'])
+                ? ($includeNegative ? $result['all_solutions'] : self::filterSolutionsByNonNegative($result['all_solutions']))
                 : null;
-            $topSolutions = self::filterSolutionsByNonNegative($result['top_solutions']);
+            $topSolutions = $includeNegative
+                ? ($result['top_solutions'] ?? [])
+                : self::filterSolutionsByNonNegative($result['top_solutions'] ?? []);
             if ($maxConsecutive !== null) {
                 if ($allSolutions !== null) {
                     $allSolutions = self::filterSolutionsByMaxConsecutive($allSolutions, $maxConsecutive);
@@ -345,7 +315,11 @@ class BestPlanLogic extends BaseLogic
             if ($maxConsecutive !== null) {
                 $bucketSource = self::fillSolutionsToMinimum($service, $bucketSource, 100, $maxConsecutive);
             }
-            $rateBuckets = self::buildRateBuckets($bucketSource, $year, $maxConsecutive);
+            $rateBuckets = self::buildRateBuckets($bucketSource, $year, $maxConsecutive, false);
+            $positivePlans = self::buildRepresentativePlans($bucketSource, [10, 20, 30, 40, 50, 60, 70, 80, 90, 100], $year, $maxConsecutive, false);
+            $negativePlans = $includeNegative
+                ? self::buildRepresentativePlans($bucketSource, [-5, -10, -15, -20], $year, $maxConsecutive, true)
+                : [];
 
             // 如果指定了目标利润率，使用智能扩展搜索。
             $searchResult = null;
@@ -465,7 +439,7 @@ class BestPlanLogic extends BaseLogic
                 $summary['best_profit_rate'] = $bestSolution['profit_rate'] ?? 0;
             }
             if ($maxConsecutive !== null && empty($rateBuckets) && $bestSolution) {
-                $rateBuckets = self::buildRateBuckets([$bestSolution], $year, $maxConsecutive);
+                $rateBuckets = self::buildRateBuckets([$bestSolution], $year, $maxConsecutive, false);
             }
 
             $targetMatched = false;
@@ -499,12 +473,17 @@ class BestPlanLogic extends BaseLogic
                     $topSolutions = [$bestSolution];
                 }
             }
+            if ($includeNegative) {
+                $topSolutions = self::mergeRepresentativePlans($topSolutions, $positivePlans, $negativePlans);
+            }
 
             return [
                 'summary' => $summary,
                 'best_solution' => $bestSolution,
                 'top_solutions' => $topSolutions,
                 'rate_buckets' => $rateBuckets,
+                'positive_plans' => $positivePlans,
+                'negative_plans' => $negativePlans,
                 'risk_assessment' => $result['risk_assessment'] ?? null,
                 'recommendations' => $result['recommendations'] ?? [],
                 'strategy_used' => $targetRate !== null ? 'target_rate' : 'balanced',  // 标记使用的策略
@@ -723,9 +702,18 @@ class BestPlanLogic extends BaseLogic
         return [100, 90, 80, 70, 60, 50, 40, 30, 20, 10];
     }
 
-    private static function buildRateBuckets(array $solutions, int $year, ?int $maxConsecutive = null): array
+    private static function buildRateBuckets(
+        array $solutions,
+        int $year,
+        ?int $maxConsecutive = null,
+        bool $allowRandomFallback = true
+    ): array
     {
         $normalized = self::normalizeBucketSolutions($solutions, $year, $maxConsecutive);
+
+        if (empty($normalized) && !$allowRandomFallback) {
+            return [];
+        }
 
         if (empty($normalized)) {
             $normalized = self::normalizeBucketSolutions(self::generateRandomSolutions(160, $maxConsecutive), $year, $maxConsecutive);
@@ -843,7 +831,12 @@ class BestPlanLogic extends BaseLogic
         return $buckets;
     }
 
-    private static function normalizeBucketSolutions(array $solutions, int $year, ?int $maxConsecutiveLimit = null): array
+    private static function normalizeBucketSolutions(
+        array $solutions,
+        int $year,
+        ?int $maxConsecutiveLimit = null,
+        bool $allowNegative = false
+    ): array
     {
         if (empty($solutions)) {
             return [];
@@ -879,7 +872,14 @@ class BestPlanLogic extends BaseLogic
             $profitRate = isset($solution['profit_rate']) ? (float)$solution['profit_rate'] : 0.0;
             $profitRateRounded = round($profitRate, 2);
             $totalProfit = self::getSolutionTotalProfit($solution);
-            if ($totalProfit < 0) {
+            $totalPrize = isset($solution['total_prize']) ? (float)$solution['total_prize'] : (float)($solution['prize_amount'] ?? 0);
+            $betAmount = isset($solution['bet_amount']) ? (float)$solution['bet_amount'] : (float)($solution['total_bets'] ?? 0);
+            $wipeoutType = self::getWipeoutPlanType([
+                'profit_rate' => $profitRate,
+                'total_prize' => $totalPrize,
+                'bet_amount' => $betAmount,
+            ]);
+            if (!$allowNegative && $totalProfit < 0) {
                 continue;
             }
             $key = self::buildSolutionKey($m1_m6, $m7);
@@ -896,10 +896,12 @@ class BestPlanLogic extends BaseLogic
                 'profit_rate' => $profitRate,
                 'profit_rate_rounded' => $profitRateRounded,
                 'total_profit' => $totalProfit,
-                'total_prize' => isset($solution['total_prize']) ? (float)$solution['total_prize'] : (float)($solution['prize_amount'] ?? 0),
-                'bet_amount' => isset($solution['bet_amount']) ? (float)$solution['bet_amount'] : (float)($solution['total_bets'] ?? 0),
+                'total_prize' => $totalPrize,
+                'bet_amount' => $betAmount,
                 'strategy' => $solution['strategy'] ?? null,
                 'distance_to_target' => isset($solution['distance_to_target']) ? (float)$solution['distance_to_target'] : null,
+                'is_wipeout_plan' => $wipeoutType !== '',
+                'wipeout_type' => $wipeoutType,
                 'solution_key' => $key,
                 'diversity_score' => self::calculateDiversityScore($m1_m6, $comboMaxConsecutive),
                 'is_sequential' => $comboMaxConsecutive >= 5,
@@ -1114,6 +1116,9 @@ class BestPlanLogic extends BaseLogic
                 'strategy' => $solution['strategy'] ?? null,
                 'distance_to_target' => isset($solution['distance_to_target']) ? (float)$solution['distance_to_target'] : null,
             ];
+            $wipeoutType = self::getWipeoutPlanType($item);
+            $item['is_wipeout_plan'] = $wipeoutType !== '';
+            $item['wipeout_type'] = $wipeoutType;
             if (!empty($solution['duplicate'])) {
                 $item['duplicate'] = true;
             }
@@ -1136,6 +1141,94 @@ class BestPlanLogic extends BaseLogic
             $flat = array_merge($flat, $solutions);
         }
         return $flat;
+    }
+
+    private static function buildRepresentativePlans(
+        array $solutions,
+        array $targets,
+        int $year,
+        ?int $maxConsecutive = null,
+        bool $negativeOnly = false
+    ): array {
+        $normalized = self::normalizeBucketSolutions($solutions, $year, $maxConsecutive, $negativeOnly);
+        if (empty($normalized)) {
+            return [];
+        }
+
+        $plans = [];
+        $used = [];
+        foreach ($targets as $target) {
+            $target = (float)$target;
+            $candidates = array_values(array_filter($normalized, function ($solution) use ($negativeOnly) {
+                $rate = (float)($solution['profit_rate'] ?? 0);
+                return $negativeOnly ? $rate < 0 : $rate >= 0;
+            }));
+            if (empty($candidates)) {
+                continue;
+            }
+
+            usort($candidates, function ($a, $b) use ($target) {
+                $distA = abs((float)$a['profit_rate'] - $target);
+                $distB = abs((float)$b['profit_rate'] - $target);
+                if ($distA !== $distB) {
+                    return $distA <=> $distB;
+                }
+                if ((float)$a['profit_rate'] !== (float)$b['profit_rate']) {
+                    return (float)$b['profit_rate'] <=> (float)$a['profit_rate'];
+                }
+                return (float)$b['total_profit'] <=> (float)$a['total_profit'];
+            });
+
+            $selected = null;
+            foreach ($candidates as $candidate) {
+                $key = $candidate['solution_key'] ?? self::buildSolutionKey($candidate['m1_m6'], (int)$candidate['m7']);
+                if (isset($used[$key])) {
+                    continue;
+                }
+                $selected = $candidate;
+                $used[$key] = true;
+                break;
+            }
+            if ($selected === null) {
+                $selected = $candidates[0];
+            }
+
+            $plan = self::formatBucketSolutions([$selected])[0];
+            $plan['target_rate'] = $target;
+            $plan['rate_type'] = $negativeOnly ? 'negative' : 'positive';
+            $plan['distance_to_target'] = round(abs((float)$plan['profit_rate'] - $target), 2);
+            $plans[] = $plan;
+        }
+
+        return $plans;
+    }
+
+    private static function mergeRepresentativePlans(array $topSolutions, array $positivePlans, array $negativePlans): array
+    {
+        $merged = [];
+        foreach ([$positivePlans, $negativePlans, $topSolutions] as $group) {
+            foreach ($group as $solution) {
+                $m1m6 = $solution['m1_m6'] ?? [];
+                $m7 = $solution['m7'] ?? null;
+                if (!is_array($m1m6) || $m7 === null) {
+                    continue;
+                }
+                $m1m6 = array_values(array_map('intval', $m1m6));
+                sort($m1m6);
+                $key = self::buildSolutionKey($m1m6, (int)$m7);
+                if (isset($merged[$key])) {
+                    continue;
+                }
+                $solution['m1_m6'] = $m1m6;
+                $solution['m7'] = (int)$m7;
+                if (!isset($solution['numbers'])) {
+                    $solution['numbers'] = array_merge($m1m6, [(int)$m7]);
+                }
+                $merged[$key] = $solution;
+            }
+        }
+
+        return array_values($merged);
     }
 
     private static function calculateDiversityScore(array $numbers, int $maxConsecutive): int
@@ -1918,7 +2011,7 @@ class BestPlanLogic extends BaseLogic
     }
 
     /**
-     * 执行开奖（使用最佳方案）
+     * 锁定开奖计划（使用最佳方案）
      */
     public static function executeDrawing(
         int $gid,
@@ -1926,7 +2019,9 @@ class BestPlanLogic extends BaseLogic
         string $plateCode,
         array $bestNumbers,
         int $year,
-        int $operatorId = 0
+        int $operatorId = 0,
+        bool $negativeConfirmed = false,
+        bool $wipeoutConfirmed = false
     )
     {
         try {
@@ -1957,90 +2052,159 @@ class BestPlanLogic extends BaseLogic
                 return false;
             }
 
-            // Prevent duplicate submission of manual plan
-            if (!empty($issue['planned_result']) && $issue['planned_source'] == 1) {
+            $now = time();
+            $closeTime = self::normalizeTimestamp($issue['close_time'] ?? 0);
+            $drawTime = self::normalizeTimestamp($issue['draw_time'] ?? 0);
+            if ($closeTime > 0 && $now < $closeTime) {
                 Db::rollback();
-                self::setError('本期已设置手动计划号码，不能重复提交');
+                self::setError('当前期号尚未封盘，不能选择开奖计划');
                 return false;
             }
-
             $numbers = array_values(array_map('intval', $bestNumbers));
-            if (count($numbers) !== 7) {
+            try {
+                $numbers = DrawPlanEvaluationService::normalizeNumbers($numbers);
+            } catch (\InvalidArgumentException $e) {
                 Db::rollback();
-                self::setError('开奖号码数量必须为7个');
+                self::setError($e->getMessage());
                 return false;
             }
-            foreach ($numbers as $num) {
-                if ($num < 1 || $num > 49) {
-                    Db::rollback();
-                    self::setError('号码范围必须在1-49之间');
-                    return false;
-                }
+
+            $evaluation = DrawPlanEvaluationService::evaluateIssue($gid, $qishu, $plateCode, $numbers, $year);
+            $isNegativePlan = (float)($evaluation['expected_profit'] ?? 0) < 0;
+            $wipeoutType = self::getWipeoutPlanType($evaluation);
+            $isWipeoutPlan = $wipeoutType !== '';
+            if ($isNegativePlan && !$negativeConfirmed) {
+                Db::rollback();
+                self::setError('负盈利方案必须二次确认后才能选择');
+                return false;
+            }
+            if ($isWipeoutPlan && !$wipeoutConfirmed) {
+                Db::rollback();
+                self::setError('通杀/近似通杀方案必须二次确认后才能选择');
+                return false;
             }
 
-            $m1_m6 = array_slice($numbers, 0, 6);
-            $m7 = $numbers[6];
+            if ($drawTime > 0 && $now < $drawTime) {
+                // Row lock is already held by the FOR UPDATE select above.
+                Db::table('la_lottery_issue')
+                    ->where('id', $issue['id'])
+                    ->update([
+                        'planned_result' => implode(',', $numbers),
+                        'planned_at' => time(),
+                        'planned_source' => 1,
+                        'planned_operator_id' => max(0, (int)$operatorId),
+                        'updated_at' => time(),
+                    ]);
 
-            // Row lock is already held by the FOR UPDATE select above
+                $result = [
+                    'issue' => $qishu,
+                    'plate_code' => $plateCode,
+                    'numbers' => $numbers,
+                    'win_count' => $evaluation['win_count'],
+                    'lose_count' => $evaluation['lose_count'],
+                    'draw_count' => $evaluation['draw_count'],
+                    'total_orders' => $evaluation['total_orders'],
+                    'total_bet_amount' => $evaluation['total_bet_amount'],
+                    'expected_payout' => $evaluation['expected_payout'],
+                    'expected_profit' => $evaluation['expected_profit'],
+                    'expected_profit_rate' => $evaluation['expected_profit_rate'],
+                    'planned_at' => $now,
+                    'plan_status' => 'locked',
+                    'is_negative_plan' => $isNegativePlan,
+                    'negative_confirmed' => $isNegativePlan ? $negativeConfirmed : false,
+                    'is_wipeout_plan' => $isWipeoutPlan,
+                    'wipeout_type' => $wipeoutType,
+                    'wipeout_confirmed' => $isWipeoutPlan ? $wipeoutConfirmed : false,
+                ];
+
+                if ($isNegativePlan) {
+                    self::writeNegativePlanOperationLog($operatorId, $result);
+                }
+                if ($isWipeoutPlan) {
+                    self::writeWipeoutPlanOperationLog($operatorId, $result);
+                }
+
+                Db::commit();
+                return $result;
+            }
+
+            $result = self::publishAndSettleIssue($issue, $qishu, $plateCode, $numbers, $evaluation, $operatorId);
+            $result['is_negative_plan'] = $isNegativePlan;
+            $result['negative_confirmed'] = $isNegativePlan ? $negativeConfirmed : false;
+            $result['is_wipeout_plan'] = $isWipeoutPlan;
+            $result['wipeout_type'] = $wipeoutType;
+            $result['wipeout_confirmed'] = $isWipeoutPlan ? $wipeoutConfirmed : false;
+            if ($isNegativePlan) {
+                self::writeNegativePlanOperationLog($operatorId, $result);
+            }
+            if ($isWipeoutPlan) {
+                self::writeWipeoutPlanOperationLog($operatorId, $result);
+            }
+            Db::commit();
+            return $result;
+
+        } catch (\Exception $e) {
+            Db::rollback();
+            self::setError($e->getMessage());
+            return false;
+        }
+    }
+
+    public static function revokeDrawingPlan(
+        int $gid,
+        string $qishu,
+        string $plateCode,
+        int $operatorId = 0
+    ) {
+        try {
+            Db::startTrans();
+
+            $issue = Db::table('la_lottery_issue')
+                ->where('game_id', $gid)
+                ->where('issue', $qishu)
+                ->where('plate_code', $plateCode)
+                ->lock(true)
+                ->find();
+
+            if (!$issue) {
+                Db::rollback();
+                self::setError('期号不存在或盘口不匹配，请检查参数');
+                return false;
+            }
+            if (!empty($issue['result']) || !empty($issue['is_settled'])) {
+                Db::rollback();
+                self::setError('本期已开奖或已结算，不能撤销计划');
+                return false;
+            }
+
+            $drawTime = self::normalizeTimestamp($issue['draw_time'] ?? 0);
+            if ($drawTime > 0 && time() >= $drawTime) {
+                Db::rollback();
+                self::setError('当前期号已到开奖时间，不能撤销计划');
+                return false;
+            }
+            if (empty($issue['planned_result']) || (int)$issue['planned_source'] !== 1) {
+                Db::rollback();
+                self::setError('本期没有可撤销的人工计划');
+                return false;
+            }
+
             Db::table('la_lottery_issue')
                 ->where('id', $issue['id'])
                 ->update([
-                    'planned_result' => implode(',', $numbers),
-                    'planned_at' => time(),
-                    'planned_source' => 1,
+                    'planned_result' => '',
+                    'planned_at' => 0,
+                    'planned_source' => 0,
                     'planned_operator_id' => max(0, (int)$operatorId),
                     'updated_at' => time(),
                 ]);
 
-            $orders = Db::table('la_betting_record')
-                ->where('game_id', $gid)
-                ->where('issue', $qishu)
-                ->where('plate_code', $plateCode)
-                ->where('status', 0)
-                ->select()
-                ->toArray();
-
-            $winCount = 0;
-            $loseCount = 0;
-            $drawCount = 0;
-            $totalWinAmount = 0.0;
-            $totalBetAmount = 0.0;
-
-            foreach ($orders as $order) {
-                $totalBetAmount += (float)$order['total_amount'];
-
-                $resultType = self::checkWin($order, $m1_m6, $m7, $year);
-                $isWin = $resultType === 'win';
-                $isDraw = $resultType === 'draw';
-                $winAmount = $isWin ? $order['total_amount'] * $order['odds'] : ($isDraw ? $order['total_amount'] : 0);
-
-                if ($isWin) {
-                    $winCount++;
-                    $totalWinAmount += $winAmount;
-                } elseif ($isDraw) {
-                    $drawCount++;
-                    $totalWinAmount += (float)$order['total_amount'];
-                } else {
-                    $loseCount++;
-                }
-            }
-
             Db::commit();
-
             return [
                 'issue' => $qishu,
                 'plate_code' => $plateCode,
-                'numbers' => $numbers,
-                'win_count' => $winCount,
-                'lose_count' => $loseCount,
-                'draw_count' => $drawCount,
-                'total_orders' => count($orders),
-                'total_bet_amount' => round($totalBetAmount, 2),
-                'total_payout' => round($totalWinAmount, 2),
-                'platform_profit' => round($totalBetAmount - $totalWinAmount, 2),
-                'planned_at' => time(),
+                'plan_status' => 'revoked',
             ];
-
         } catch (\Exception $e) {
             Db::rollback();
             self::setError($e->getMessage());
@@ -2051,13 +2215,93 @@ class BestPlanLogic extends BaseLogic
     /**
      * 自定义开奖号码并立即开奖结算
      */
+    public static function previewCustomDrawing(
+        int $gid,
+        string $qishu,
+        string $plateCode,
+        array $drawNumbers,
+        int $year
+    ) {
+        try {
+            $issue = Db::table('la_lottery_issue')
+                ->where('game_id', $gid)
+                ->where('issue', $qishu)
+                ->where('plate_code', $plateCode)
+                ->find();
+
+            if (!$issue) {
+                self::setError('期号不存在或盘口不匹配，请检查参数');
+                return false;
+            }
+
+            if (!empty($issue['result']) || (int)$issue['status'] === 3) {
+                self::setError('本期已开奖，不能重复开奖');
+                return false;
+            }
+
+            if (!empty($issue['is_settled'])) {
+                self::setError('本期已结算，不能重复开奖');
+                return false;
+            }
+
+            $closeTime = self::normalizeTimestamp($issue['close_time'] ?? 0);
+            if ($closeTime > 0 && time() < $closeTime) {
+                self::setError('当前期号尚未封盘，不能预估自定义开奖');
+                return false;
+            }
+            $drawTime = self::normalizeTimestamp($issue['draw_time'] ?? 0);
+            if ($drawTime > 0 && time() < $drawTime) {
+                self::setError('未到开奖时间，只能先选择并锁定开奖方案');
+                return false;
+            }
+
+            try {
+                $numbers = DrawPlanEvaluationService::normalizeNumbers($drawNumbers);
+            } catch (\InvalidArgumentException $e) {
+                self::setError($e->getMessage());
+                return false;
+            }
+
+            $evaluation = DrawPlanEvaluationService::evaluateIssue($gid, $qishu, $plateCode, $numbers, $year);
+            $isNegativePlan = (float)($evaluation['expected_profit'] ?? 0) < 0;
+            $wipeoutType = self::getWipeoutPlanType($evaluation);
+
+            return [
+                'issue' => $qishu,
+                'plate_code' => $plateCode,
+                'numbers' => $numbers,
+                'draw_numbers' => $numbers,
+                'win_count' => $evaluation['win_count'],
+                'lose_count' => $evaluation['lose_count'],
+                'draw_count' => $evaluation['draw_count'],
+                'total_orders' => $evaluation['total_orders'],
+                'total_bet_amount' => $evaluation['total_bet_amount'],
+                'expected_payout' => $evaluation['expected_payout'],
+                'expected_profit' => $evaluation['expected_profit'],
+                'expected_profit_rate' => $evaluation['expected_profit_rate'],
+                'total_payout' => $evaluation['expected_payout'],
+                'total_win_amount' => $evaluation['expected_payout'],
+                'platform_profit' => $evaluation['expected_profit'],
+                'is_negative_plan' => $isNegativePlan,
+                'is_wipeout_plan' => $wipeoutType !== '',
+                'wipeout_type' => $wipeoutType,
+                'plan_status' => 'preview',
+            ];
+        } catch (\Exception $e) {
+            self::setError($e->getMessage());
+            return false;
+        }
+    }
+
     public static function customDrawing(
         int $gid,
         string $qishu,
         string $plateCode,
         array $drawNumbers,
         int $year,
-        int $operatorId = 0
+        int $operatorId = 0,
+        bool $negativeConfirmed = false,
+        bool $wipeoutConfirmed = false
     )
     {
         try {
@@ -2096,120 +2340,249 @@ class BestPlanLogic extends BaseLogic
                 self::setError('当前期号尚未封盘，不能自定义开奖');
                 return false;
             }
-
-            $numbers = array_values(array_map('intval', $drawNumbers));
-            if (count($numbers) !== 7) {
+            $drawTime = self::normalizeTimestamp($issue['draw_time'] ?? 0);
+            if ($drawTime > 0 && time() < $drawTime) {
                 Db::rollback();
-                self::setError('开奖号码数量必须为7个');
+                self::setError('未到开奖时间，只能先选择并锁定开奖方案');
                 return false;
             }
-            if (count(array_unique($numbers)) !== 7) {
+
+            try {
+                $numbers = DrawPlanEvaluationService::normalizeNumbers($drawNumbers);
+            } catch (\InvalidArgumentException $e) {
                 Db::rollback();
-                self::setError('开奖号码不能重复');
+                self::setError($e->getMessage());
                 return false;
             }
-            foreach ($numbers as $num) {
-                if ($num < 1 || $num > 49) {
-                    Db::rollback();
-                    self::setError('号码范围必须在1-49之间');
-                    return false;
-                }
+
+            $evaluation = DrawPlanEvaluationService::evaluateIssue($gid, $qishu, $plateCode, $numbers, $year);
+            $isNegativePlan = (float)($evaluation['expected_profit'] ?? 0) < 0;
+            $wipeoutType = self::getWipeoutPlanType($evaluation);
+            $isWipeoutPlan = $wipeoutType !== '';
+            if ($isNegativePlan && !$negativeConfirmed) {
+                Db::rollback();
+                self::setError('负盈利自定义开奖必须二次确认后才能提交');
+                return false;
+            }
+            if ($isWipeoutPlan && !$wipeoutConfirmed) {
+                Db::rollback();
+                self::setError('通杀/近似通杀自定义开奖必须二次确认后才能提交');
+                return false;
             }
 
-            $orders = Db::table('la_betting_record')
-                ->where('game_id', $gid)
-                ->where('issue_id', $issue['id'])
-                ->where('issue', $qishu)
-                ->where('plate_code', $plateCode)
-                ->where('status', 0)
-                ->select()
-                ->toArray();
-
-            $winCount = 0;
-            $loseCount = 0;
-            $drawCount = 0;
-            $totalWinAmount = 0.0;
-            $totalBetAmount = 0.0;
-
-            foreach ($orders as $order) {
-                $totalBetAmount += (float)$order['total_amount'];
-
-                $resultType = LotteryBetLogic::checkWin(
-                    (string)($order['method_name'] ?? ''),
-                    (string)($order['bet_content'] ?? ''),
-                    $numbers,
-                    $year,
-                    (string)($order['bet_type'] ?? 'win')
-                );
-                $isWin = $resultType === 'win';
-                $isDraw = $resultType === 'draw';
-                $winAmount = $isWin ? $order['total_amount'] * $order['odds'] : ($isDraw ? $order['total_amount'] : 0);
-
-                if ($isWin) {
-                    $winCount++;
-                    $totalWinAmount += $winAmount;
-                } elseif ($isDraw) {
-                    $drawCount++;
-                    $totalWinAmount += (float)$order['total_amount'];
-                } else {
-                    $loseCount++;
-                }
+            $result = self::publishAndSettleIssue($issue, $qishu, $plateCode, $numbers, $evaluation, $operatorId);
+            $result['is_negative_plan'] = $isNegativePlan;
+            $result['negative_confirmed'] = $isNegativePlan ? $negativeConfirmed : false;
+            $result['is_wipeout_plan'] = $isWipeoutPlan;
+            $result['wipeout_type'] = $wipeoutType;
+            $result['wipeout_confirmed'] = $isWipeoutPlan ? $wipeoutConfirmed : false;
+            if ($isNegativePlan) {
+                $result['selection_source'] = 'custom_drawing';
+                self::writeNegativePlanOperationLog($operatorId, $result);
             }
-
-            $now = time();
-            Db::table('la_lottery_issue')
-                ->where('id', $issue['id'])
-                ->update([
-                    'result' => implode(',', $numbers),
-                    'planned_result' => implode(',', $numbers),
-                    'planned_at' => $now,
-                    'planned_source' => 1,
-                    'planned_operator_id' => max(0, (int)$operatorId),
-                    'status' => 3,
-                    'updated_at' => $now,
-                ]);
-
-            LotteryBetLogic::settleBetting((int)$issue['id'], $numbers);
-
-            $pendingCount = Db::table('la_betting_record')
-                ->where('issue_id', $issue['id'])
-                ->where('status', 0)
-                ->count();
-
-            if ($pendingCount > 0) {
-                throw new \Exception('仍有未结算订单，请检查用户账户或投注记录');
+            if ($isWipeoutPlan) {
+                $result['selection_source'] = 'custom_drawing';
+                self::writeWipeoutPlanOperationLog($operatorId, $result);
             }
-
-            Db::table('la_lottery_issue')
-                ->where('id', $issue['id'])
-                ->update([
-                    'is_settled' => 1,
-                    'settled_at' => $now,
-                    'updated_at' => time(),
-                ]);
 
             Db::commit();
-
-            return [
-                'issue' => $qishu,
-                'plate_code' => $plateCode,
-                'numbers' => $numbers,
-                'draw_numbers' => $numbers,
-                'win_count' => $winCount,
-                'lose_count' => $loseCount,
-                'draw_count' => $drawCount,
-                'total_orders' => count($orders),
-                'total_bet_amount' => round($totalBetAmount, 2),
-                'total_payout' => round($totalWinAmount, 2),
-                'total_win_amount' => round($totalWinAmount, 2),
-                'platform_profit' => round($totalBetAmount - $totalWinAmount, 2),
-                'settled_at' => $now,
-            ];
+            return $result;
         } catch (\Exception $e) {
             Db::rollback();
             self::setError($e->getMessage());
             return false;
         }
+    }
+
+    private static function publishAndSettleIssue(
+        array $issue,
+        string $qishu,
+        string $plateCode,
+        array $numbers,
+        array $evaluation,
+        int $operatorId
+    ): array {
+        $now = time();
+        Db::table('la_lottery_issue')
+            ->where('id', $issue['id'])
+            ->update([
+                'result' => implode(',', $numbers),
+                'planned_result' => implode(',', $numbers),
+                'planned_at' => $now,
+                'planned_source' => 1,
+                'planned_operator_id' => max(0, (int)$operatorId),
+                'status' => 3,
+                'updated_at' => $now,
+            ]);
+
+        LotteryBetLogic::settleBetting((int)$issue['id'], $numbers);
+
+        $pendingCount = Db::table('la_betting_record')
+            ->where('issue_id', $issue['id'])
+            ->where('status', 0)
+            ->count();
+
+        if ($pendingCount > 0) {
+            throw new \Exception('仍有未结算订单，请检查用户账户或投注记录');
+        }
+
+        Db::table('la_lottery_issue')
+            ->where('id', $issue['id'])
+            ->update([
+                'is_settled' => 1,
+                'settled_at' => $now,
+                'updated_at' => time(),
+            ]);
+
+        return [
+            'issue' => $qishu,
+            'plate_code' => $plateCode,
+            'numbers' => $numbers,
+            'draw_numbers' => $numbers,
+            'win_count' => $evaluation['win_count'],
+            'lose_count' => $evaluation['lose_count'],
+            'draw_count' => $evaluation['draw_count'],
+            'total_orders' => $evaluation['total_orders'],
+            'total_bet_amount' => $evaluation['total_bet_amount'],
+            'expected_payout' => $evaluation['expected_payout'],
+            'expected_profit' => $evaluation['expected_profit'],
+            'expected_profit_rate' => $evaluation['expected_profit_rate'],
+            'total_payout' => $evaluation['expected_payout'],
+            'total_win_amount' => $evaluation['expected_payout'],
+            'platform_profit' => $evaluation['expected_profit'],
+            'settled_at' => $now,
+            'plan_status' => 'settled',
+        ];
+    }
+
+    private static function getWipeoutPlanType(array $result): string
+    {
+        $totalBetAmount = (float)($result['total_bet_amount'] ?? $result['bet_amount'] ?? $result['total_bets'] ?? 0);
+        if ($totalBetAmount <= 0) {
+            return '';
+        }
+
+        $payout = $result['expected_payout']
+            ?? $result['total_payout']
+            ?? $result['total_win_amount']
+            ?? $result['total_prize']
+            ?? $result['prize_amount']
+            ?? null;
+        $profitRate = (float)($result['expected_profit_rate'] ?? $result['profit_rate'] ?? 0);
+
+        if ($payout !== null && round((float)$payout, 2) <= 0.01) {
+            return 'full';
+        }
+        if ($profitRate >= 99.0) {
+            return 'near';
+        }
+
+        return '';
+    }
+
+    private static function getWipeoutPlanLabel(string $wipeoutType): string
+    {
+        return $wipeoutType === 'full' ? '通杀方案' : '近似通杀方案';
+    }
+
+    private static function writeNegativePlanOperationLog(int $operatorId, array $result): void
+    {
+        $admin = null;
+        if ($operatorId > 0) {
+            $admin = Db::table('la_admin')
+                ->where('id', $operatorId)
+                ->find();
+        }
+
+        $expectedProfit = round((float)($result['expected_profit'] ?? $result['platform_profit'] ?? 0), 2);
+        $expectedLoss = round(abs(min(0, $expectedProfit)), 2);
+        $profitRate = round((float)($result['expected_profit_rate'] ?? 0), 2);
+        $numbers = array_values(array_map('intval', $result['numbers'] ?? $result['draw_numbers'] ?? []));
+
+        Db::table('la_operation_log')->insert([
+            'admin_id' => $operatorId,
+            'admin_name' => $admin['name'] ?? '',
+            'account' => $admin['account'] ?? '',
+            'action' => '选择负盈利开奖计划',
+            'type' => 'POST',
+            'url' => request()->url(true),
+            'params' => OperationLogContentService::encodeParams([
+                'issue' => $result['issue'] ?? '',
+                'plate_code' => $result['plate_code'] ?? '',
+                'numbers' => $numbers,
+                'plan_status' => $result['plan_status'] ?? '',
+                'selection_source' => $result['selection_source'] ?? 'plan_selection',
+                'negative_confirmed' => (bool)($result['negative_confirmed'] ?? false),
+                'expected_loss' => $expectedLoss,
+                'expected_profit' => $expectedProfit,
+                'expected_profit_rate' => $profitRate,
+                'expected_payout' => round((float)($result['expected_payout'] ?? $result['total_payout'] ?? 0), 2),
+                'total_bet_amount' => round((float)($result['total_bet_amount'] ?? 0), 2),
+                'total_orders' => (int)($result['total_orders'] ?? 0),
+            ]),
+            'result' => OperationLogContentService::encodeResult([
+                'message' => '负盈利方案已二次确认',
+                'expected_loss' => $expectedLoss,
+                'expected_profit_rate' => $profitRate,
+                'plan_status' => $result['plan_status'] ?? '',
+            ]),
+            'ip' => request()->ip(),
+            'create_time' => time(),
+        ]);
+    }
+
+    private static function writeWipeoutPlanOperationLog(int $operatorId, array $result): void
+    {
+        $wipeoutType = (string)($result['wipeout_type'] ?? self::getWipeoutPlanType($result));
+        if ($wipeoutType === '') {
+            return;
+        }
+
+        $admin = null;
+        if ($operatorId > 0) {
+            $admin = Db::table('la_admin')
+                ->where('id', $operatorId)
+                ->find();
+        }
+
+        $label = self::getWipeoutPlanLabel($wipeoutType);
+        $expectedProfit = round((float)($result['expected_profit'] ?? $result['platform_profit'] ?? 0), 2);
+        $profitRate = round((float)($result['expected_profit_rate'] ?? 0), 2);
+        $expectedPayout = round((float)($result['expected_payout'] ?? $result['total_payout'] ?? 0), 2);
+        $numbers = array_values(array_map('intval', $result['numbers'] ?? $result['draw_numbers'] ?? []));
+
+        Db::table('la_operation_log')->insert([
+            'admin_id' => $operatorId,
+            'admin_name' => $admin['name'] ?? '',
+            'account' => $admin['account'] ?? '',
+            'action' => '选择通杀/近似通杀开奖计划',
+            'type' => 'POST',
+            'url' => request()->url(true),
+            'params' => OperationLogContentService::encodeParams([
+                'issue' => $result['issue'] ?? '',
+                'plate_code' => $result['plate_code'] ?? '',
+                'numbers' => $numbers,
+                'plan_status' => $result['plan_status'] ?? '',
+                'selection_source' => $result['selection_source'] ?? 'plan_selection',
+                'wipeout_type' => $wipeoutType,
+                'wipeout_label' => $label,
+                'wipeout_confirmed' => (bool)($result['wipeout_confirmed'] ?? false),
+                'expected_profit' => $expectedProfit,
+                'expected_profit_rate' => $profitRate,
+                'expected_payout' => $expectedPayout,
+                'total_bet_amount' => round((float)($result['total_bet_amount'] ?? 0), 2),
+                'total_orders' => (int)($result['total_orders'] ?? 0),
+            ]),
+            'result' => OperationLogContentService::encodeResult([
+                'message' => $label . '已二次确认',
+                'wipeout_type' => $wipeoutType,
+                'expected_profit_rate' => $profitRate,
+                'expected_payout' => $expectedPayout,
+                'plan_status' => $result['plan_status'] ?? '',
+            ]),
+            'ip' => request()->ip(),
+            'create_time' => time(),
+        ]);
     }
 
     private static function checkWin(array $order, array $m1_m6, int $m7, int $year): string
@@ -2324,6 +2697,15 @@ class BestPlanLogic extends BaseLogic
         }
 
         return 'lose';
+    }
+
+    private static function normalizeTimestamp($value): int
+    {
+        if (is_numeric($value)) {
+            return (int)$value;
+        }
+        $timestamp = strtotime((string)$value);
+        return $timestamp !== false ? (int)$timestamp : 0;
     }
 
     /**

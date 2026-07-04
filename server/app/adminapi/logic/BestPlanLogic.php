@@ -9,6 +9,7 @@
 namespace app\adminapi\logic;
 
 use app\common\logic\BaseLogic;
+use app\common\service\OperationLogContentService;
 use think\facade\Db;
 
 /**
@@ -62,7 +63,7 @@ class BestPlanLogic extends BaseLogic
     {
         // 查询当前可投注的期号（status=2 表示投注中）
         $issue = Db::table('la_lottery_issue')
-            ->field('issue, plate_code, open_time, close_time, draw_time, status, result')
+            ->field('issue, plate_code, open_time, close_time, draw_time, status, result, planned_result, planned_at, planned_source, planned_operator_id')
             ->where('game_id', $gid)
             ->where('plate_code', $plateCode)
             ->where('status', 2)  // 2=投注中
@@ -72,7 +73,7 @@ class BestPlanLogic extends BaseLogic
         // 如果没有投注中的期号，查询最新的待开盘期号（status=1）
         if (!$issue) {
             $issue = Db::table('la_lottery_issue')
-                ->field('issue, plate_code, open_time, close_time, draw_time, status, result')
+                ->field('issue, plate_code, open_time, close_time, draw_time, status, result, planned_result, planned_at, planned_source, planned_operator_id')
                 ->where('game_id', $gid)
                 ->where('plate_code', $plateCode)
                 ->where('status', 1)  // 1=待开盘
@@ -83,7 +84,7 @@ class BestPlanLogic extends BaseLogic
         // 如果还是没有，查询最新的任意期号
         if (!$issue) {
             $issue = Db::table('la_lottery_issue')
-                ->field('issue, plate_code, open_time, close_time, draw_time, status, result')
+                ->field('issue, plate_code, open_time, close_time, draw_time, status, result, planned_result, planned_at, planned_source, planned_operator_id')
                 ->where('game_id', $gid)
                 ->where('plate_code', $plateCode)
                 ->order('id', 'desc')
@@ -107,6 +108,10 @@ class BestPlanLogic extends BaseLogic
             'kjtime' => $issue['draw_time'] ? date('Y-m-d H:i:s', $issue['draw_time']) : '',
             'status' => (int)$issue['status'],  // ✅ 状态字段
             'is_opened' => ($issue['status'] == 3 && !empty($resultValue)),  // status=3且result不为空才是已开奖
+            'has_planned_result' => !empty($issue['planned_result']),
+            'planned_source' => (int)($issue['planned_source'] ?? 0),
+            'planned_at' => !empty($issue['planned_at']) ? date('Y-m-d H:i:s', (int)$issue['planned_at']) : '',
+            'planned_operator_id' => (int)($issue['planned_operator_id'] ?? 0),
             'draw_numbers' => [],  // ✅ 默认空数组
             'draw_numbers_text' => '',  // ✅ 默认空字符串
         ];
@@ -142,7 +147,8 @@ class BestPlanLogic extends BaseLogic
         float $tolerance = 5.0,
         ?string $sortBy = null,
         ?int $limit = null,
-        ?int $maxConsecutive = null
+        ?int $maxConsecutive = null,
+        bool $includeNegative = true
     ) {
         // ✅ 检查期号是否已经开奖
         $issue = Db::table('la_lottery_issue')
@@ -161,7 +167,7 @@ class BestPlanLogic extends BaseLogic
         }
 
         // 调用 API 的 BestPlanLogic（因为计算逻辑是通用的）
-        return \app\api\logic\BestPlanLogic::calculateRealtime($gid, $qishu, $plateCode, $year, $targetRate, $tolerance, $sortBy, $limit, $maxConsecutive);
+        return \app\api\logic\BestPlanLogic::calculateRealtime($gid, $qishu, $plateCode, $year, $targetRate, $tolerance, $sortBy, $limit, $maxConsecutive, $includeNegative);
     }
 
 
@@ -367,7 +373,7 @@ class BestPlanLogic extends BaseLogic
 
 
     /**
-     * @notes 执行开奖（使用最佳方案）
+     * @notes 锁定开奖计划（使用最佳方案）
      * @param int $gid 游戏ID
      * @param string $qishu 期号
      * @param string $plateCode 盘口代码
@@ -383,10 +389,21 @@ class BestPlanLogic extends BaseLogic
         string $plateCode,
         array $bestNumbers,
         int $year,
-        int $operatorId = 0
+        int $operatorId = 0,
+        bool $negativeConfirmed = false,
+        bool $wipeoutConfirmed = false
     )
     {
-        return \app\api\logic\BestPlanLogic::executeDrawing($gid, $qishu, $plateCode, $bestNumbers, $year, $operatorId);
+        return \app\api\logic\BestPlanLogic::executeDrawing($gid, $qishu, $plateCode, $bestNumbers, $year, $operatorId, $negativeConfirmed, $wipeoutConfirmed);
+    }
+
+    public static function revokeDrawingPlan(
+        int $gid,
+        string $qishu,
+        string $plateCode,
+        int $operatorId = 0
+    ) {
+        return \app\api\logic\BestPlanLogic::revokeDrawingPlan($gid, $qishu, $plateCode, $operatorId);
     }
 
     /**
@@ -399,16 +416,29 @@ class BestPlanLogic extends BaseLogic
      * @param int $operatorId 操作员ID
      * @return array|false
      */
+    public static function previewCustomDrawing(
+        int $gid,
+        string $qishu,
+        string $plateCode,
+        array $drawNumbers,
+        int $year
+    )
+    {
+        return \app\api\logic\BestPlanLogic::previewCustomDrawing($gid, $qishu, $plateCode, $drawNumbers, $year);
+    }
+
     public static function customDrawing(
         int $gid,
         string $qishu,
         string $plateCode,
         array $drawNumbers,
         int $year,
-        int $operatorId = 0
+        int $operatorId = 0,
+        bool $negativeConfirmed = false,
+        bool $wipeoutConfirmed = false
     )
     {
-        return \app\api\logic\BestPlanLogic::customDrawing($gid, $qishu, $plateCode, $drawNumbers, $year, $operatorId);
+        return \app\api\logic\BestPlanLogic::customDrawing($gid, $qishu, $plateCode, $drawNumbers, $year, $operatorId, $negativeConfirmed, $wipeoutConfirmed);
     }
 
 
@@ -422,20 +452,20 @@ class BestPlanLogic extends BaseLogic
     public static function previewNewIssue(int $gid, string $plateCode = 'A', string $strategy = 'plate_config')
     {
         try {
-            $currentIssue = self::getLatestIssue($gid, $plateCode);
-            if (!self::canCreateNextIssue($currentIssue)) {
-                self::setError('无法创建新期数，必须当前期号开奖完成后才可以启动新盘口');
+            $todayIssue = self::getLatestTodayIssue($gid, $plateCode);
+            if (!self::canCreateNextIssue($todayIssue)) {
+                self::setError('无法创建新期数，必须今日当前期号开奖完成后才可以启动新盘口');
                 return false;
             }
 
-            $newIssue = \app\common\service\LotteryIssueService::previewNextIssue($gid, $plateCode, $strategy);
+            $newIssue = \app\common\service\LotteryIssueService::previewNextIssueWithBase($gid, $plateCode, $strategy, $todayIssue);
 
             if (!$newIssue) {
                 self::setError('预览新期号失败，请稍后重试');
                 return false;
             }
 
-            return self::formatNewIssueResult($newIssue, $currentIssue);
+            return self::formatNewIssueResult($newIssue, $todayIssue);
         } catch (\Exception $e) {
             self::setError('预览失败: ' . $e->getMessage());
             return false;
@@ -454,21 +484,21 @@ class BestPlanLogic extends BaseLogic
     public static function createNewIssue(int $gid, string $plateCode = 'A', string $strategy = 'plate_config')
     {
         try {
-            $currentIssue = self::getLatestIssue($gid, $plateCode);
-            if (!self::canCreateNextIssue($currentIssue)) {
-                self::setError('无法创建新期数，必须当前期号开奖完成后才可以启动新盘口');
+            $todayIssue = self::getLatestTodayIssue($gid, $plateCode);
+            if (!self::canCreateNextIssue($todayIssue)) {
+                self::setError('无法创建新期数，必须今日当前期号开奖完成后才可以启动新盘口');
                 return false;
             }
 
-            // 调用LotteryIssueService创建新期号
-            $newIssue = \app\common\service\LotteryIssueService::getOrCreateCurrentIssue($gid, $plateCode, $strategy);
+            // 调用方已校验今日期号状态；清空今日期数后允许跳过历史未完成期号重新开盘。
+            $newIssue = \app\common\service\LotteryIssueService::forceCreateNextIssue($gid, $plateCode, $strategy, $todayIssue);
 
             if (!$newIssue) {
                 self::setError('创建新期号失败,请稍后重试');
                 return false;
             }
 
-            return self::formatNewIssueResult($newIssue, $currentIssue);
+            return self::formatNewIssueResult($newIssue, $todayIssue);
         } catch (\Exception $e) {
             self::setError('创建失败: ' . $e->getMessage());
             return false;
@@ -638,12 +668,12 @@ class BestPlanLogic extends BaseLogic
                 'action' => '清空今日期数',
                 'type' => 'POST',
                 'url' => request()->url(true),
-                'params' => json_encode([
+                'params' => OperationLogContentService::encodeParams([
                     'gid' => $gid,
                     'plate_code' => $plateCode,
                     'date' => $today,
-                ], JSON_UNESCAPED_UNICODE),
-                'result' => json_encode([
+                ]),
+                'result' => OperationLogContentService::encodeResult([
                     'issue_count' => $issueCount,
                     'betting_count' => $bettingCount,
                     'winning_count' => $winningCount,
@@ -651,7 +681,7 @@ class BestPlanLogic extends BaseLogic
                     'commission_count' => $commissionCount,
                     'history_count' => $historyCount,
                     'affected_users' => count($userSummaries),
-                ], JSON_UNESCAPED_UNICODE),
+                ]),
                 'ip' => request()->ip(),
                 'create_time' => time(),
             ]);
@@ -681,12 +711,14 @@ class BestPlanLogic extends BaseLogic
         return number_format($value, 2, '.', '');
     }
 
-    private static function getLatestIssue(int $gid, string $plateCode): ?array
+    private static function getLatestTodayIssue(int $gid, string $plateCode): ?array
     {
+        $today = date('Ymd');
         $issue = Db::table('la_lottery_issue')
             ->field('issue, status, result, open_time, close_time, draw_time')
             ->where('game_id', $gid)
             ->where('plate_code', $plateCode)
+            ->where('issue', 'like', $today . '%')
             ->order('id', 'desc')
             ->find();
 

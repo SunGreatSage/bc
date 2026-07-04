@@ -35,4 +35,13 @@ class LogController extends BaseAdminController
     {
         return $this->dataLists(new LogLists());
     }
+
+    /**
+     * @notes 获取风控日志筛选项
+     * @return \think\response\Json
+     */
+    public function riskOptions()
+    {
+        return $this->success('获取成功', LogLists::riskOptions());
+    }
 }

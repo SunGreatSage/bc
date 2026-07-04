@@ -19,6 +19,10 @@ export namespace BestPlanApi {
     status?: number;  // 状态: 0=未开盘, 1=待开盘, 2=投注中, 3=已开奖
     draw_numbers?: string[];  // 开奖号码数组 ["01", "13", "25", "37", "42", "49", "07"]
     draw_numbers_text?: string;  // 开奖号码文本 "01,13,25,37,42,49,07"
+    has_planned_result?: boolean;
+    planned_source?: number;
+    planned_at?: string;
+    planned_operator_id?: number;
   }
 
   /** 号码详情 */
@@ -52,7 +56,59 @@ export namespace BestPlanApi {
   /** 分析结果 */
   export interface AnalyzeResult {
     summary: Summary;
-    details: NumberDetail[];
+    best_solution?: PlanSolution | null;
+    details?: NumberDetail[];
+    top_solutions?: PlanSolution[];
+    rate_buckets?: Array<{
+      rate: number;
+      range: string;
+      count: number;
+      solutions: PlanSolution[];
+    }>;
+    positive_plans?: PlanSolution[];
+    negative_plans?: PlanSolution[];
+    message?: string;
+  }
+
+  export interface PlanSolution {
+    numbers?: number[];
+    m1_m6: number[];
+    m7: number;
+    profit_rate: number;
+    total_profit: number;
+    total_prize?: number;
+    bet_amount?: number;
+    strategy?: string;
+    target_rate?: number;
+    rate_type?: 'positive' | 'negative';
+    distance_to_target?: number;
+    is_wipeout_plan?: boolean;
+    wipeout_type?: 'full' | 'near' | '';
+  }
+
+  export interface CustomDrawingResult {
+    issue: string;
+    plate_code: string;
+    numbers: number[];
+    draw_numbers: number[];
+    total_orders: number;
+    win_count: number;
+    lose_count: number;
+    draw_count: number;
+    total_bet_amount: number;
+    expected_payout?: number;
+    expected_profit?: number;
+    expected_profit_rate?: number;
+    total_payout?: number;
+    total_win_amount?: number;
+    platform_profit?: number;
+    settled_at?: number;
+    is_negative_plan?: boolean;
+    negative_confirmed?: boolean;
+    is_wipeout_plan?: boolean;
+    wipeout_type?: 'full' | 'near' | '';
+    wipeout_confirmed?: boolean;
+    plan_status?: 'preview' | 'settled';
   }
 
   /** 历史记录 */
@@ -214,6 +270,7 @@ export async function calculateRealtime(data: {
   year?: number;
   target_rate?: number;
   tolerance?: number;
+  include_negative?: boolean;
 }) {
   const formData = new URLSearchParams();
   if (data.gid) formData.append('gid', String(data.gid));
@@ -226,6 +283,7 @@ export async function calculateRealtime(data: {
   if (data.tolerance !== undefined && data.tolerance !== null) {
     formData.append('tolerance', String(data.tolerance));
   }
+  formData.append('include_negative', data.include_negative === false ? '0' : '1');
 
   return requestClient.post<BestPlanApi.AnalyzeResult>('/best_plan/calculateRealtime', formData, {
     headers: {
@@ -332,7 +390,7 @@ export async function getNumberDistribution(params: { gid?: number; qishu: strin
 }
 
 /**
- * 执行开奖（使用最佳方案）
+ * 锁定开奖计划（使用最佳方案）
  */
 export async function executeDrawing(data: {
   gid?: number;
@@ -340,6 +398,8 @@ export async function executeDrawing(data: {
   plate_code?: string;
   best_numbers: number[] | string;
   year?: number;
+  negative_confirmed?: boolean;
+  wipeout_confirmed?: boolean;
 }) {
   const formData = new URLSearchParams();
   if (data.gid) formData.append('gid', String(data.gid));
@@ -353,16 +413,56 @@ export async function executeDrawing(data: {
   formData.append('best_numbers', numbers);
 
   if (data.year) formData.append('year', String(data.year));
+  if (data.negative_confirmed) formData.append('negative_confirmed', '1');
+  if (data.wipeout_confirmed) formData.append('wipeout_confirmed', '1');
 
   return requestClient.post<{
-    qishu: string;
-    draw_numbers: number[];
+    issue: string;
+    plate_code: string;
+    numbers: number[];
     total_orders: number;
     win_count: number;
     lose_count: number;
-    total_win_amount: number;
-    platform_profit: number;
+    draw_count: number;
+    expected_payout: number;
+    expected_profit: number;
+    expected_profit_rate: number;
+    total_payout?: number;
+    total_win_amount?: number;
+    platform_profit?: number;
+    plan_status?: 'locked' | 'settled';
+    planned_at?: number;
+    settled_at?: number;
+    is_negative_plan?: boolean;
+    negative_confirmed?: boolean;
+    is_wipeout_plan?: boolean;
+    wipeout_type?: 'full' | 'near' | '';
+    wipeout_confirmed?: boolean;
   }>('/best_plan/executeDrawing', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+}
+
+/**
+ * 撤销已锁定的开奖计划
+ */
+export async function revokeDrawingPlan(data: {
+  gid?: number;
+  qishu: string;
+  plate_code?: string;
+}) {
+  const formData = new URLSearchParams();
+  if (data.gid) formData.append('gid', String(data.gid));
+  formData.append('qishu', data.qishu);
+  if (data.plate_code) formData.append('plate_code', data.plate_code);
+
+  return requestClient.post<{
+    issue: string;
+    plate_code: string;
+    plan_status: string;
+  }>('/best_plan/revokeDrawingPlan', formData, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
@@ -372,7 +472,7 @@ export async function executeDrawing(data: {
 /**
  * 自定义开奖号码并立即开奖结算
  */
-export async function customDrawing(data: {
+export async function previewCustomDrawing(data: {
   gid?: number;
   qishu: string;
   plate_code?: string;
@@ -391,21 +491,40 @@ export async function customDrawing(data: {
 
   if (data.year) formData.append('year', String(data.year));
 
-  return requestClient.post<{
-    issue: string;
-    plate_code: string;
-    numbers: number[];
-    draw_numbers: number[];
-    total_orders: number;
-    win_count: number;
-    lose_count: number;
-    draw_count: number;
-    total_bet_amount: number;
-    total_payout: number;
-    total_win_amount: number;
-    platform_profit: number;
-    settled_at: number;
-  }>('/best_plan/customDrawing', formData, {
+  return requestClient.post<BestPlanApi.CustomDrawingResult>('/best_plan/previewCustomDrawing', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+}
+
+/**
+ * 自定义开奖号码并立即开奖结算
+ */
+export async function customDrawing(data: {
+  gid?: number;
+  qishu: string;
+  plate_code?: string;
+  draw_numbers: number[] | string;
+  year?: number;
+  negative_confirmed?: boolean;
+  wipeout_confirmed?: boolean;
+}) {
+  const formData = new URLSearchParams();
+  if (data.gid) formData.append('gid', String(data.gid));
+  formData.append('qishu', data.qishu);
+  if (data.plate_code) formData.append('plate_code', data.plate_code);
+
+  const numbers = Array.isArray(data.draw_numbers)
+    ? data.draw_numbers.join(',')
+    : data.draw_numbers;
+  formData.append('draw_numbers', numbers);
+
+  if (data.year) formData.append('year', String(data.year));
+  if (data.negative_confirmed) formData.append('negative_confirmed', '1');
+  if (data.wipeout_confirmed) formData.append('wipeout_confirmed', '1');
+
+  return requestClient.post<BestPlanApi.CustomDrawingResult>('/best_plan/customDrawing', formData, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },

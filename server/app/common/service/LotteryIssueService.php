@@ -167,8 +167,8 @@ class LotteryIssueService
         if ($latestIssue) {
             trace("📋 找到最新期号: " . $latestIssue['issue'] . ", status=" . $latestIssue['status'] . ", result=" . ($latestIssue['result'] ?: '空'), 'info');
 
-            // 必须满足: status=3(已开奖) 且 有开奖结果(result不为空)
-            if ($latestIssue['status'] == 3 && !empty($latestIssue['result'])) {
+            // 必须满足: status=3(已开奖)、有开奖结果且已结算，才能创建下一期。
+            if ($latestIssue['status'] == 3 && !empty($latestIssue['result']) && !empty($latestIssue['is_settled'])) {
                 trace("✨ 上一期已开奖,准备创建新期号", 'info');
                 return self::autoCreateNextIssue($gameId, $plateCode, $latestIssue, $strategy);
             } else {
@@ -202,6 +202,39 @@ class LotteryIssueService
             return self::buildNextIssueData($gameId, $plateCode, $latestIssue, $strategy);
         } catch (\Exception $e) {
             trace("❌ 预览期号异常: " . $e->getMessage(), 'error');
+            return null;
+        }
+    }
+
+    public static function previewNextIssueWithBase(
+        int $gameId = 200,
+        string $plateCode = 'A',
+        string $strategy = 'plate_config',
+        ?array $latestIssue = null
+    ): ?array {
+        try {
+            return self::buildNextIssueData($gameId, $plateCode, $latestIssue, $strategy);
+        } catch (\Exception $e) {
+            trace("❌ 预览指定基准期号异常: " . $e->getMessage(), 'error');
+            return null;
+        }
+    }
+
+    /**
+     * 手动创建下一期期号。
+     * 调用方必须先校验当前业务期号是否允许创建；这里仅负责按策略落库。
+     */
+    public static function forceCreateNextIssue(
+        int $gameId = 200,
+        string $plateCode = 'A',
+        string $strategy = 'plate_config',
+        ?array $latestIssue = null
+    ): ?array
+    {
+        try {
+            return self::autoCreateNextIssue($gameId, $plateCode, $latestIssue, $strategy);
+        } catch (\Exception $e) {
+            trace("❌ 手动创建期号异常: " . $e->getMessage(), 'error');
             return null;
         }
     }

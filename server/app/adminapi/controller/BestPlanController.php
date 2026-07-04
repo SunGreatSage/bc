@@ -137,6 +137,7 @@ class BestPlanController extends BaseAdminController
         $sortBy = $this->request->post('sort_by');
         $limit = $this->request->post('limit');
         $maxConsecutive = $this->request->post('max_consecutive');
+        $includeNegative = $this->request->post('include_negative', 1);
 
         if (empty($qishu)) {
             return $this->fail('期号不能为空');
@@ -157,8 +158,9 @@ class BestPlanController extends BaseAdminController
         if ($maxConsecutive !== null && $maxConsecutive <= 0) {
             $maxConsecutive = null;
         }
+        $includeNegative = !in_array((string)$includeNegative, ['0', 'false', 'False'], true);
 
-        $result = BestPlanLogic::calculateRealtime($gid, $qishu, $plateCode, $year, $targetRate, $tolerance, $sortBy, $limit, $maxConsecutive);
+        $result = BestPlanLogic::calculateRealtime($gid, $qishu, $plateCode, $year, $targetRate, $tolerance, $sortBy, $limit, $maxConsecutive, $includeNegative);
 
         if ($result === false) {
             return $this->fail(BestPlanLogic::getError());
@@ -435,17 +437,22 @@ class BestPlanController extends BaseAdminController
      *
      * 流程：
      * 1. 校验已封盘（close_time 到达）
-     * 2. 写入 la_lottery_issue.planned_result（仅后台可见）
-     * 3. 不触发对外开奖展示、不做结算/派奖/分成
-     * 4. 到 draw_time 由定时任务发布 result 并结算
+     * 2. 未到 draw_time: 写入 la_lottery_issue.planned_result（仅后台可见）
+     * 3. 已到 draw_time: 立即写入 result 并结算/派奖/分成
      */
     public function executeDrawing(): Json
     {
+        if (!$this->isRootAdmin()) {
+            return $this->fail('只有总管理可以选择开奖方案');
+        }
+
         $gid = (int)$this->request->post('gid', 200);
         $qishu = $this->request->post('qishu', '');
         $plateCode = $this->request->post('plate_code', 'A');  // 新增：盘口代码
         $bestNumbers = $this->request->post('best_numbers', '');
         $year = $this->request->post('year');
+        $negativeConfirmed = $this->request->post('negative_confirmed', 0);
+        $wipeoutConfirmed = $this->request->post('wipeout_confirmed', 0);
 
         // 验证参数
         if (empty($qishu)) {
@@ -475,23 +482,57 @@ class BestPlanController extends BaseAdminController
         }
 
         $year = $year ? (int)$year : (int)date('Y');
+        $negativeConfirmed = in_array((string)$negativeConfirmed, ['1', 'true', 'True'], true);
+        $wipeoutConfirmed = in_array((string)$wipeoutConfirmed, ['1', 'true', 'True'], true);
 
         // 提交计划（记录操作员ID，便于审计）
-        $result = BestPlanLogic::executeDrawing($gid, $qishu, $plateCode, $bestNumbers, $year, $this->adminId);
+        $result = BestPlanLogic::executeDrawing($gid, $qishu, $plateCode, $bestNumbers, $year, $this->adminId, $negativeConfirmed, $wipeoutConfirmed);
 
         if ($result === false) {
             return $this->fail(BestPlanLogic::getError());
         }
 
-        return $this->success('提交计划成功', $result);
+        $message = (($result['plan_status'] ?? '') === 'settled') ? '开奖并结算完成' : '开奖计划已锁定';
+        return $this->success($message, $result);
+    }
+
+    /**
+     * @notes 撤销已锁定的人工计划（开奖时间前）
+     * @return Json
+     */
+    public function revokeDrawingPlan(): Json
+    {
+        if (!$this->isRootAdmin()) {
+            return $this->fail('只有总管理可以撤销开奖计划');
+        }
+
+        $gid = (int)$this->request->post('gid', 200);
+        $qishu = $this->request->post('qishu', '');
+        $plateCode = $this->request->post('plate_code', 'A');
+
+        if (empty($qishu)) {
+            return $this->fail('期号不能为空');
+        }
+
+        $result = BestPlanLogic::revokeDrawingPlan($gid, $qishu, $plateCode, $this->adminId);
+
+        if ($result === false) {
+            return $this->fail(BestPlanLogic::getError());
+        }
+
+        return $this->success('开奖计划已撤销', $result);
     }
 
     /**
      * @notes 自定义开奖号码并立即开奖结算
      * @return Json
      */
-    public function customDrawing(): Json
+    public function previewCustomDrawing(): Json
     {
+        if (!$this->isRootAdmin()) {
+            return $this->fail('只有总管理可以预估自定义开奖');
+        }
+
         $gid = (int)$this->request->post('gid', 200);
         $qishu = $this->request->post('qishu', '');
         $plateCode = $this->request->post('plate_code', 'A');
@@ -527,7 +568,65 @@ class BestPlanController extends BaseAdminController
 
         $year = $year ? (int)$year : (int)date('Y');
 
-        $result = BestPlanLogic::customDrawing($gid, $qishu, $plateCode, $drawNumbers, $year, $this->adminId);
+        $result = BestPlanLogic::previewCustomDrawing($gid, $qishu, $plateCode, $drawNumbers, $year);
+
+        if ($result === false) {
+            return $this->fail(BestPlanLogic::getError());
+        }
+
+        return $this->success('自定义开奖预估完成', $result);
+    }
+
+    /**
+     * @notes 自定义开奖号码并立即开奖结算
+     * @return Json
+     */
+    public function customDrawing(): Json
+    {
+        if (!$this->isRootAdmin()) {
+            return $this->fail('只有总管理可以自定义开奖');
+        }
+
+        $gid = (int)$this->request->post('gid', 200);
+        $qishu = $this->request->post('qishu', '');
+        $plateCode = $this->request->post('plate_code', 'A');
+        $drawNumbers = $this->request->post('draw_numbers', '');
+        $year = $this->request->post('year');
+        $negativeConfirmed = $this->request->post('negative_confirmed', 0);
+        $wipeoutConfirmed = $this->request->post('wipeout_confirmed', 0);
+
+        if (empty($qishu)) {
+            return $this->fail('期号不能为空');
+        }
+
+        if (empty($drawNumbers)) {
+            return $this->fail('开奖号码不能为空');
+        }
+
+        if (is_string($drawNumbers)) {
+            $drawNumbers = explode(',', $drawNumbers);
+        }
+        $drawNumbers = array_map('intval', $drawNumbers);
+
+        if (count($drawNumbers) !== 7) {
+            return $this->fail('必须提供7个开奖号码');
+        }
+
+        if (count(array_unique($drawNumbers)) !== 7) {
+            return $this->fail('开奖号码不能重复');
+        }
+
+        foreach ($drawNumbers as $num) {
+            if ($num < 1 || $num > 49) {
+                return $this->fail('号码必须在1-49之间');
+            }
+        }
+
+        $year = $year ? (int)$year : (int)date('Y');
+        $negativeConfirmed = in_array((string)$negativeConfirmed, ['1', 'true', 'True'], true);
+        $wipeoutConfirmed = in_array((string)$wipeoutConfirmed, ['1', 'true', 'True'], true);
+
+        $result = BestPlanLogic::customDrawing($gid, $qishu, $plateCode, $drawNumbers, $year, $this->adminId, $negativeConfirmed, $wipeoutConfirmed);
 
         if ($result === false) {
             return $this->fail(BestPlanLogic::getError());
@@ -623,5 +722,10 @@ class BestPlanController extends BaseAdminController
         } catch (\Exception $e) {
             return $this->fail('清空失败: ' . $e->getMessage());
         }
+    }
+
+    private function isRootAdmin(): bool
+    {
+        return (int)($this->adminInfo['root'] ?? 0) === 1;
     }
 }

@@ -4,6 +4,7 @@
 namespace app\adminapi\listener;
 
 
+use app\common\service\OperationLogContentService;
 use ReflectionClass;
 use think\Exception;
 
@@ -69,9 +70,9 @@ class OperationLog
         $systemLog->account = $request->adminInfo['account'] ?? '';
         $systemLog->url = $request->url(true);
         $systemLog->type = $request->isGet() ? 'GET' : 'POST';
-        $systemLog->params = json_encode($params, true);
+        $systemLog->params = OperationLogContentService::encodeParams($params);
         $systemLog->ip = $request->ip();
-        $systemLog->result = $response->getContent();
+        $systemLog->result = OperationLogContentService::encodeResult($response->getContent());
         return $systemLog->save();
     }
 }

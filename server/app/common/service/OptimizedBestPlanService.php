@@ -11,7 +11,8 @@ use think\facade\Db;
 class OptimizedBestPlanService
 {
     private const KEYWORDS_SPECIAL_NUMBER = ['特码', '特碼', '特号', '特號'];
-    private const KEYWORDS_NORMAL_NUMBER = ['正码', '正碼', '平码', '平碼'];
+    private const KEYWORDS_NORMAL_NUMBER = ['正码', '正碼'];
+    private const KEYWORDS_FLAT_NUMBER = ['平码', '平碼'];
     private const KEYWORDS_SPECIAL_ZODIAC = ['特肖', '特肖连'];
     private const KEYWORDS_ANY_ZODIAC = ['平肖'];
     private const KEYWORDS_MULTI_ZODIAC = ['三肖', '四肖', '五肖'];
@@ -52,6 +53,7 @@ class OptimizedBestPlanService
     /** 玩法缓存，避免重复解析 */
     protected array $specialNumberBets = [];
     protected array $normalNumberBets = [];
+    protected array $flatNumberBets = [];
     protected array $numberComboBets = [];
     protected array $numberMissBets = [];
     protected array $specialZodiacBets = [];
@@ -83,6 +85,7 @@ class OptimizedBestPlanService
     {
         $this->specialNumberBets = [];
         $this->normalNumberBets = [];
+        $this->flatNumberBets = [];
         $this->numberComboBets = [];
         $this->numberMissBets = [];
         $this->specialZodiacBets = [];
@@ -127,6 +130,14 @@ class OptimizedBestPlanService
                 $numbers = array_values(array_unique(array_map('intval', $items)));
                 if (!empty($numbers)) {
                     $this->normalNumberBets[] = $base + ['numbers' => $numbers];
+                }
+                continue;
+            }
+
+            if ($this->containsKeyword($methodName, self::KEYWORDS_FLAT_NUMBER)) {
+                $numbers = array_values(array_unique(array_map('intval', $items)));
+                if (!empty($numbers)) {
+                    $this->flatNumberBets[] = $base + ['numbers' => $numbers];
                 }
                 continue;
             }
@@ -308,6 +319,17 @@ class OptimizedBestPlanService
                 foreach ($betNumbers as $num) {
                     if ($num >= 1 && $num <= 49) {
                         $this->normalCodeWeights[$num] += $direction * $weightedAmount;
+                    }
+                }
+                continue;
+            }
+
+            if ($this->containsKeyword($methodName, self::KEYWORDS_FLAT_NUMBER)) {
+                $betNumbers = array_map('intval', $items);
+                foreach ($betNumbers as $num) {
+                    if ($num >= 1 && $num <= 49) {
+                        $this->normalCodeWeights[$num] += $direction * $weightedAmount;
+                        $this->specialCodeWeights[$num] += $direction * $weightedAmount;
                     }
                 }
                 continue;
@@ -581,6 +603,12 @@ class OptimizedBestPlanService
         }
 
         foreach ($this->normalNumberBets as $bet) {
+            $hit = !empty(array_intersect($bet['numbers'], $normalCodes));
+            $result = $this->resolveResult($hit, $bet['bet_type']);
+            $this->accumulatePrize($result, $bet['amount'], $bet['odds'], $totalPrize);
+        }
+
+        foreach ($this->flatNumberBets as $bet) {
             $hit = !empty(array_intersect($bet['numbers'], $all7Numbers));
             $result = $this->resolveResult($hit, $bet['bet_type']);
             $this->accumulatePrize($result, $bet['amount'], $bet['odds'], $totalPrize);
@@ -675,6 +703,13 @@ class OptimizedBestPlanService
         }
 
         if ($this->containsKeyword($methodName, self::KEYWORDS_NORMAL_NUMBER)) {
+            $betNumbers = array_map('intval', $rawItems);
+            $normalOnly = array_values(array_diff($allNumbers, [$specialCode]));
+            $hit = !empty(array_intersect($betNumbers, $normalOnly));
+            return $this->resolveResult($hit, $betType);
+        }
+
+        if ($this->containsKeyword($methodName, self::KEYWORDS_FLAT_NUMBER)) {
             $betNumbers = array_map('intval', $rawItems);
             $hit = !empty(array_intersect($betNumbers, $allNumbers));
             return $this->resolveResult($hit, $betType);

@@ -7,7 +7,7 @@ use think\console\Input;
 use think\console\Output;
 use app\api\logic\LotteryBetLogic;
 use app\common\model\lottery\{LotteryIssue, BettingRecord, UserAccount, WinningRecord, AccountLog, AgentCommission, UserExtend};
-use app\common\service\OptimizedBestPlanService;
+use app\common\service\LotteryIssueService;
 use think\facade\Db;
 use think\facade\Log;
 
@@ -29,6 +29,7 @@ class DrawLottery extends Command
 
         $this->planClosedIssues($output);
         $this->publishAndSettleDueIssues($output);
+        $this->ensureActivePlateIssues($output);
 
         $output->writeln('Lottery draw task completed');
     }
@@ -78,23 +79,51 @@ class DrawLottery extends Command
         return $year > 0 ? $year : (int)date('Y');
     }
 
-    /**
-     * 封盘后预生成 planned_result（不公开、不结算）
-     *
-     * 优先级：
-     * 1. 后台手动设置的 planned_result（planned_source=1）不会被覆盖
-     * 2. 只有未设置 planned_result 的期次才会自动计算
-     */
-    /**
-     * 自动计算提前时间（秒）：开奖前多久自动计算
-     * 设置为120秒（2分钟），即开奖前2分钟才自动计算
-     * 这样管理员有更多时间手动选择号码（封盘后到开奖前2分钟都可以选择）
-     *
-     * 注意：此值应大于定时任务执行间隔（当前为60秒），
-     * 以确保在窗口期内至少有一次任务执行机会
-     */
-    private const AUTO_PLAN_BEFORE_DRAW_SECONDS = 120;
+    private function countPendingBets($issue): int
+    {
+        return (int)BettingRecord::where([
+            'issue_id' => $issue->id,
+            'status' => 0,
+        ])->count();
+    }
 
+    private function ensureNextIssue($issue, Output $output): void
+    {
+        if ((int)($issue->is_settled ?? 0) !== 1 || empty($issue->result)) {
+            return;
+        }
+
+        $nextIssue = LotteryIssueService::getOrCreateCurrentIssue((int)$issue->game_id, (string)$issue->plate_code);
+        if ($nextIssue) {
+            $output->writeln("Next issue ready: {$issue->plate_code}-{$nextIssue['issue']}");
+        }
+    }
+
+    private function ensureActivePlateIssues(Output $output): void
+    {
+        $plates = Db::table('la_plate')
+            ->where('status', 1)
+            ->select()
+            ->toArray();
+
+        foreach ($plates as $plate) {
+            $gameId = (int)($plate['game_id'] ?? 200);
+            $plateCode = (string)($plate['code'] ?? 'A');
+            if ($plateCode === '') {
+                continue;
+            }
+
+            $issue = LotteryIssueService::getOrCreateCurrentIssue($gameId, $plateCode);
+            if ($issue) {
+                $output->writeln("Checked active issue {$plateCode}-{$issue['issue']}");
+            }
+        }
+    }
+
+    /**
+     * 封盘后不再自动预生成 planned_result。
+     * 有投注的期次必须由总管理员在后台选择方案；无投注期次到开奖时间再随机开奖。
+     */
     private function planClosedIssues(Output $output): void
     {
         $issues = LotteryIssue::getPendingPlanIssues();
@@ -102,56 +131,9 @@ class DrawLottery extends Command
             return;
         }
 
-        $now = time();
-
         foreach ($issues as $issue) {
-            // 检查是否已有后台手动设置的计划（planned_source=1 表示后台手动设置）
-            $existingPlanned = $this->parseNumbersString($issue->planned_result);
-            if (count($existingPlanned) === 7 && $issue->planned_source == 1) {
-                $output->writeln("Skip {$issue->plate_code}-{$issue->issue}: already has manual planned_result");
-                continue;
-            }
-
-            // 延迟自动计算：只在开奖前N秒才自动计算，给后台管理员足够时间选择号码
-            $drawTime = is_numeric($issue->draw_time) ? (int)$issue->draw_time : strtotime($issue->draw_time);
-            $autoPlannedTime = $drawTime - self::AUTO_PLAN_BEFORE_DRAW_SECONDS;
-
-            if ($now < $autoPlannedTime) {
-                $waitSeconds = $autoPlannedTime - $now;
-                $output->writeln("Wait {$issue->plate_code}-{$issue->issue}: auto-plan in {$waitSeconds}s (waiting for manual selection)");
-                continue;
-            }
-
-            $output->writeln("Planning issue {$issue->plate_code}-{$issue->issue}");
-
-            try {
-                $year = $this->getIssueYear($issue);
-                $service = new OptimizedBestPlanService((int)$issue->game_id, (string)$issue->issue, $year, (string)$issue->plate_code);
-                $plan = $service->findBest7Numbers();
-
-                $best = $plan['best_solution'] ?? null;
-                $numbers = $best ? array_merge($best['m1_m6'], [$best['m7']]) : [];
-                $numbers = array_values(array_filter(array_map('intval', $numbers), fn($n) => $n >= 1 && $n <= 49));
-                $numbers = array_values(array_unique($numbers));
-
-                if (count($numbers) !== 7) {
-                    $numbers = $this->generateFallbackResult();
-                }
-
-                $issue->planned_result = implode(',', $numbers);
-                $issue->planned_at = time();
-                $issue->planned_source = 0;  // 0=自动计算
-                $issue->planned_operator_id = 0;
-                $issue->save();
-
-                $output->writeln('Auto planned result ' . $issue->planned_result);
-            } catch (\Exception $e) {
-                $output->writeln('Plan failed ' . $e->getMessage());
-                Log::error('plan_failed', [
-                    'issue_id' => $issue->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            $betCount = $this->countPendingBets($issue);
+            $output->writeln("Manual plan required {$issue->plate_code}-{$issue->issue}: pending bets {$betCount}");
         }
     }
 
@@ -160,8 +142,8 @@ class DrawLottery extends Command
      *
      * 开奖号码优先级：
      * 1. result 字段（如果已有值）
-     * 2. planned_result 字段（后台手动设置或自动计算）
-     * 3. 随机生成（兜底）
+     * 2. planned_result 字段（后台手动设置）
+     * 3. 无投注期次随机生成；有投注且未设置计划则保持等待开奖
      */
     private function publishAndSettleDueIssues(Output $output): void
     {
@@ -191,10 +173,21 @@ class DrawLottery extends Command
                     }
                 }
 
-                // 优先级3: 兜底随机生成
+                // 优先级3: 有投注未选方案时等待人工处理；无投注期次自动随机开奖。
                 if (count($result) !== 7) {
+                    $betCount = $this->countPendingBets($issue);
+                    if ($betCount > 0) {
+                        $output->writeln("Waiting manual plan: {$issue->plate_code}-{$issue->issue}, pending bets {$betCount}");
+                        Log::warning('draw_waiting_manual_plan', [
+                            'issue_id' => $issue->id,
+                            'issue' => $issue->issue,
+                            'plate_code' => $issue->plate_code,
+                            'pending_bets' => $betCount,
+                        ]);
+                        continue;
+                    }
                     $result = $this->generateFallbackResult();
-                    $resultSource = 'fallback_random';
+                    $resultSource = 'no_bet_random';
                 }
 
                 $issue->result = implode(',', $result);
@@ -203,7 +196,9 @@ class DrawLottery extends Command
 
                 $output->writeln("Draw result: {$issue->result} (source: {$resultSource})");
 
-                $this->settleBetting($issue, $result, $output);
+                if ($this->settleBetting($issue, $result, $output)) {
+                    $this->ensureNextIssue($issue, $output);
+                }
             } catch (\Exception $e) {
                 $output->writeln('Draw failed ' . $e->getMessage());
                 Log::error('draw_failed', [
@@ -217,7 +212,7 @@ class DrawLottery extends Command
     /**
      * Settle all bets for the issue
      */
-    private function settleBetting($issue, $result, $output)
+    private function settleBetting($issue, $result, $output): bool
     {
         $lastId = 0;
         $pageSize = 1000;
@@ -258,7 +253,7 @@ class DrawLottery extends Command
                 'issue_id' => $issue->id,
                 'pending_count' => $pendingCount,
             ]);
-            return;
+            return false;
         }
 
         $issue->status = 3;
@@ -267,6 +262,7 @@ class DrawLottery extends Command
         $issue->save();
 
         $output->writeln("Settlement done, total bets: {$totalSettled}");
+        return true;
     }
 
     /**
@@ -278,12 +274,16 @@ class DrawLottery extends Command
         try {
             $betType = $betting->bet_type ?? 'win';
             $year = (int)substr((string)$betting->issue, 0, 4);
+            $playMethod = $this->getPlayMethod((int)($betting->method_id ?? 0));
+            $methodName = (string)(($playMethod['name'] ?? '') ?: $betting->method_name);
+            $methodCode = (string)($playMethod['code'] ?? '');
             $resultType = LotteryBetLogic::checkWin(
-                (string)$betting->method_name,
+                $methodName,
                 (string)$betting->bet_content,
                 $result,
                 $year,
-                $betType
+                $betType,
+                $methodCode
             );
             $isWin = $resultType === 'win';
             $isDraw = $resultType === 'draw';
@@ -355,6 +355,23 @@ class DrawLottery extends Command
             Db::rollback();
             throw $e;
         }
+    }
+
+    private function getPlayMethod(int $methodId): ?array
+    {
+        static $cache = [];
+
+        if ($methodId <= 0) {
+            return null;
+        }
+
+        if (!array_key_exists($methodId, $cache)) {
+            $cache[$methodId] = Db::table('la_play_method')
+                ->where('id', $methodId)
+                ->find();
+        }
+
+        return $cache[$methodId] ?: null;
     }
 
     /**

@@ -8,9 +8,10 @@ import {
   getCurrentQishu,
   getPlateList,
   calculateRealtime,
-  analyzeAndSave,
   findByTargetRate,
   executeDrawing,
+  revokeDrawingPlan,
+  previewCustomDrawing,
   customDrawing,
   createNewIssue,
   previewNewIssue,
@@ -70,10 +71,10 @@ const columns: TableColumnsType = [
     customRender: ({ text }) => `${Number(text).toFixed(2)}%`,
   },
   {
-    title: '策略',
+    title: '目标/实际',
     dataIndex: 'strategy',
     key: 'strategy',
-    width: 100,
+    width: 180,
     align: 'center',
   },
   {
@@ -126,11 +127,6 @@ const detailColumns: TableColumnsType = [
   },
 ];
 
-// 风险等级颜色
-const getRiskColor = (level: number) => {
-  return level === 0 ? 'green' : level === 1 ? 'orange' : 'red';
-};
-
 function toFiniteNumber(value: unknown, fallback = 0) {
   const num = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(num) ? num : fallback;
@@ -138,6 +134,83 @@ function toFiniteNumber(value: unknown, fallback = 0) {
 
 function formatFixed(value: unknown, digits = 2, fallback = 0) {
   return toFiniteNumber(value, fallback).toFixed(digits);
+}
+
+function formatRatePercent(value: unknown, digits = 2) {
+  return `${formatFixed(value, digits)}%`;
+}
+
+function formatProfitSummary(value: unknown, rate: unknown, settled = false) {
+  const profit = toFiniteNumber(value);
+  const profitRate = toFiniteNumber(rate);
+  if (profit < 0) {
+    return `${settled ? '平台亏损' : '预计亏损'}：¥${formatFixed(Math.abs(profit))} (亏损率 ${formatFixed(Math.abs(profitRate))}%)`;
+  }
+  return `${settled ? '平台利润' : '预计利润'}：¥${formatFixed(profit)} (${formatFixed(profitRate)}%)`;
+}
+
+type WipeoutPlanType = '' | 'full' | 'near';
+
+function confirmNegativePlan(totalProfit: number, profitRate: number, totalPrize: number, immediateMode: boolean) {
+  if (totalProfit >= 0) {
+    return true;
+  }
+
+  return window.confirm(
+    `负盈利二次确认\n\n` +
+    `预计亏损金额：¥${formatFixed(Math.abs(totalProfit))}\n` +
+    `预计亏损率：${formatFixed(Math.abs(profitRate))}%\n` +
+    `预计赔付：¥${formatFixed(totalPrize)}\n\n` +
+    (immediateMode ? '确认后将立即开奖并结算，本次负盈利选择会写入操作日志。' : '确认后将锁定负盈利开奖计划，本次选择会写入操作日志。')
+  );
+}
+
+function getWipeoutPlanType(profitRate: unknown, totalPayout: unknown, totalBetAmount: unknown): WipeoutPlanType {
+  const betAmount = toFiniteNumber(totalBetAmount);
+  if (betAmount <= 0) {
+    return '';
+  }
+
+  const payout = toFiniteNumber(totalPayout, Number.NaN);
+  const rate = toFiniteNumber(profitRate);
+  if (Number.isFinite(payout) && payout <= 0.01) {
+    return 'full';
+  }
+  if (rate >= 99) {
+    return 'near';
+  }
+  return '';
+}
+
+function getWipeoutPlanLabel(type: WipeoutPlanType) {
+  if (type === 'full') {
+    return '通杀';
+  }
+  if (type === 'near') {
+    return '近似通杀';
+  }
+  return '';
+}
+
+function confirmWipeoutPlan(
+  wipeoutType: WipeoutPlanType,
+  profitRate: number,
+  totalPayout: number,
+  totalBetAmount: number,
+  immediateMode: boolean,
+) {
+  if (!wipeoutType) {
+    return true;
+  }
+
+  const label = getWipeoutPlanLabel(wipeoutType);
+  return window.confirm(
+    `${label}方案二次确认\n\n` +
+    `本期总投注：¥${formatFixed(totalBetAmount)}\n` +
+    `预计赔付：¥${formatFixed(totalPayout)}\n` +
+    `实际利润率：${formatFixed(profitRate)}%\n\n` +
+    (immediateMode ? `确认后将立即开奖并结算，本次${label}选择会写入操作日志。` : `确认后将锁定${label}开奖计划，本次选择会写入操作日志。`)
+  );
 }
 
 function normalizeDrawNumbers(values: Array<number | undefined>): number[] {
@@ -170,6 +243,30 @@ function isBeforeCloseTime() {
   }
   const closeTime = new Date(qishuInfo.value.closetime).getTime();
   return Number.isFinite(closeTime) && Date.now() < closeTime;
+}
+
+function isBeforeDrawTime() {
+  if (!qishuInfo.value?.kjtime) {
+    return false;
+  }
+  const drawTime = new Date(qishuInfo.value.kjtime).getTime();
+  return Number.isFinite(drawTime) && Date.now() < drawTime;
+}
+
+function canSelectPlan() {
+  return Boolean(qishuInfo.value?.qishu && !qishuInfo.value?.is_opened && !isBeforeCloseTime());
+}
+
+function isImmediateDrawingMode() {
+  return Boolean(qishuInfo.value?.qishu && !qishuInfo.value?.is_opened && !isBeforeCloseTime() && !isBeforeDrawTime());
+}
+
+function canRevokePlan() {
+  return Boolean(qishuInfo.value?.has_planned_result && !qishuInfo.value?.is_opened && isBeforeDrawTime());
+}
+
+function canCustomDrawNow() {
+  return Boolean(qishuInfo.value?.qishu && !qishuInfo.value?.is_opened && !isBeforeCloseTime() && !isBeforeDrawTime());
 }
 
 // 获取盘口列表
@@ -330,6 +427,10 @@ async function handleCalculate() {
     message.warning('请先获取当前期号');
     return;
   }
+  if (isBeforeCloseTime()) {
+    message.warning('封盘后才会生成开奖方案');
+    return;
+  }
 
   loading.value = true;
   try {
@@ -340,33 +441,15 @@ async function handleCalculate() {
       year: new Date().getFullYear(),
       target_rate: targetRate.value,  // 传递目标利润率
       tolerance: tolerance.value,      // 传递误差范围
+      include_negative: true,
     });
-    message.success('计算完成');
+    if (analyzeResult.value?.message) {
+      message.info(analyzeResult.value.message);
+    } else {
+      message.success('计算完成');
+    }
   } catch (error: any) {
     message.error(error?.message || '计算失败');
-  } finally {
-    loading.value = false;
-  }
-}
-
-// 执行分析并保存
-async function handleAnalyzeAndSave() {
-  if (!qishuInfo.value?.qishu) {
-    message.warning('请先获取当前期号');
-    return;
-  }
-
-  loading.value = true;
-  try {
-    analyzeResult.value = await analyzeAndSave({
-      gid: 200,
-      qishu: qishuInfo.value.qishu,
-      plate_code: selectedPlate.value,  // 添加盘口代码
-      year: new Date().getFullYear(),
-    });
-    message.success('分析完成并已保存');
-  } catch (error: any) {
-    message.error(error?.message || '分析失败');
   } finally {
     loading.value = false;
   }
@@ -376,6 +459,10 @@ async function handleAnalyzeAndSave() {
 async function handleFindByRate() {
   if (!qishuInfo.value?.qishu) {
     message.warning('请先获取当前期号');
+    return;
+  }
+  if (isBeforeCloseTime()) {
+    message.warning('封盘后才会生成开奖方案');
     return;
   }
 
@@ -451,15 +538,18 @@ const tableData = computed(() => {
     const numbers = [...solution.m1_m6, solution.m7].sort((a, b) => a - b);
 
     // 判断风险等级
+    const totalPayout = toFiniteNumber(solution.total_prize ?? (solution as any).prize_amount);
+    const totalBetAmount = toFiniteNumber(solution.bet_amount ?? analyzeResult.value?.summary?.total_bets);
+    const wipeoutType = (solution.wipeout_type || getWipeoutPlanType(solution.profit_rate, totalPayout, totalBetAmount)) as WipeoutPlanType;
     let riskLevel = 0; // 0=安全, 1=注意, 2=危险
-    if (solution.profit_rate < 0) {
-      riskLevel = 2; // 负利润=危险
+    if (solution.profit_rate < 0 || wipeoutType) {
+      riskLevel = 2; // 负利润或通杀类方案=危险
     } else if (solution.profit_rate < 50) {
       riskLevel = 1; // 低利润=注意
     }
 
     // 策略名称映射
-    const strategyNames = {
+    const strategyNames: Record<string, string> = {
       'optimal': '最优',
       'medium': '中等',
       'low_profit': '低利润',
@@ -467,9 +557,18 @@ const tableData = computed(() => {
     };
 
     // ✅ 安全获取策略名称
-    const strategyName = solution.strategy
+    let strategyName = solution.strategy
       ? (strategyNames[solution.strategy] || solution.strategy)
-      : '未知';
+      : '推荐';
+    if (
+      (solution.rate_type === 'negative' || solution.rate_type === 'positive')
+      && solution.target_rate !== undefined
+    ) {
+      strategyName = `目标${formatRatePercent(solution.target_rate, 0)} / 实际${formatRatePercent(solution.profit_rate)}`;
+    }
+    if (wipeoutType) {
+      strategyName = `${getWipeoutPlanLabel(wipeoutType)} | ${strategyName}`;
+    }
 
     return {
       key: index,
@@ -478,6 +577,7 @@ const tableData = computed(() => {
       profit_rate: solution.profit_rate ?? 0,
       strategy: strategyName,
       risk_level: riskLevel,
+      wipeout_type: wipeoutType,
       // 原始数据,用于开奖
       raw: solution,
     };
@@ -487,7 +587,7 @@ const tableData = computed(() => {
   return formattedData.sort((a, b) => b.profit_rate - a.profit_rate);
 });
 
-// 用此方案开奖
+// 锁定最佳方案
 async function handleExecuteDrawing() {
   if (!qishuInfo.value?.qishu) {
     message.warning('请先获取当前期号');
@@ -498,13 +598,37 @@ async function handleExecuteDrawing() {
     message.warning('请先计算出最佳方案');
     return;
   }
+  if (!canSelectPlan()) {
+    message.warning('封盘后才可以选择开奖计划');
+    return;
+  }
+
+  const immediateMode = isImmediateDrawingMode();
+  const bestSolution = (analyzeResult.value as any)?.best_solution;
+  const totalProfit = toFiniteNumber(analyzeResult.value.summary.best_profit);
+  const profitRate = toFiniteNumber(analyzeResult.value.summary.best_profit_rate);
+  const totalPrize = toFiniteNumber(bestSolution?.total_prize ?? bestSolution?.prize_amount);
+  const totalBetAmount = toFiniteNumber(bestSolution?.bet_amount ?? analyzeResult.value.summary.total_bets);
+  const wipeoutType = (bestSolution?.wipeout_type || getWipeoutPlanType(profitRate, totalPrize, totalBetAmount)) as WipeoutPlanType;
+  const isNegativePlan = totalProfit < 0;
 
   // 二次确认
   const confirm = window.confirm(
-    `确定要用此方案开奖吗？\n\n期号：${qishuInfo.value.qishu}\n正码(m1-m6)：${analyzeResult.value.summary.best_m1_m6.join(', ')}\n特码(m7)：${analyzeResult.value.summary.best_m7}\n\n预计利润：¥${formatFixed(analyzeResult.value.summary.best_profit)} (${formatFixed(analyzeResult.value.summary.best_profit_rate)}%)\n\n此操作不可撤销！`
+    `${immediateMode ? '确定要选择此最佳方案并立即开奖结算？' : '确定要锁定此开奖计划？'}\n\n` +
+    `期号：${qishuInfo.value.qishu}\n` +
+    `正码(m1-m6)：${analyzeResult.value.summary.best_m1_m6.join(', ')}\n` +
+    `特码(m7)：${analyzeResult.value.summary.best_m7}\n\n` +
+    `${formatProfitSummary(totalProfit, profitRate)}\n\n` +
+    (immediateMode ? '当前已到开奖时间，确认后将立即公布开奖结果并结算。' : '开奖时间前可以改选或撤销，到开奖时间由系统自动结算。')
   );
 
   if (!confirm) {
+    return;
+  }
+  if (!confirmNegativePlan(totalProfit, profitRate, totalPrize, immediateMode)) {
+    return;
+  }
+  if (!confirmWipeoutPlan(wipeoutType, profitRate, totalPrize, totalBetAmount, immediateMode)) {
     return;
   }
 
@@ -516,33 +640,37 @@ async function handleExecuteDrawing() {
       plate_code: selectedPlate.value,  // 添加盘口代码
       best_numbers: analyzeResult.value.summary.best_numbers,
       year: new Date().getFullYear(),
+      negative_confirmed: isNegativePlan,
+      wipeout_confirmed: Boolean(wipeoutType),
     });
 
     const totalOrders = toFiniteNumber((result as any)?.total_orders ?? (result as any)?.data?.total_orders);
     const winCount = toFiniteNumber((result as any)?.win_count ?? (result as any)?.data?.win_count);
     const loseCount = toFiniteNumber((result as any)?.lose_count ?? (result as any)?.data?.lose_count);
-    const totalWinAmount = toFiniteNumber((result as any)?.total_win_amount ?? (result as any)?.data?.total_win_amount);
-    const platformProfit = toFiniteNumber((result as any)?.platform_profit ?? (result as any)?.data?.platform_profit);
+    const totalPayout = toFiniteNumber((result as any)?.expected_payout ?? (result as any)?.total_win_amount ?? (result as any)?.data?.expected_payout ?? (result as any)?.data?.total_win_amount);
+    const platformProfit = toFiniteNumber((result as any)?.expected_profit ?? (result as any)?.platform_profit ?? (result as any)?.data?.expected_profit ?? (result as any)?.data?.platform_profit);
+    const profitRate = toFiniteNumber((result as any)?.expected_profit_rate ?? (result as any)?.data?.expected_profit_rate);
+    const settled = ((result as any)?.plan_status ?? (result as any)?.data?.plan_status) === 'settled';
 
     message.success(
-      `开奖成功！\n` +
+      `${settled ? '开奖并结算完成！' : '开奖计划已锁定！'}\n` +
       `总订单：${totalOrders}笔\n` +
-      `中奖：${winCount}笔，派奖¥${formatFixed(totalWinAmount)}\n` +
+      `中奖：${winCount}笔，${settled ? '实际赔付' : '预计赔付'}¥${formatFixed(totalPayout)}\n` +
       `未中奖：${loseCount}笔\n` +
-      `平台利润：¥${formatFixed(platformProfit)}`
+      formatProfitSummary(platformProfit, profitRate, settled)
     , 10);
 
-    // 开奖成功后，清空当前结果并刷新期号信息
+    // 计划锁定后，清空当前结果并刷新期号信息
     analyzeResult.value = null;
     await fetchCurrentQishu();
   } catch (error: any) {
-    message.error(error?.message || '开奖失败');
+    message.error(error?.message || '锁定计划失败');
   } finally {
     loading.value = false;
   }
 }
 
-// ✨ 选中某个方案进行开奖
+// ✨ 选中某个方案锁定计划
 async function handleSelectAndDraw(record: any) {
   console.log('🔵 handleSelectAndDraw 被调用', record);
 
@@ -562,6 +690,10 @@ async function handleSelectAndDraw(record: any) {
   }
 
   const numbers = [...solution.m1_m6, solution.m7];
+  if (!canSelectPlan()) {
+    message.warning('封盘后才可以选择开奖计划');
+    return;
+  }
 
   console.log('📊 开奖号码:', numbers);
   console.log('📊 完整方案数据:', solution);
@@ -569,23 +701,33 @@ async function handleSelectAndDraw(record: any) {
   // 安全获取字段值,提供默认值
   const totalProfit = toFiniteNumber(solution.total_profit);
   const profitRate = toFiniteNumber(solution.profit_rate ?? record.profit_rate);
-  const totalPrize = toFiniteNumber(solution.total_prize);
+  const totalPrize = toFiniteNumber(solution.total_prize ?? solution.prize_amount);
+  const totalBetAmount = toFiniteNumber(solution.bet_amount ?? analyzeResult.value?.summary?.total_bets);
+  const wipeoutType = (record.wipeout_type || solution.wipeout_type || getWipeoutPlanType(profitRate, totalPrize, totalBetAmount)) as WipeoutPlanType;
   const strategy = record.strategy || '未知';
+  const immediateMode = isImmediateDrawingMode();
+  const isNegativePlan = totalProfit < 0;
 
   // 二次确认
   const confirm = window.confirm(
-    `确定要用此方案开奖吗？\n\n` +
+    `${immediateMode ? '确定要选择此方案并立即开奖结算？' : '确定要锁定此开奖计划？'}\n\n` +
     `期号：${qishuInfo.value.qishu}\n` +
     `盘口：${selectedPlate.value}\n` +
     `正码(m1-m6)：${solution.m1_m6.join(', ')}\n` +
     `特码(m7)：${solution.m7}\n` +
     `策略：${strategy}\n\n` +
-    `预计利润：¥${formatFixed(totalProfit)} (${formatFixed(profitRate)}%)\n` +
+    `${formatProfitSummary(totalProfit, profitRate)}\n` +
     `预计赔付：¥${formatFixed(totalPrize)}\n\n` +
-    `此操作不可撤销！`
+    (immediateMode ? '当前已到开奖时间，确认后将立即公布开奖结果并结算。' : '开奖时间前可以改选或撤销，到开奖时间由系统自动结算。')
   );
 
   if (!confirm) {
+    return;
+  }
+  if (!confirmNegativePlan(totalProfit, profitRate, totalPrize, immediateMode)) {
+    return;
+  }
+  if (!confirmWipeoutPlan(wipeoutType, profitRate, totalPrize, totalBetAmount, immediateMode)) {
     return;
   }
 
@@ -597,28 +739,63 @@ async function handleSelectAndDraw(record: any) {
       plate_code: selectedPlate.value,
       best_numbers: numbers,
       year: new Date().getFullYear(),
+      negative_confirmed: isNegativePlan,
+      wipeout_confirmed: Boolean(wipeoutType),
     });
 
     const totalOrders = toFiniteNumber((result as any)?.total_orders ?? (result as any)?.data?.total_orders);
     const winCount = toFiniteNumber((result as any)?.win_count ?? (result as any)?.data?.win_count);
     const loseCount = toFiniteNumber((result as any)?.lose_count ?? (result as any)?.data?.lose_count);
-    const totalWinAmount = toFiniteNumber((result as any)?.total_win_amount ?? (result as any)?.data?.total_win_amount);
-    const platformProfit = toFiniteNumber((result as any)?.platform_profit ?? (result as any)?.data?.platform_profit);
+    const totalPayout = toFiniteNumber((result as any)?.expected_payout ?? (result as any)?.total_win_amount ?? (result as any)?.data?.expected_payout ?? (result as any)?.data?.total_win_amount);
+    const platformProfit = toFiniteNumber((result as any)?.expected_profit ?? (result as any)?.platform_profit ?? (result as any)?.data?.expected_profit ?? (result as any)?.data?.platform_profit);
+    const profitRateResult = toFiniteNumber((result as any)?.expected_profit_rate ?? (result as any)?.data?.expected_profit_rate);
+    const settled = ((result as any)?.plan_status ?? (result as any)?.data?.plan_status) === 'settled';
 
     message.success(
-      `🎉 开奖成功！\n\n` +
-      `开奖号码：${numbers.sort((a, b) => a - b).join(', ')}\n` +
+      `${settled ? '开奖并结算完成！' : '开奖计划已锁定！'}\n\n` +
+      `计划号码：${numbers.join(', ')}\n` +
       `总订单：${totalOrders}笔\n` +
-      `中奖：${winCount}笔，派奖¥${formatFixed(totalWinAmount)}\n` +
+      `中奖：${winCount}笔，${settled ? '实际赔付' : '预计赔付'}¥${formatFixed(totalPayout)}\n` +
       `未中奖：${loseCount}笔\n` +
-      `平台利润：¥${formatFixed(platformProfit)}`
+      formatProfitSummary(platformProfit, profitRateResult, settled)
     , 10);
 
-    // 开奖成功后，刷新期号和清空结果
+    // 计划锁定后，刷新期号和清空结果
     analyzeResult.value = null;
     await fetchCurrentQishu();
   } catch (error: any) {
-    message.error(error?.message || '开奖失败');
+    message.error(error?.message || '锁定计划失败');
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function handleRevokeDrawingPlan() {
+  if (!qishuInfo.value?.qishu) {
+    message.warning('请先获取当前期号');
+    return;
+  }
+  if (!canRevokePlan()) {
+    message.warning('只有开奖时间前可以撤销已锁定计划');
+    return;
+  }
+
+  if (!window.confirm(`确认撤销当前期号的开奖计划？\n\n期号：${qishuInfo.value.qishu}\n盘口：${selectedPlate.value}\n\n撤销后到开奖时间前需要重新选择方案。`)) {
+    return;
+  }
+
+  loading.value = true;
+  try {
+    await revokeDrawingPlan({
+      gid: 200,
+      qishu: qishuInfo.value.qishu,
+      plate_code: selectedPlate.value,
+    });
+    message.success('开奖计划已撤销');
+    analyzeResult.value = null;
+    await fetchCurrentQishu();
+  } catch (error: any) {
+    message.error(error?.message || '撤销计划失败');
   } finally {
     loading.value = false;
   }
@@ -637,6 +814,10 @@ function openCustomDrawModal() {
     message.warning('当前期号尚未封盘，不能自定义开奖');
     return;
   }
+  if (isBeforeDrawTime()) {
+    message.warning('未到开奖时间，只能先选择并锁定开奖计划');
+    return;
+  }
   customDrawNumbers.value = [undefined, undefined, undefined, undefined, undefined, undefined, undefined];
   customDrawVisible.value = true;
 }
@@ -650,6 +831,10 @@ async function handleCustomDrawOk() {
     message.warning('当前期号尚未封盘，不能自定义开奖');
     return;
   }
+  if (isBeforeDrawTime()) {
+    message.warning('未到开奖时间，只能先选择并锁定开奖计划');
+    return;
+  }
 
   const numbers = normalizeDrawNumbers(customDrawNumbers.value);
   const errorText = validateDrawNumbers(numbers);
@@ -660,27 +845,54 @@ async function handleCustomDrawOk() {
 
   const normalNumbers = numbers.slice(0, 6);
   const specialNumber = numbers[6] as number;
-  const confirmText =
-    `确认自定义开奖？\n\n` +
-    `期号：${qishuInfo.value.qishu}\n` +
-    `盘口：${selectedPlate.value}\n` +
-    `正码(m1-m6)：${normalNumbers.map(formatDrawNumber).join(', ')}\n` +
-    `特码(m7)：${formatDrawNumber(specialNumber)}\n\n` +
-    `此操作不可撤销！`;
-
-  if (!window.confirm(confirmText)) {
-    return;
-  }
 
   customDrawSubmitting.value = true;
   loading.value = true;
   try {
+    const preview = await previewCustomDrawing({
+      gid: 200,
+      qishu: qishuInfo.value.qishu,
+      plate_code: selectedPlate.value,
+      draw_numbers: numbers,
+      year: new Date().getFullYear(),
+    });
+    const previewData = (preview as any)?.data ?? preview;
+    const previewPayout = toFiniteNumber(previewData?.expected_payout ?? previewData?.total_payout ?? previewData?.total_win_amount);
+    const previewProfit = toFiniteNumber(previewData?.expected_profit ?? previewData?.platform_profit);
+    const previewProfitRate = toFiniteNumber(previewData?.expected_profit_rate);
+    const previewTotalBet = toFiniteNumber(previewData?.total_bet_amount);
+    const previewWipeoutType = (previewData?.wipeout_type || getWipeoutPlanType(previewProfitRate, previewPayout, previewTotalBet)) as WipeoutPlanType;
+    const isNegativePlan = previewProfit < 0;
+
+    const confirmText =
+      `确认自定义开奖？\n\n` +
+      `期号：${qishuInfo.value.qishu}\n` +
+      `盘口：${selectedPlate.value}\n` +
+      `正码(m1-m6)：${normalNumbers.map(formatDrawNumber).join(', ')}\n` +
+      `特码(m7)：${formatDrawNumber(specialNumber)}\n\n` +
+      `预计赔付：¥${formatFixed(previewPayout)}\n` +
+      (previewWipeoutType ? `风险标记：${getWipeoutPlanLabel(previewWipeoutType)}\n` : '') +
+      `${formatProfitSummary(previewProfit, previewProfitRate)}\n\n` +
+      `此操作不可撤销！`;
+
+    if (!window.confirm(confirmText)) {
+      return;
+    }
+    if (!confirmNegativePlan(previewProfit, previewProfitRate, previewPayout, true)) {
+      return;
+    }
+    if (!confirmWipeoutPlan(previewWipeoutType, previewProfitRate, previewPayout, previewTotalBet, true)) {
+      return;
+    }
+
     const result = await customDrawing({
       gid: 200,
       qishu: qishuInfo.value.qishu,
       plate_code: selectedPlate.value,
       draw_numbers: numbers,
       year: new Date().getFullYear(),
+      negative_confirmed: isNegativePlan,
+      wipeout_confirmed: Boolean(previewWipeoutType),
     });
 
     const totalOrders = toFiniteNumber((result as any)?.total_orders ?? (result as any)?.data?.total_orders);
@@ -694,6 +906,7 @@ async function handleCustomDrawOk() {
       (result as any)?.data?.total_win_amount
     );
     const platformProfit = toFiniteNumber((result as any)?.platform_profit ?? (result as any)?.data?.platform_profit);
+    const profitRate = toFiniteNumber((result as any)?.expected_profit_rate ?? (result as any)?.data?.expected_profit_rate);
 
     message.success(
       `自定义开奖并结算成功！\n` +
@@ -701,7 +914,7 @@ async function handleCustomDrawOk() {
       `总订单：${totalOrders}笔\n` +
       `中奖：${winCount}笔，和局：${drawCount}笔，派奖¥${formatFixed(totalPayout)}\n` +
       `未中奖：${loseCount}笔\n` +
-      `平台利润：¥${formatFixed(platformProfit)}`,
+      formatProfitSummary(platformProfit, profitRate, true),
       10
     );
 
@@ -869,6 +1082,7 @@ onBeforeUnmount(() => {
           <div class="text-gray-500">当前状态</div>
           <div class="text-lg">
             <Tag v-if="qishuInfo.is_opened" color="red">已开奖</Tag>
+            <Tag v-else-if="qishuInfo.has_planned_result" color="purple">已锁定计划</Tag>
             <Tag v-else-if="new Date() > new Date(qishuInfo.closetime)" color="orange">已封盘</Tag>
             <Tag v-else-if="new Date() > new Date(qishuInfo.opentime)" color="green">投注中</Tag>
             <Tag v-else color="blue">待开盘</Tag>
@@ -920,11 +1134,8 @@ onBeforeUnmount(() => {
       </div>
 
       <Space>
-        <Button type="primary" :loading="loading" @click="handleCalculate">
+        <Button type="primary" :loading="loading" :disabled="isBeforeCloseTime()" @click="handleCalculate">
           实时计算
-        </Button>
-        <Button type="primary" :loading="loading" @click="handleAnalyzeAndSave">
-          分析并保存
         </Button>
         <Button :type="autoRefresh ? 'default' : 'primary'" @click="toggleAutoRefresh">
           {{ autoRefresh ? '关闭' : '开启' }}自动刷新
@@ -934,17 +1145,25 @@ onBeforeUnmount(() => {
           danger
           size="large"
           :loading="loading"
-          :disabled="!analyzeResult?.summary?.best_numbers"
+          :disabled="(analyzeResult?.summary?.best_numbers?.length ?? 0) !== 7 || !canSelectPlan()"
           @click="handleExecuteDrawing"
           style="margin-left: 20px;"
         >
-          🎯 用此方案开奖
+          {{ isImmediateDrawingMode() ? '选择最佳并开奖' : '锁定最佳计划' }}
+        </Button>
+        <Button
+          size="large"
+          :loading="loading"
+          :disabled="!canRevokePlan()"
+          @click="handleRevokeDrawingPlan"
+        >
+          撤销计划
         </Button>
         <Button
           danger
           size="large"
           :loading="customDrawSubmitting"
-          :disabled="!qishuInfo?.qishu || qishuInfo?.is_opened || isBeforeCloseTime()"
+          :disabled="!canCustomDrawNow()"
           @click="openCustomDrawModal"
         >
           自定义开奖
@@ -967,7 +1186,7 @@ onBeforeUnmount(() => {
           <span>误差范围：±</span>
           <InputNumber v-model:value="tolerance" :min="0" :max="10" :step="0.1" />
           <span>%</span>
-          <Button :loading="loading" @click="handleFindByRate">
+          <Button :loading="loading" :disabled="isBeforeCloseTime()" @click="handleFindByRate">
             查找号码
           </Button>
         </Space>
@@ -1055,7 +1274,7 @@ onBeforeUnmount(() => {
     </Card>
 
     <!-- 所有方案列表表格 -->
-    <Card title="所有方案列表（可选择任意方案开奖）" v-if="analyzeResult">
+    <Card title="所有方案列表（封盘后可选择方案）" v-if="analyzeResult">
       <Table
         :columns="columns"
         :data-source="tableData"
@@ -1067,21 +1286,21 @@ onBeforeUnmount(() => {
         <template #bodyCell="{ column, record }">
           <!-- 风险等级列 - 使用Tag组件显示 -->
           <template v-if="column.key === 'risk_level'">
-            <Tag :color="record.risk_level === 0 ? 'success' : record.risk_level === 1 ? 'warning' : 'error'">
-              {{ record.risk_level === 0 ? '✅ 安全' : record.risk_level === 1 ? '⚠️ 注意' : '🔴 危险' }}
+            <Tag :color="record.wipeout_type ? 'error' : record.risk_level === 0 ? 'success' : record.risk_level === 1 ? 'warning' : 'error'">
+              {{ record.wipeout_type ? getWipeoutPlanLabel(record.wipeout_type) : record.risk_level === 0 ? '✅ 安全' : record.risk_level === 1 ? '⚠️ 注意' : '🔴 危险' }}
             </Tag>
           </template>
 
-          <!-- 操作列 - 显示"选中此号码开奖"按钮 -->
+          <!-- 操作列 - 显示"选中此方案"按钮 -->
           <template v-if="column.key === 'action'">
             <Button
               type="primary"
               size="small"
               @click="() => handleSelectAndDraw(record)"
-              :disabled="!qishuInfo?.qishu"
-              :title="!qishuInfo?.qishu ? '请先获取当前期号' : '点击选择此方案开奖'"
+              :disabled="!canSelectPlan()"
+              :title="canSelectPlan() ? (isImmediateDrawingMode() ? '点击选择此方案并立即开奖结算' : '点击选择此方案锁定计划') : '封盘后可选择方案'"
             >
-              选中此号码开奖
+              {{ isImmediateDrawingMode() ? '选中并开奖' : '选中此方案' }}
             </Button>
           </template>
         </template>

@@ -1,7 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router';
 
-import { BasicLayout } from '#/layouts';
-
 const routes: RouteRecordRaw[] = [
   {
     meta: {
@@ -40,6 +38,15 @@ const routes: RouteRecordRaw[] = [
         meta: {
           icon: 'lucide:list-ordered',
           title: '历史下单',
+        },
+      },
+      {
+        name: 'ControlPanelRiskLog',
+        path: 'risk-log',
+        component: () => import('#/views/control-panel/risk-log/index.vue'),
+        meta: {
+          icon: 'lucide:shield-alert',
+          title: '风控日志',
         },
       },
     ],
