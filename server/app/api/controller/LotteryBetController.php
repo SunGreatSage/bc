@@ -499,12 +499,12 @@ class LotteryBetController extends BaseApiController
      *   }
      * }
      *
-     * 响应示例(生肖玩法 - 特肖/三肖/四肖/五肖/六肖):
+     * 响应示例(生肖玩法 - 特肖/三肖/四肖/五肖):
      * {
      *   "code": 1,
      *   "msg": "获取成功",
      *   "data": {
-     *     "play_name": "六肖",
+     *     "play_name": "特肖",
      *     "play_type": "zodiac",
      *     "year": 2025,
      *     "year_zodiac": "蛇",
@@ -513,9 +513,9 @@ class LotteryBetController extends BaseApiController
      *       {
      *         "value": "鼠",
      *         "label": "鼠",
-     *         "odds": "1.9700",
-     *         "odds_win": "0.0000",
-     *         "odds_not_win": "1.9680",
+     *         "odds": "11.7500",
+     *         "odds_win": "11.7500",
+     *         "odds_not_win": "10.7500",
      *         "numbers": ["06", "18", "30", "42"],
      *         "count": 4,
      *         "is_current_year": false,
@@ -542,12 +542,14 @@ class LotteryBetController extends BaseApiController
      *       }
      *     ],
      *     "odds_types": [
-     *       {"type": "normal", "label": "普通", "odds": "1.9700"},
-     *       {"type": "win", "label": "中", "odds": "0.0000"},
-     *       {"type": "not_win", "label": "不中", "odds": "1.9680"}
+     *       {"type": "normal", "label": "普通", "odds": "11.7500"},
+     *       {"type": "win", "label": "中", "odds": "11.7500"},
+     *       {"type": "not_win", "label": "不中", "odds": "10.7500"}
      *     ],
      *     "special_rules": {
-     *       "rule_49": "开出49号视为和局,投注金额退还"
+     *       "judge_scope": "只按第7个开奖号特码判断",
+     *       "win_rule": "特码生肖命中所选生肖即中奖",
+     *       "rule_49": "开出49号按当年生肖正常判奖,不作为和局"
      *     }
      *   }
      * }

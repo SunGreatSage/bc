@@ -69,7 +69,7 @@
           </h4>
           <ul class="notice-list">
             <li>开奖结果由7个不重复的号码组成：m1-m6为正码，m7为特码</li>
-            <li>49号为特殊号码，作为特码时为和局，不计输赢，退还本金</li>
+            <li>49号作为特码时按玩法分别判定：特码号码和特肖正常判奖</li>
             <li>生肖对照表每年变化一次，以当年农历生肖为准</li>
             <li>用户仅可选择"中"类型投注（预测号码会出现）</li>
             <li>"不中"投注为平台盈利逻辑，非用户投注选项</li>
@@ -101,7 +101,7 @@
             </div>
             <p class="mt-3 text-warning">
               <i class="fas fa-exclamation-triangle mr-2"></i>
-              <strong>特殊情况：</strong>特码为49时，视为和局，退还本金
+              <strong>特殊情况：</strong>特码号码玩法开49正常判奖，投注49即中奖
             </p>
           </div>
         </div>
@@ -141,6 +141,10 @@
               <div class="text-success">✓ 投注"狗" → 中奖</div>
               <div class="text-muted">✗ 投注"鼠" → 不中奖</div>
             </div>
+            <p class="mt-3 text-warning">
+              <i class="fas fa-exclamation-triangle mr-2"></i>
+              <strong>49号规则：</strong>特肖开49按当年生肖正常判奖，不视为和局
+            </p>
           </div>
         </div>
 
@@ -374,9 +378,9 @@
           </h4>
           <div class="space-y-3">
             <div class="special-case">
-              <div class="case-title">49号和局规则</div>
+              <div class="case-title">49号特殊规则</div>
               <div class="case-content">
-                当特码（m7）为49时，视为和局，不计输赢，退还本金
+                特码号码和特肖开49按对应号码、对应生肖正常判奖；仅部分特殊选项玩法按和局退还本金
               </div>
             </div>
             <div class="special-case">
@@ -501,12 +505,13 @@ const faqData = {
     `
   },
   3: {
-    question: '特码为49时为什么是和局？',
+    question: '哪些玩法开49会和局？',
     answer: `
-      <p>49号在六合彩中是特殊号码：</p>
+      <p>49号在不同玩法中的判奖口径不同：</p>
       <ul class="notice-list mt-2">
-        <li>当特码（m7）为49时，视为和局</li>
-        <li>不计输赢，系统自动退还本金</li>
+        <li>特码号码玩法开49正常判奖，投注49即中奖</li>
+        <li>特肖开49按当年生肖正常判奖，不视为和局</li>
+        <li>部分特殊选项玩法开49时，系统自动退还本金</li>
         <li>49作为正码（m1-m6）时，正常参与判奖</li>
       </ul>
       <p class="text-info mt-2">

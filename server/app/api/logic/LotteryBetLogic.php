@@ -766,6 +766,7 @@ class LotteryBetLogic
         $oddsWin = number_format($oddsDefault, 4, '.', '');          // 赔率（包本金,用户投注使用）
         $oddsNotWin = number_format($oddsDefault - 1, 4, '.', '');   // 历史遗留字段(已废弃)
         $isPingXiao = self::isPingXiaoPlay((string)$playName, (string)($playMethod['code'] ?? ''));
+        $isTeXiao = self::isTeXiaoPlay((string)$playName, (string)($playMethod['code'] ?? ''));
 
         // 生成生肖选项
         $options = [];
@@ -853,10 +854,22 @@ class LotteryBetLogic
                     'judge_scope' => '按全部7个开奖号码判断',
                     'win_rule' => '任意一个开奖号码对应所选生肖即中奖',
                 ]
-                : [
-                    'rule_49' => '开出49号视为和局,投注金额退还',
-                ],
+                : ($isTeXiao
+                    ? [
+                        'judge_scope' => '只按第7个开奖号特码判断',
+                        'win_rule' => '特码生肖命中所选生肖即中奖',
+                        'rule_49' => '开出49号按当年生肖正常判奖,不作为和局',
+                    ]
+                    : [
+                        'rule_49' => '开出49号视为和局,投注金额退还',
+                    ]),
         ];
+    }
+
+    private static function isTeXiaoPlay(string $methodName, string $methodCode = ''): bool
+    {
+        return strtolower(trim($methodCode)) === 'texiao'
+            || self::containsAnyKeyword($methodName, ['特肖']);
     }
 
     private static function isPingXiaoPlay(string $methodName, string $methodCode = ''): bool

@@ -2656,9 +2656,6 @@ class BestPlanLogic extends BaseLogic
         }
 
         if ($methodCode === 'texiao' || self::containsKeyword($methodName, ['特肖'])) {
-            if ($m7 == 49) {
-                return 'draw';
-            }
             $betZodiacs = ZodiacService::normalizeZodiacSelections($betItems, $year);
             if (empty($betZodiacs)) {
                 return 'lose';
