@@ -184,14 +184,17 @@
         </div>
       </div>
 
-      <!-- 49号特殊规则提示 - 所有生肖玩法都显示 -->
-      <div v-if="playType === 'zodiac' && !isPingXiaoPlay" class="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
+      <!-- 49号特殊规则提示 -->
+      <div v-if="shouldShowSpecialRuleNotice" class="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
         <div class="flex items-start gap-2">
           <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
           </svg>
           <div class="text-sm text-gray-800">
-            <strong class="text-gray-900">特殊规则：</strong>{{ isSixSpecialZodiacPlay ? '特码开49时视为' : '开奖号码中包含49号时视为' }}<strong class="text-red-700">和局</strong>，系统将退还投注金额。
+            <strong class="text-gray-900">特殊规则：</strong>
+            <span :class="specialRuleIsDraw ? 'text-red-700 font-semibold' : 'text-green-700 font-semibold'">
+              {{ specialRuleText }}
+            </span>
           </div>
         </div>
       </div>
@@ -381,6 +384,7 @@ const secondsToClose = ref(0) // 距离封盘的秒数
 
 // API数据相关状态
 const betNumbersData = ref([])
+const specialRules = ref({})
 const playName = ref('特碼') // 默认玩法名称
 const playType = ref('number') // 玩法类型：number、zodiac 或 combo_number
 const currentYear = ref(new Date().getFullYear()) // 当前年份
@@ -404,6 +408,7 @@ const wildAnimals = ['鼠', '虎', '兔', '龍', '蛇', '猴']
 // 判断是否可以投注（seconds_to_close > 0 时可以投注）
 const canBet = computed(() => secondsToClose.value > 0)
 const isPingXiaoPlay = computed(() => playType.value === 'zodiac' && playName.value.includes('平肖'))
+const isTeXiaoPlay = computed(() => playType.value === 'zodiac' && playName.value.includes('特肖'))
 const isSingleZodiacPlay = computed(() => playType.value === 'zodiac' && (playName.value === '特肖' || isPingXiaoPlay.value))
 const isSixSpecialZodiacPlay = computed(() => {
   const name = playName.value || ''
@@ -411,6 +416,26 @@ const isSixSpecialZodiacPlay = computed(() => {
 })
 const isLegacyMultiZodiacPlay = computed(() => playType.value === 'zodiac' && playName.value && (isSixSpecialZodiacPlay.value || playName.value.includes('五肖') || playName.value.includes('四肖') || playName.value.includes('三肖')))
 const isGroupedBetPlay = computed(() => playType.value === 'combo_number' || playType.value === 'zodiac_combo' || (playType.value === 'zodiac' && !isSingleZodiacPlay.value))
+const specialRuleText = computed(() => {
+  const backendRule = specialRules.value?.rule_49
+  if (backendRule) {
+    return backendRule
+  }
+  if (isTeXiaoPlay.value) {
+    return '开出49号按当年生肖正常判奖，不作为和局'
+  }
+  if (isSixSpecialZodiacPlay.value) {
+    return '特码开49时视为和局，系统将退还投注金额'
+  }
+  return '开奖号码中包含49号时视为和局，系统将退还投注金额'
+})
+const shouldShowSpecialRuleNotice = computed(() => {
+  return playType.value === 'zodiac' && !isPingXiaoPlay.value && specialRuleText.value
+})
+const specialRuleIsDraw = computed(() => {
+  const text = specialRuleText.value || ''
+  return (text.includes('和局') || text.includes('退还')) && !text.includes('不作为和局') && !text.includes('不视为和局') && !text.includes('正常判奖')
+})
 const comboRuleText = computed(() => {
   if (playType.value === 'zodiac_combo') {
     return `选${comboSelectCount.value}个生肖，7个开奖号码中每个生肖都出现即中奖`
@@ -466,6 +491,7 @@ const fetchBetNumbers = async () => {
     const result = await lotteryService.getBetNumbers(playName.value, lotteryId, currentYear.value, plateCode)
     if (result.code === 1 && result.data) {
       betNumbersData.value = result.data.options || []
+      specialRules.value = result.data.special_rules || {}
       console.log('获取到的生肖数据:', result.data.options)
 
       // 优先使用后端返回的玩法类型，兼容旧接口再按名称判断生肖玩法
@@ -487,10 +513,12 @@ const fetchBetNumbers = async () => {
     } else {
       console.error('获取投注号码失败:', result.msg)
       betNumbersData.value = []
+      specialRules.value = {}
     }
   } catch (error) {
     console.error('获取投注号码API错误:', error)
     betNumbersData.value = []
+    specialRules.value = {}
   } finally {
     isLoading.value = false
   }
