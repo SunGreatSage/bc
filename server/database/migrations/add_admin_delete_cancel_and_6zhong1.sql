@@ -139,7 +139,7 @@ DEALLOCATE PREPARE stmt;
 
 UPDATE `la_play_method`
 SET `code` = 'liuzhongyi',
-    `odds_default` = IF(`odds_default` > 0, `odds_default`, 2.00),
+    `odds_default` = IF(`odds_default` > 0, `odds_default`, 2.11),
     `odds_min` = IF(`odds_min` > 0, `odds_min`, 1.00),
     `odds_max` = IF(`odds_max` > 0, `odds_max`, 999.00),
     `is_enabled` = 1,
@@ -149,7 +149,7 @@ WHERE `game_id` = 200 AND `name` = '6中1';
 
 INSERT INTO `la_play_method`
   (`game_id`, `name`, `code`, `odds_default`, `odds_min`, `odds_max`, `prize_config`, `is_enabled`, `sort`, `created_at`, `updated_at`)
-SELECT 200, '6中1', 'liuzhongyi', 2.00, 1.00, 999.00, NULL, 1, 13, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()
+SELECT 200, '6中1', 'liuzhongyi', 2.11, 1.00, 999.00, NULL, 1, 13, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()
 WHERE NOT EXISTS (
   SELECT 1 FROM `la_play_method` WHERE `game_id` = 200 AND `name` = '6中1'
 );

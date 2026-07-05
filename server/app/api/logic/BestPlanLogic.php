@@ -1951,8 +1951,15 @@ class BestPlanLogic extends BaseLogic
         }
 
         try {
-            $row = Db::query('SHOW COLUMNS FROM `' . $table . '` LIKE ?', [$column]);
-            $cache[$key] = !empty($row);
+            $row = Db::query(
+                'SELECT COUNT(*) AS count
+                 FROM INFORMATION_SCHEMA.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                   AND TABLE_NAME = ?
+                   AND COLUMN_NAME = ?',
+                [$table, $column]
+            );
+            $cache[$key] = (int)($row[0]['count'] ?? 0) > 0;
         } catch (\Throwable $e) {
             $cache[$key] = false;
         }

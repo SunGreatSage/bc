@@ -213,6 +213,13 @@ const issueColumns: TableColumnsType = [
     align: 'right',
   },
   {
+    title: '平台利润',
+    dataIndex: 'profit_amount',
+    key: 'profit_amount',
+    width: 120,
+    align: 'right',
+  },
+  {
     title: '结算状态',
     dataIndex: 'is_settled',
     key: 'is_settled',
@@ -549,6 +556,11 @@ onMounted(() => {
           </template>
           <template v-else-if="column.key === 'total_prize_amount'">
             ¥{{ Number(record.total_prize_amount).toFixed(2) }}
+          </template>
+          <template v-else-if="column.key === 'profit_amount'">
+            <span :class="Number(record.profit_amount || 0) >= 0 ? 'text-green-600' : 'text-red-600'">
+              ¥{{ Number(record.profit_amount || 0).toFixed(2) }}
+            </span>
           </template>
           <template v-else-if="column.key === 'is_settled'">
             <Tag :color="record.is_settled === 1 ? 'success' : 'default'">

@@ -155,6 +155,7 @@ export namespace BestPlanApi {
     settled_at: number;
     total_bet_amount: string;
     total_prize_amount: string;
+    profit_amount: string;
     created_at: number;
     updated_at: number;
     open_time_text: string;

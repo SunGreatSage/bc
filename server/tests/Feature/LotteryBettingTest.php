@@ -4,6 +4,7 @@ namespace tests\Feature;
 
 use PHPUnit\Framework\TestCase;
 use app\api\logic\LotteryBetLogic;
+use app\common\service\DrawPlanEvaluationService;
 use app\common\model\lottery\AccountLog;
 use app\common\model\lottery\WinningRecord;
 
@@ -12,6 +13,46 @@ use app\common\model\lottery\WinningRecord;
  */
 class LotteryBettingTest extends TestCase
 {
+    public function testPingmaOnlyMatchesFirstSixNumbers()
+    {
+        $drawnNumbers = [1, 2, 3, 4, 5, 6, 7];
+
+        $this->assertSame(
+            'lose',
+            LotteryBetLogic::checkWin('平码', '07', $drawnNumbers, 2026, 'win', 'pingma'),
+            '平码不应命中第7个特码'
+        );
+
+        $this->assertSame(
+            'win',
+            LotteryBetLogic::checkWin('平码', '06', $drawnNumbers, 2026, 'win', 'pingma'),
+            '平码应命中前6个平码'
+        );
+    }
+
+    public function testPlanEvaluationUsesPingmaFirstSixRule()
+    {
+        $orders = [
+            [
+                'id' => 1,
+                'method_id' => 20,
+                'play_method_name' => '平码',
+                'method_code' => 'pingma',
+                'bet_content' => '07',
+                'total_amount' => 100,
+                'odds' => 7,
+                'bet_type' => 'win',
+            ],
+        ];
+
+        $evaluation = DrawPlanEvaluationService::evaluateOrders($orders, [1, 2, 3, 4, 5, 6, 7], 2026);
+
+        $this->assertSame(0, $evaluation['win_count']);
+        $this->assertSame(1, $evaluation['lose_count']);
+        $this->assertSame('lose', $evaluation['details'][0]['result']);
+        $this->assertSame(0.0, $evaluation['expected_payout']);
+    }
+
     /**
      * 测试投注流程
      */

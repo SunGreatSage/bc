@@ -273,8 +273,11 @@ class BestPlanLogic extends BaseLogic
             $item['close_time_text'] = !empty($item['close_time']) ? date('Y-m-d H:i:s', (int)$item['close_time']) : '';
             $item['draw_time_text'] = !empty($item['draw_time']) ? date('Y-m-d H:i:s', (int)$item['draw_time']) : '';
             $item['settled_time_text'] = !empty($item['settled_at']) ? date('Y-m-d H:i:s', (int)$item['settled_at']) : '';
-            $item['total_bet_amount'] = number_format((float)($item['total_bet_amount'] ?? 0), 2, '.', '');
-            $item['total_prize_amount'] = number_format((float)($item['total_prize_amount'] ?? 0), 2, '.', '');
+            $totalBetAmount = (float)($item['total_bet_amount'] ?? 0);
+            $totalPrizeAmount = (float)($item['total_prize_amount'] ?? 0);
+            $item['total_bet_amount'] = number_format($totalBetAmount, 2, '.', '');
+            $item['total_prize_amount'] = number_format($totalPrizeAmount, 2, '.', '');
+            $item['profit_amount'] = number_format($totalBetAmount - $totalPrizeAmount, 2, '.', '');
         }
         unset($item);
 
@@ -1072,8 +1075,15 @@ class BestPlanLogic extends BaseLogic
         }
 
         try {
-            $row = Db::query('SHOW COLUMNS FROM `' . $table . '` LIKE ?', [$column]);
-            $cache[$key] = !empty($row);
+            $row = Db::query(
+                'SELECT COUNT(*) AS count
+                 FROM INFORMATION_SCHEMA.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                   AND TABLE_NAME = ?
+                   AND COLUMN_NAME = ?',
+                [$table, $column]
+            );
+            $cache[$key] = (int)($row[0]['count'] ?? 0) > 0;
         } catch (\Throwable $e) {
             $cache[$key] = false;
         }

@@ -348,7 +348,7 @@ class BestPlanController extends BaseAdminController
         $filters = $this->parseFilters($this->request->post('filters/a', $this->request->post('filters', [])));
         $result = BestPlanLogic::deleteBetRecords($ids, $this->adminId, $filters);
 
-        if (BestPlanLogic::getError()) {
+        if (BestPlanLogic::hasError()) {
             return $this->fail(BestPlanLogic::getError());
         }
 
@@ -369,7 +369,7 @@ class BestPlanController extends BaseAdminController
         $filters = $this->parseFilters($this->request->post('filters/a', $this->request->post('filters', [])));
         $result = BestPlanLogic::deleteHistories($ids, $this->adminId, $filters);
 
-        if (BestPlanLogic::getError()) {
+        if (BestPlanLogic::hasError()) {
             return $this->fail(BestPlanLogic::getError());
         }
 
@@ -393,7 +393,7 @@ class BestPlanController extends BaseAdminController
         $filters = $this->parseFilters($this->request->post('filters/a', $this->request->post('filters', [])));
         $result = BestPlanLogic::deleteIssueHistories($ids, $this->adminId, $filters);
 
-        if (BestPlanLogic::getError()) {
+        if (BestPlanLogic::hasError()) {
             return $this->fail(BestPlanLogic::getError());
         }
 
