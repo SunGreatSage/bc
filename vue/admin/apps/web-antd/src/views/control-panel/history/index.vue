@@ -1,12 +1,29 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 
-import { Card, Table, Tag, Button, Modal, Descriptions, message } from 'ant-design-vue';
+import {
+  Button,
+  Card,
+  Descriptions,
+  Form,
+  FormItem,
+  Input,
+  Modal,
+  Select,
+  Space,
+  Table,
+  Tag,
+  message,
+} from 'ant-design-vue';
 import type { TableColumnsType } from 'ant-design-vue';
 
 import {
-  getHistoryList,
+  deleteHistories,
+  deleteIssueHistories,
   getDetail,
+  getHistoryList,
+  getIssueHistoryList,
+  getPlateList,
   type BestPlanApi,
 } from '#/api/best-plan';
 
@@ -19,6 +36,24 @@ const historyList = ref<BestPlanApi.HistoryRecord[]>([]);
 const detailVisible = ref(false);
 const detailData = ref<BestPlanApi.DetailRecord | null>(null);
 const detailLoading = ref(false);
+const selectedRowKeys = ref<number[]>([]);
+const issueHistoryList = ref<BestPlanApi.IssueHistoryRecord[]>([]);
+const issueLoading = ref(false);
+const selectedIssueRowKeys = ref<number[]>([]);
+const plateOptions = ref<Array<{ label: string; value: string }>>([]);
+
+const issueSearchParams = reactive({
+  plate_code: '',
+  issue: '',
+  start_date: '',
+  end_date: '',
+});
+
+const issuePagination = reactive({
+  current: 1,
+  pageSize: 20,
+  total: 0,
+});
 
 // 历史列表表格列定义
 const columns: TableColumnsType = [
@@ -137,6 +172,68 @@ const detailColumns: TableColumnsType = [
   },
 ];
 
+const issueColumns: TableColumnsType = [
+  {
+    title: '期号',
+    dataIndex: 'issue',
+    key: 'issue',
+    width: 130,
+  },
+  {
+    title: '盘口',
+    dataIndex: 'plate_code',
+    key: 'plate_code',
+    width: 80,
+    align: 'center',
+  },
+  {
+    title: '开奖号码',
+    dataIndex: 'result',
+    key: 'result',
+    width: 180,
+  },
+  {
+    title: '开奖时间',
+    dataIndex: 'draw_time_text',
+    key: 'draw_time_text',
+    width: 180,
+  },
+  {
+    title: '投注总额',
+    dataIndex: 'total_bet_amount',
+    key: 'total_bet_amount',
+    width: 120,
+    align: 'right',
+  },
+  {
+    title: '派奖总额',
+    dataIndex: 'total_prize_amount',
+    key: 'total_prize_amount',
+    width: 120,
+    align: 'right',
+  },
+  {
+    title: '结算状态',
+    dataIndex: 'is_settled',
+    key: 'is_settled',
+    width: 100,
+    align: 'center',
+  },
+  {
+    title: '状态',
+    dataIndex: 'status_text',
+    key: 'status_text',
+    width: 100,
+    align: 'center',
+  },
+  {
+    title: '操作',
+    key: 'issue_action',
+    width: 100,
+    align: 'center',
+  },
+];
+
 // 获取历史列表
 async function fetchHistoryList() {
   loading.value = true;
@@ -145,11 +242,130 @@ async function fetchHistoryList() {
       gid: 200,
       limit: 50,
     });
+    selectedRowKeys.value = [];
   } catch (error: any) {
     message.error(error?.message || '获取历史列表失败');
   } finally {
     loading.value = false;
   }
+}
+
+async function fetchPlateOptions() {
+  try {
+    const plates = await getPlateList(200);
+    plateOptions.value = plates.map((plate) => ({
+      label: `${plate.code}盘`,
+      value: plate.code,
+    }));
+  } catch (error) {
+    console.error('获取盘口列表失败:', error);
+  }
+}
+
+async function fetchIssueHistoryList() {
+  issueLoading.value = true;
+  try {
+    const result = await getIssueHistoryList({
+      gid: 200,
+      page: issuePagination.current,
+      limit: issuePagination.pageSize,
+      plate_code: issueSearchParams.plate_code || undefined,
+      issue: issueSearchParams.issue || undefined,
+      start_date: issueSearchParams.start_date || undefined,
+      end_date: issueSearchParams.end_date || undefined,
+    });
+    issueHistoryList.value = result.lists || [];
+    selectedIssueRowKeys.value = [];
+    issuePagination.total = result.count || 0;
+  } catch (error: any) {
+    message.error(error?.message || '获取期号历史失败');
+  } finally {
+    issueLoading.value = false;
+  }
+}
+
+function handleSelectionChange(keys: (string | number)[]) {
+  selectedRowKeys.value = keys.map((key) => Number(key));
+}
+
+function handleIssueSelectionChange(keys: (string | number)[]) {
+  selectedIssueRowKeys.value = keys.map((key) => Number(key));
+}
+
+function handleIssueTableChange(pag: any) {
+  issuePagination.current = pag.current;
+  issuePagination.pageSize = pag.pageSize;
+  fetchIssueHistoryList();
+}
+
+function handleIssueSearch() {
+  issuePagination.current = 1;
+  fetchIssueHistoryList();
+}
+
+function handleIssueReset() {
+  issueSearchParams.plate_code = '';
+  issueSearchParams.issue = '';
+  issueSearchParams.start_date = '';
+  issueSearchParams.end_date = '';
+  issuePagination.current = 1;
+  fetchIssueHistoryList();
+}
+
+function getHistoryDeleteLogFilters() {
+  return {
+    gid: 200,
+  };
+}
+
+function getIssueDeleteLogFilters() {
+  return {
+    gid: 200,
+    plate_code: issueSearchParams.plate_code || undefined,
+    issue: issueSearchParams.issue || undefined,
+    start_date: issueSearchParams.start_date || undefined,
+    end_date: issueSearchParams.end_date || undefined,
+  };
+}
+
+function confirmDeleteHistories(ids: number[]) {
+  if (ids.length === 0) {
+    message.warning('请先选择要删除的历史记录');
+    return;
+  }
+
+  Modal.confirm({
+    title: '确认删除历史记录？',
+    content: '删除后仅后台历史记录列表不再显示，不会影响前台开奖和用户投注数据。',
+    okText: '确认删除',
+    okType: 'danger',
+    cancelText: '取消',
+    async onOk() {
+      await deleteHistories(ids, getHistoryDeleteLogFilters());
+      message.success('删除成功');
+      fetchHistoryList();
+    },
+  });
+}
+
+function confirmDeleteIssueHistories(ids: number[]) {
+  if (ids.length === 0) {
+    message.warning('请先选择要删除的期号历史');
+    return;
+  }
+
+  Modal.confirm({
+    title: '确认删除期号历史？',
+    content: '删除后仅后台期号历史列表不再显示，不会影响前台开奖展示和用户投注数据。',
+    okText: '确认删除',
+    okType: 'danger',
+    cancelText: '取消',
+    async onOk() {
+      await deleteIssueHistories(ids, getIssueDeleteLogFilters());
+      message.success('删除成功');
+      fetchIssueHistoryList();
+    },
+  });
 }
 
 // 查看详情
@@ -172,7 +388,9 @@ function handleCloseDetail() {
 }
 
 onMounted(() => {
+  fetchPlateOptions();
   fetchHistoryList();
+  fetchIssueHistoryList();
 });
 </script>
 
@@ -180,9 +398,18 @@ onMounted(() => {
   <div class="p-4">
     <Card title="历史记录">
       <template #extra>
-        <Button type="primary" @click="fetchHistoryList" :loading="loading">
-          刷新
-        </Button>
+        <Space>
+          <Button
+            danger
+            :disabled="selectedRowKeys.length === 0"
+            @click="confirmDeleteHistories(selectedRowKeys)"
+          >
+            批量删除
+          </Button>
+          <Button type="primary" @click="fetchHistoryList" :loading="loading">
+            刷新
+          </Button>
+        </Space>
       </template>
 
       <Table
@@ -192,6 +419,10 @@ onMounted(() => {
         :pagination="{ pageSize: 20 }"
         :scroll="{ x: 1200 }"
         row-key="id"
+        :row-selection="{
+          selectedRowKeys,
+          onChange: handleSelectionChange,
+        }"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'total_bets'">
@@ -221,8 +452,117 @@ onMounted(() => {
             </Tag>
           </template>
           <template v-else-if="column.key === 'action'">
-            <Button type="link" @click="handleViewDetail(record.id)">
-              查看详情
+            <Space>
+              <Button type="link" @click="handleViewDetail(record.id)">
+                查看详情
+              </Button>
+              <Button type="link" danger @click="confirmDeleteHistories([record.id])">
+                删除
+              </Button>
+            </Space>
+          </template>
+        </template>
+      </Table>
+    </Card>
+
+    <Card title="期号历史" class="mt-4">
+      <Form :model="issueSearchParams" layout="inline" class="mb-4">
+        <FormItem label="盘口">
+          <Select
+            v-model:value="issueSearchParams.plate_code"
+            allow-clear
+            :options="plateOptions"
+            placeholder="全部"
+            style="width: 120px"
+          />
+        </FormItem>
+        <FormItem label="期号">
+          <Input
+            v-model:value="issueSearchParams.issue"
+            allow-clear
+            placeholder="期号模糊搜索"
+            style="width: 180px"
+            @press-enter="handleIssueSearch"
+          />
+        </FormItem>
+        <FormItem label="开奖日期">
+          <Space>
+            <Input
+              v-model:value="issueSearchParams.start_date"
+              placeholder="开始日期"
+              style="width: 130px"
+              type="date"
+            />
+            <span class="text-gray-400">至</span>
+            <Input
+              v-model:value="issueSearchParams.end_date"
+              placeholder="结束日期"
+              style="width: 130px"
+              type="date"
+            />
+          </Space>
+        </FormItem>
+        <FormItem>
+          <Space>
+            <Button type="primary" :loading="issueLoading" @click="handleIssueSearch">
+              搜索
+            </Button>
+            <Button @click="handleIssueReset">重置</Button>
+            <Button
+              danger
+              :disabled="selectedIssueRowKeys.length === 0"
+              @click="confirmDeleteIssueHistories(selectedIssueRowKeys)"
+            >
+              批量删除
+            </Button>
+          </Space>
+        </FormItem>
+      </Form>
+
+      <Table
+        :columns="issueColumns"
+        :data-source="issueHistoryList"
+        :loading="issueLoading"
+        :pagination="{
+          current: issuePagination.current,
+          pageSize: issuePagination.pageSize,
+          total: issuePagination.total,
+          showSizeChanger: true,
+          showTotal: (total) => `共 ${total} 条记录`,
+          pageSizeOptions: ['10', '20', '50', '100'],
+        }"
+        :scroll="{ x: 1120 }"
+        row-key="id"
+        :row-selection="{
+          selectedRowKeys: selectedIssueRowKeys,
+          onChange: handleIssueSelectionChange,
+        }"
+        @change="handleIssueTableChange"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'result'">
+            <Tag v-if="record.result" color="success">{{ record.result }}</Tag>
+            <span v-else class="text-gray-400">未开奖</span>
+          </template>
+          <template v-else-if="column.key === 'total_bet_amount'">
+            ¥{{ Number(record.total_bet_amount).toFixed(2) }}
+          </template>
+          <template v-else-if="column.key === 'total_prize_amount'">
+            ¥{{ Number(record.total_prize_amount).toFixed(2) }}
+          </template>
+          <template v-else-if="column.key === 'is_settled'">
+            <Tag :color="record.is_settled === 1 ? 'success' : 'default'">
+              {{ record.is_settled === 1 ? '已结算' : '未结算' }}
+            </Tag>
+          </template>
+          <template v-else-if="column.key === 'status_text'">
+            <Tag :color="record.status >= 4 || record.is_settled === 1 ? 'success' : 'processing'">
+              {{ record.status_text }}
+            </Tag>
+          </template>
+          <template v-else-if="column.key === 'issue_action'">
+            <Button type="link" danger @click="confirmDeleteIssueHistories([record.id])">
+              删除
             </Button>
           </template>
         </template>

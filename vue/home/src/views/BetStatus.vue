@@ -21,8 +21,11 @@
             @change="handleFilterChange"
           >
             <option value="">全部</option>
+            <option value="0">待开奖</option>
             <option value="1">已中奖</option>
             <option value="2">未中奖</option>
+            <option value="3">已撤单</option>
+            <option value="4">和局</option>
           </select>
         </div>
         <div>
@@ -115,12 +118,13 @@
               <th class="px-6 py-3 whitespace-nowrap">中奖金额</th>
               <th class="px-6 py-3 whitespace-nowrap">盈利</th>
               <th class="px-6 py-3 whitespace-nowrap">时间</th>
+              <th class="px-6 py-3 whitespace-nowrap">操作</th>
             </tr>
           </thead>
           <tbody>
             <!-- 加载状态 -->
             <tr v-if="isLoading">
-              <td colspan="13" class="px-6 py-8 text-center text-gray-500">
+              <td colspan="14" class="px-6 py-8 text-center text-gray-500">
                 <div class="flex items-center justify-center gap-2">
                   <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
                   加载中...
@@ -129,7 +133,7 @@
             </tr>
             <!-- 错误状态 -->
             <tr v-else-if="apiError">
-              <td colspan="13" class="px-6 py-8 text-center text-red-500">
+              <td colspan="14" class="px-6 py-8 text-center text-red-500">
                 {{ apiError }}
                 <div class="mt-2">
                   <button @click="refreshData" class="text-blue-600 hover:text-blue-800 underline">
@@ -140,7 +144,7 @@
             </tr>
             <!-- 无数据状态 -->
             <tr v-else-if="filteredBets.length === 0">
-              <td colspan="13" class="px-6 py-8 text-center text-gray-500">
+              <td colspan="14" class="px-6 py-8 text-center text-gray-500">
                 暂无注单记录
               </td>
             </tr>
@@ -200,7 +204,9 @@
                     'px-2 py-1 rounded-full text-xs font-medium': true,
                     'bg-yellow-100 text-yellow-800': bet.status === 'pending',
                     'bg-green-100 text-green-800': bet.status === 'won',
-                    'bg-red-100 text-red-800': bet.status === 'lost'
+                    'bg-red-100 text-red-800': bet.status === 'lost',
+                    'bg-gray-100 text-gray-700': bet.status === 'cancelled',
+                    'bg-blue-100 text-blue-800': bet.status === 'draw'
                   }"
                 >
                   {{ bet.statusText }}
@@ -224,6 +230,17 @@
               <!-- 时间 -->
               <td class="px-6 py-4 text-gray-600 text-xs whitespace-nowrap">
                 {{ formatDateTime(bet.time) }}
+              </td>
+              <!-- 操作 -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <button
+                  v-if="bet.canCancel"
+                  @click="cancelBet(bet.id)"
+                  class="text-sm text-red-600 hover:text-red-800"
+                >
+                  撤单
+                </button>
+                <span v-else class="text-xs text-gray-400">-</span>
               </td>
             </tr>
           </tbody>
@@ -275,6 +292,8 @@ const mapStatusFromApi = (statusValue) => {
       return 'lost'     // 未中奖
     case 3:
       return 'cancelled' // 已撤单
+    case 4:
+      return 'draw'      // 和局
     default:
       return 'pending'
   }
@@ -341,7 +360,8 @@ const fetchBetList = async () => {
         prize: parseFloat(item.prize) || 0,        // 实际中奖金额
         profitAmount: parseFloat(item.profit_amount) || 0,
         time: item.time,                           // 时间
-        rawStatus: item.status                     // 原始状态值（新表）
+        rawStatus: item.status,                    // 原始状态值（新表）
+        canCancel: !!item.can_cancel
       }))
 
       totalRecords.value = result.data.total || 0
@@ -390,7 +410,9 @@ const getStatusText = (status) => {
   const statusMap = {
     'pending': '待开奖',
     'won': '中奖',
-    'lost': '未中奖'
+    'lost': '未中奖',
+    'cancelled': '已撤单',
+    'draw': '和局'
   }
   return statusMap[status] || status
 }
@@ -443,9 +465,26 @@ const resetFilters = () => {
   handleFilterChange()
 }
 
-const cancelBet = (betId) => {
-  // TODO: 实现取消注单的API调用
-  alert('取消注单功能暂未实现')
+const cancelBet = async (betId) => {
+  if (!window.confirm('确认撤销该注单？撤单后下注金额将退回余额。')) {
+    return
+  }
+
+  try {
+    isLoading.value = true
+    const result = await lotteryService.cancelBet(betId)
+    if (result.code === 1) {
+      alert('撤单成功')
+      fetchBetList()
+    } else {
+      alert(result.msg || '撤单失败')
+    }
+  } catch (error) {
+    console.error('撤单失败:', error)
+    alert('网络错误，请稍后重试')
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const viewDetails = (bet) => {

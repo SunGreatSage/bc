@@ -9,6 +9,7 @@
 namespace app\adminapi\logic;
 
 use app\common\logic\BaseLogic;
+use app\common\service\BetCancelService;
 use app\common\service\OperationLogContentService;
 use think\facade\Db;
 
@@ -225,7 +226,64 @@ class BestPlanLogic extends BaseLogic
      */
     public static function getHistoryList(int $gid, int $page, int $limit): array
     {
-        return \app\api\logic\BestPlanLogic::getHistoryList($gid, $page, $limit);
+        return \app\api\logic\BestPlanLogic::getHistoryList($gid, $limit);
+    }
+
+    public static function getIssueHistoryList(array $params): array
+    {
+        $gid = (int)($params['gid'] ?? 200);
+        $page = max(1, (int)($params['page'] ?? 1));
+        $limit = (int)($params['limit'] ?? 20);
+        $limit = $limit > 0 ? min($limit, 100) : 20;
+        $plateCode = trim((string)($params['plate_code'] ?? ''));
+        $issue = trim((string)($params['issue'] ?? ''));
+        $startTime = self::parseDateBoundary($params['start_date'] ?? '', false);
+        $endTime = self::parseDateBoundary($params['end_date'] ?? '', true);
+
+        $query = self::buildIssueHistoryQuery($gid, $plateCode, $issue, $startTime, $endTime);
+        $lists = $query
+            ->field([
+                'id',
+                'game_id',
+                'plate_code',
+                'issue',
+                'result',
+                'status',
+                'open_time',
+                'close_time',
+                'draw_time',
+                'is_settled',
+                'settled_at',
+                'total_bet_amount',
+                'total_prize_amount',
+                'created_at',
+                'updated_at',
+            ])
+            ->order('draw_time', 'desc')
+            ->order('id', 'desc')
+            ->page($page, $limit)
+            ->select()
+            ->toArray();
+
+        foreach ($lists as &$item) {
+            $item['status'] = (int)($item['status'] ?? 0);
+            $item['status_text'] = self::getIssueStatusText($item['status']);
+            $item['is_settled'] = (int)($item['is_settled'] ?? 0);
+            $item['open_time_text'] = !empty($item['open_time']) ? date('Y-m-d H:i:s', (int)$item['open_time']) : '';
+            $item['close_time_text'] = !empty($item['close_time']) ? date('Y-m-d H:i:s', (int)$item['close_time']) : '';
+            $item['draw_time_text'] = !empty($item['draw_time']) ? date('Y-m-d H:i:s', (int)$item['draw_time']) : '';
+            $item['settled_time_text'] = !empty($item['settled_at']) ? date('Y-m-d H:i:s', (int)$item['settled_at']) : '';
+            $item['total_bet_amount'] = number_format((float)($item['total_bet_amount'] ?? 0), 2, '.', '');
+            $item['total_prize_amount'] = number_format((float)($item['total_prize_amount'] ?? 0), 2, '.', '');
+        }
+        unset($item);
+
+        return [
+            'lists' => $lists,
+            'count' => self::buildIssueHistoryQuery($gid, $plateCode, $issue, $startTime, $endTime)->count('id'),
+            'page_no' => $page,
+            'page_size' => $limit,
+        ];
     }
 
 
@@ -258,8 +316,11 @@ class BestPlanLogic extends BaseLogic
         $plateCode = trim((string)($params['plate_code'] ?? ''));
         $issue = trim((string)($params['issue'] ?? ''));
         $status = trim((string)($params['status'] ?? ''));
+        $profitType = trim((string)($params['profit_type'] ?? ''));
+        $startTime = self::parseDateBoundary($params['start_date'] ?? '', false);
+        $endTime = self::parseDateBoundary($params['end_date'] ?? '', true);
 
-        $lists = self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue, $status)
+        $lists = self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue, $status, $profitType, $startTime, $endTime)
             ->field([
                 'b.id',
                 'b.sn',
@@ -283,6 +344,7 @@ class BestPlanLogic extends BaseLogic
                 'b.prize_amount',
                 '(b.total_amount - b.prize_amount) as profit_amount',
                 'b.is_settled',
+                'i.close_time',
                 'b.created_at',
                 'b.updated_at',
             ])
@@ -301,10 +363,13 @@ class BestPlanLogic extends BaseLogic
             $item['profit_amount'] = number_format((float)$item['profit_amount'], 2, '.', '');
             $item['created_time'] = !empty($item['created_at']) ? date('Y-m-d H:i:s', (int)$item['created_at']) : '';
             $item['status_text'] = self::getBetStatusText((int)($item['status'] ?? 0));
+            $item['can_cancel'] = (int)($item['status'] ?? 0) === 0
+                && (int)($item['is_settled'] ?? 0) === 0
+                && (int)($item['close_time'] ?? 0) > time();
         }
         unset($item);
 
-        $summary = self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue, $status)
+        $summary = self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue, $status, $profitType, $startTime, $endTime)
             ->field([
                 'COUNT(b.id) as order_count',
                 'IFNULL(SUM(b.total_amount), 0) as total_amount',
@@ -315,7 +380,7 @@ class BestPlanLogic extends BaseLogic
 
         return [
             'lists' => $lists,
-            'count' => self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue, $status)->count('b.id'),
+            'count' => self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue, $status, $profitType, $startTime, $endTime)->count('b.id'),
             'page_no' => $page,
             'page_size' => $limit,
             'summary' => [
@@ -343,13 +408,21 @@ class BestPlanLogic extends BaseLogic
         string $userType,
         string $plateCode,
         string $issue,
-        string $status
+        string $status,
+        string $profitType = '',
+        int $startTime = 0,
+        int $endTime = 0
     ) {
         $query = Db::table('la_betting_record')
             ->alias('b')
             ->leftJoin('la_user u', 'u.id = b.user_id')
             ->leftJoin('la_user_extend ue', 'ue.user_id = b.user_id')
+            ->leftJoin('la_lottery_issue i', 'i.id = b.issue_id')
             ->where('b.game_id', $gid);
+
+        if (self::columnExists('la_betting_record', 'admin_deleted_at')) {
+            $query->whereNull('b.admin_deleted_at');
+        }
 
         if ($username !== '') {
             $query->where(function ($query) use ($username) {
@@ -373,11 +446,171 @@ class BestPlanLogic extends BaseLogic
             $query->where('b.issue', 'like', '%' . $issue . '%');
         }
 
-        if ($status !== '' && in_array($status, ['1', '2'], true)) {
+        if ($status !== '' && in_array($status, ['0', '1', '2', '3', '4'], true)) {
             $query->where('b.status', (int)$status);
         }
 
+        if ($profitType === 'profit') {
+            $query->whereRaw('(b.total_amount - b.prize_amount) > 0');
+        } elseif ($profitType === 'loss') {
+            $query->whereRaw('(b.total_amount - b.prize_amount) < 0');
+        } elseif ($profitType === 'flat') {
+            $query->whereRaw('(b.total_amount - b.prize_amount) = 0');
+        }
+
+        if ($startTime > 0) {
+            $query->where('b.created_at', '>=', $startTime);
+        }
+
+        if ($endTime > 0) {
+            $query->where('b.created_at', '<=', $endTime);
+        }
+
         return $query;
+    }
+
+    private static function buildIssueHistoryQuery(
+        int $gid,
+        string $plateCode,
+        string $issue,
+        int $startTime = 0,
+        int $endTime = 0
+    ) {
+        $query = Db::table('la_lottery_issue')
+            ->where('game_id', $gid);
+
+        if (self::columnExists('la_lottery_issue', 'admin_hidden_at')) {
+            $query->whereNull('admin_hidden_at');
+        }
+
+        if ($plateCode !== '') {
+            $query->where('plate_code', $plateCode);
+        }
+
+        if ($issue !== '') {
+            $query->where('issue', 'like', '%' . $issue . '%');
+        }
+
+        if ($startTime > 0) {
+            $query->where('draw_time', '>=', $startTime);
+        }
+
+        if ($endTime > 0) {
+            $query->where('draw_time', '<=', $endTime);
+        }
+
+        return $query;
+    }
+
+    public static function deleteBetRecords(array $ids, int $operatorId = 0, array $filters = []): array
+    {
+        $ids = self::normalizeIds($ids);
+        if (empty($ids)) {
+            self::setError('请选择要删除的历史下单数据');
+            return [];
+        }
+
+        if (!self::columnExists('la_betting_record', 'admin_deleted_at')) {
+            self::setError('缺少后台删除字段，请先执行数据库迁移');
+            return [];
+        }
+
+        $affected = Db::table('la_betting_record')
+            ->whereIn('id', $ids)
+            ->whereNull('admin_deleted_at')
+            ->update([
+                'admin_deleted_at' => time(),
+                'admin_deleted_by' => $operatorId,
+                'updated_at' => time(),
+            ]);
+
+        self::writeOperationLog('删除历史下单数据', $operatorId, [
+            'ids' => $ids,
+            'affected' => $affected,
+            'filters' => self::filterLogContext($filters),
+        ]);
+
+        return [
+            'affected' => (int)$affected,
+            'ids' => $ids,
+        ];
+    }
+
+    public static function deleteHistories(array $ids, int $operatorId = 0, array $filters = []): array
+    {
+        $ids = self::normalizeIds($ids);
+        if (empty($ids)) {
+            self::setError('请选择要删除的历史记录');
+            return [];
+        }
+
+        if (!self::columnExists('la_best_plan_history', 'admin_deleted_at')) {
+            self::setError('缺少历史记录后台删除字段，请先执行数据库迁移');
+            return [];
+        }
+
+        $affected = Db::table('la_best_plan_history')
+            ->whereIn('id', $ids)
+            ->whereNull('admin_deleted_at')
+            ->update([
+                'admin_deleted_at' => time(),
+                'admin_deleted_by' => $operatorId,
+            ]);
+
+        self::writeOperationLog('删除历史记录', $operatorId, [
+            'ids' => $ids,
+            'affected' => $affected,
+            'filters' => self::filterLogContext($filters),
+        ]);
+
+        return [
+            'affected' => (int)$affected,
+            'ids' => $ids,
+        ];
+    }
+
+    public static function deleteIssueHistories(array $ids, int $operatorId = 0, array $filters = []): array
+    {
+        $ids = self::normalizeIds($ids);
+        if (empty($ids)) {
+            self::setError('请选择要隐藏的期号历史');
+            return [];
+        }
+
+        if (!self::columnExists('la_lottery_issue', 'admin_hidden_at')) {
+            self::setError('缺少期号后台隐藏字段，请先执行数据库迁移');
+            return [];
+        }
+
+        $affected = Db::table('la_lottery_issue')
+            ->whereIn('id', $ids)
+            ->whereNull('admin_hidden_at')
+            ->update([
+                'admin_hidden_at' => time(),
+                'admin_hidden_by' => $operatorId,
+                'updated_at' => time(),
+            ]);
+
+        self::writeOperationLog('隐藏期号历史', $operatorId, [
+            'ids' => $ids,
+            'affected' => $affected,
+            'filters' => self::filterLogContext($filters),
+        ]);
+
+        return [
+            'affected' => (int)$affected,
+            'ids' => $ids,
+        ];
+    }
+
+    public static function cancelBetBeforeClose(int $id, int $operatorId = 0)
+    {
+        try {
+            return BetCancelService::cancelBeforeClose($id, $operatorId, 'admin');
+        } catch (\Throwable $e) {
+            self::setError($e->getMessage());
+            return false;
+        }
     }
 
 
@@ -802,9 +1035,82 @@ class BestPlanLogic extends BaseLogic
             1 => '已中奖',
             2 => '未中奖',
             3 => '已撤单',
+            4 => '和局',
         ];
 
         return $statusMap[$status] ?? '未知';
+    }
+
+    private static function normalizeIds(array $ids): array
+    {
+        $ids = array_map('intval', $ids);
+        $ids = array_filter($ids, fn($id) => $id > 0);
+        return array_values(array_unique($ids));
+    }
+
+    private static function parseDateBoundary($value, bool $endOfDay): int
+    {
+        $value = trim((string)$value);
+        if ($value === '') {
+            return 0;
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            $value .= $endOfDay ? ' 23:59:59' : ' 00:00:00';
+        }
+
+        $timestamp = strtotime($value);
+        return $timestamp === false ? 0 : (int)$timestamp;
+    }
+
+    private static function columnExists(string $table, string $column): bool
+    {
+        static $cache = [];
+        $key = $table . '.' . $column;
+        if (array_key_exists($key, $cache)) {
+            return $cache[$key];
+        }
+
+        try {
+            $row = Db::query('SHOW COLUMNS FROM `' . $table . '` LIKE ?', [$column]);
+            $cache[$key] = !empty($row);
+        } catch (\Throwable $e) {
+            $cache[$key] = false;
+        }
+
+        return $cache[$key];
+    }
+
+    private static function writeOperationLog(string $action, int $operatorId, array $result): void
+    {
+        Db::table('la_operation_log')->insert([
+            'admin_id' => $operatorId,
+            'admin_name' => '',
+            'account' => '',
+            'action' => $action,
+            'type' => request()->method(),
+            'url' => request()->url(true),
+            'params' => OperationLogContentService::encodeParams(request()->param()),
+            'result' => OperationLogContentService::encodeResult($result),
+            'ip' => request()->ip(),
+            'create_time' => time(),
+        ]);
+    }
+
+    private static function filterLogContext(array $filters): array
+    {
+        $context = [];
+        foreach ($filters as $key => $value) {
+            if (!is_scalar($value)) {
+                continue;
+            }
+            $value = trim((string)$value);
+            if ($value === '') {
+                continue;
+            }
+            $context[(string)$key] = $value;
+        }
+        return $context;
     }
 
     private static function getCreationStrategyText(string $strategy): string

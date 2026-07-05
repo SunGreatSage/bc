@@ -8,6 +8,7 @@ use app\common\service\ZodiacYearService;
 use app\common\service\ZodiacService;
 use app\common\service\LotteryPlayRuleService;
 use app\common\service\OrderSnService;
+use app\common\service\BetCancelService;
 use app\common\model\lottery\AccountLog;
 use app\common\model\lottery\WinningRecord;
 
@@ -222,7 +223,8 @@ class LotteryBetLogic
                 return 'lose';
             }
 
-            $hitCount = count(array_intersect($betNumbers, $regularNumbers));
+            $judgeNumbers = ($comboRule['judge_scope'] ?? '') === 'all7' ? $allNumbers : $regularNumbers;
+            $hitCount = count(array_intersect($betNumbers, $judgeNumbers));
             return self::resolveResult($hitCount >= $comboRule['hit_count'], $betType);
         }
 
@@ -239,7 +241,7 @@ class LotteryBetLogic
 
             case '平码':
             case '平碼':
-                $hit = in_array((int)$betContent, $allNumbers);
+                $hit = in_array((int)$betContent, $regularNumbers);
                 return self::resolveResult($hit, $betType);
 
             case '平肖':
@@ -395,12 +397,14 @@ class LotteryBetLogic
     private static function getNumberComboRule(string $methodName, string $methodCode = ''): ?array
     {
         $codeMap = [
-            'erzhonger' => [2, 2],
-            'sanzhonger' => [3, 2],
-            'sanzhongsan' => [3, 3],
-            'sizhonger' => [4, 2],
-            'sizhongsan' => [4, 3],
-            'sizhongsi' => [4, 4],
+            'erzhonger' => [2, 2, 'regular6'],
+            'sanzhonger' => [3, 2, 'regular6'],
+            'sanzhongsan' => [3, 3, 'regular6'],
+            'sizhonger' => [4, 2, 'regular6'],
+            'sizhongsan' => [4, 3, 'regular6'],
+            'sizhongsi' => [4, 4, 'regular6'],
+            'liuzhongyi' => [6, 1, 'all7'],
+            'six_pick_one' => [6, 1, 'all7'],
         ];
 
         $methodCode = strtolower(trim($methodCode));
@@ -408,10 +412,19 @@ class LotteryBetLogic
             return [
                 'select_count' => $codeMap[$methodCode][0],
                 'hit_count' => $codeMap[$methodCode][1],
+                'judge_scope' => $codeMap[$methodCode][2],
             ];
         }
 
         $normalized = str_replace([' ', '　', '-', '_'], '', trim($methodName));
+        if (in_array($normalized, ['6中1', '六中一'], true)) {
+            return [
+                'select_count' => 6,
+                'hit_count' => 1,
+                'judge_scope' => 'all7',
+            ];
+        }
+
         $chineseNumberMap = [
             '一' => 1,
             '二' => 2,
@@ -441,6 +454,7 @@ class LotteryBetLogic
         return [
             'select_count' => $selectCount,
             'hit_count' => $hitCount,
+            'judge_scope' => 'regular6',
         ];
     }
 
@@ -743,9 +757,15 @@ class LotteryBetLogic
                 'win_rule' => '所选号码全部没有开出即中奖',
             ];
         } else {
-            $result['special_rules'] = [
-                'regular_only' => '只按前6个正码判奖，特码不参与命中计算',
-            ];
+            $result['special_rules'] = ($comboRule['judge_scope'] ?? '') === 'all7'
+                ? [
+                    'judge_scope' => '按全部7个开奖号码判断',
+                    'win_rule' => '所选6个号码中任意1个出现在7个开奖号中即中奖',
+                    'rule_49' => '49按普通号码判奖，不打和',
+                ]
+                : [
+                    'regular_only' => '只按前6个正码判奖，特码不参与命中计算',
+                ];
         }
 
         return $result;
@@ -1221,7 +1241,8 @@ class LotteryBetLogic
         $list = Db::table('la_betting_record')
             ->alias('b')
             ->leftJoin('la_play_method p', 'b.method_id = p.id')
-            ->field('b.id, b.sn, b.issue, b.game_id, b.plate_code, b.method_id, b.method_name, b.bet_type, b.bet_content, b.bet_amount, b.total_amount, b.odds, b.status, b.prize_amount, (b.prize_amount - b.total_amount) as profit_amount, b.created_at, b.updated_at, p.name as play_name')
+            ->leftJoin('la_lottery_issue i', 'i.id = b.issue_id')
+            ->field('b.id, b.sn, b.issue, b.game_id, b.plate_code, b.method_id, b.method_name, b.bet_type, b.bet_content, b.bet_amount, b.total_amount, b.odds, b.status, b.prize_amount, (b.prize_amount - b.total_amount) as profit_amount, b.is_settled, b.created_at, b.updated_at, i.close_time, p.name as play_name')
             ->where($where)
             ->order('b.id', 'desc')
             ->page($page, $limit)
@@ -1277,6 +1298,9 @@ class LotteryBetLogic
 
             // 投注内容
             $item['content'] = $item['bet_content'];
+            $item['can_cancel'] = (int)$item['status'] === 0
+                && (int)($item['is_settled'] ?? 0) === 0
+                && (int)($item['close_time'] ?? 0) > time();
         }
 
         // 查询总数
@@ -1306,6 +1330,16 @@ class LotteryBetLogic
                 'total_profit_amount' => number_format((float)($summary['total_profit_amount'] ?? 0), 2, '.', ''),
             ],
         ];
+    }
+
+    public static function cancelBet(int $userId, int $betId)
+    {
+        try {
+            return BetCancelService::cancelBeforeClose($betId, $userId, 'user', $userId);
+        } catch (\Throwable $e) {
+            self::setError($e->getMessage());
+            return false;
+        }
     }
 
     /**

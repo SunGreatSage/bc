@@ -167,6 +167,14 @@ export const lotteryService = {
   getBetList: (params = {}) =>
     apiClient.get('/api/lottery_bet/getBetList', { params }),
 
+  // Cancel pending bet before close time
+  cancelBet: (id) =>
+    apiClient.post('/api/lottery_bet/cancelBet', { id }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }),
+
   // Get draw results
   getDrawResult: (gid, qishu, plateCode = 'A') =>
     apiClient.get('/api/lottery_bet/getKjResult', {

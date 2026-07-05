@@ -267,6 +267,27 @@ class LotteryBetController extends BaseApiController
         return $this->success('获取成功', $result);
     }
 
+    /**
+     * @notes 用户封盘前撤单
+     * @return Json
+     */
+    public function cancelBet(): Json
+    {
+        $userId = $this->userId;
+        $id = (int)$this->request->post('id', 0);
+
+        if ($id <= 0) {
+            return $this->fail('注单ID不能为空');
+        }
+
+        $result = LotteryBetLogic::cancelBet($userId, $id);
+        if ($result === false) {
+            return $this->fail(LotteryBetLogic::getError());
+        }
+
+        return $this->success('撤单成功', $result);
+    }
+
 
     /**
      * @notes 查询开奖结果(公开接口,无需登录)

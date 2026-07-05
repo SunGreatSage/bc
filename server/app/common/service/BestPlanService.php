@@ -540,7 +540,8 @@ class BestPlanService
             } elseif ($comboRule) {
                 $numberSelections = $this->parseNumberSelections((string)$bet['content']);
                 if (count($numberSelections) === $comboRule['select_count']) {
-                    $hitCount = count(array_intersect($numberSelections, $normalCodes));
+                    $judgeNumbers = ($comboRule['judge_scope'] ?? '') === 'all7' ? $all7Numbers : $normalCodes;
+                    $hitCount = count(array_intersect($numberSelections, $judgeNumbers));
                     $resultType = $this->resolveBetOutcome($hitCount >= $comboRule['hit_count'], $betType);
                 }
             } else {
@@ -558,7 +559,7 @@ class BestPlanService
                     case '平碼':
                         $hit = false;
                         foreach ($betNumbers as $betNum) {
-                            if (in_array((int)$betNum, $all7Numbers, true)) {
+                            if (in_array((int)$betNum, $normalCodes, true)) {
                                 $hit = true;
                                 break;
                             }
@@ -664,6 +665,14 @@ class BestPlanService
     protected function getNumberComboRule(string $methodName): ?array
     {
         $normalized = str_replace([' ', '　', '-', '_'], '', trim($methodName));
+        if (in_array($normalized, ['6中1', '六中一'], true)) {
+            return [
+                'select_count' => 6,
+                'hit_count' => 1,
+                'judge_scope' => 'all7',
+            ];
+        }
+
         $chineseNumberMap = [
             '一' => 1,
             '二' => 2,
@@ -693,6 +702,7 @@ class BestPlanService
         return [
             'select_count' => $selectCount,
             'hit_count' => $hitCount,
+            'judge_scope' => 'regular6',
         ];
     }
 

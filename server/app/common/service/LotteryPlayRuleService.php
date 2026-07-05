@@ -137,6 +137,24 @@ class LotteryPlayRuleService
         return null;
     }
 
+    public static function getNumberComboRule(string $methodName, string $methodCode = ''): ?array
+    {
+        $code = strtolower(trim($methodCode));
+        if (in_array($code, ['liuzhongyi', 'six_pick_one'], true)) {
+            return self::buildNumberComboRule(6, 1, 'all7');
+        }
+
+        $normalized = str_replace([' ', '　', '-', '_'], '', trim($methodName));
+        $nameMap = ['6中1', '六中一'];
+        foreach ($nameMap as $keyword) {
+            if ($normalized === $keyword || strpos($normalized, $keyword) !== false) {
+                return self::buildNumberComboRule(6, 1, 'all7');
+            }
+        }
+
+        return null;
+    }
+
     public static function getSpecialOptionList(array $playMethod): array
     {
         $play = self::getSpecialOptionPlay((string)$playMethod['name'], (string)($playMethod['code'] ?? ''));
@@ -177,6 +195,11 @@ class LotteryPlayRuleService
             return (float)$sixSpecialRule['odds'];
         }
 
+        $numberComboRule = self::getNumberComboRule((string)$playMethod['name'], (string)($playMethod['code'] ?? ''));
+        if ($numberComboRule) {
+            return (float)($playMethod['odds_default'] ?? 0);
+        }
+
         $lianXiaoRule = self::getLianXiaoRule((string)$playMethod['name'], (string)($playMethod['code'] ?? ''));
         if ($lianXiaoRule) {
             $zodiacs = self::parseZodiacSelections($betContent, (int)date('Y'));
@@ -201,6 +224,15 @@ class LotteryPlayRuleService
             $zodiacs = self::parseZodiacSelections($betContent, (int)date('Y'));
             if (count($zodiacs) !== $sixSpecialRule['select_count']) {
                 return sprintf('%s玩法必须选择%d个不重复生肖', $playMethod['name'], $sixSpecialRule['select_count']);
+            }
+            return null;
+        }
+
+        $numberComboRule = self::getNumberComboRule((string)$playMethod['name'], (string)($playMethod['code'] ?? ''));
+        if ($numberComboRule) {
+            $numbers = self::parseNumberSelections($betContent);
+            if (count($numbers) !== $numberComboRule['select_count']) {
+                return sprintf('%s玩法必须选择%d个不重复号码', $playMethod['name'], $numberComboRule['select_count']);
             }
             return null;
         }
@@ -249,6 +281,18 @@ class LotteryPlayRuleService
 
             $specialZodiac = ZodiacYearService::getZodiacByNumberAndYear($special, $year);
             return self::resolveResult(in_array($specialZodiac, $betZodiacs, true), $betType);
+        }
+
+        $numberComboRule = self::getNumberComboRule($methodName, $methodCode);
+        if ($numberComboRule) {
+            $betNumbers = self::parseNumberSelections($betContent);
+            if (count($betNumbers) !== $numberComboRule['select_count']) {
+                return 'lose';
+            }
+
+            $drawNumbers = self::normalizeDrawnNumbers($drawnNumbers);
+            $hitCount = count(array_intersect($betNumbers, $drawNumbers));
+            return self::resolveResult($hitCount >= $numberComboRule['hit_count'], $betType);
         }
 
         $specialPlay = self::getSpecialOptionPlay($methodName, $methodCode);
@@ -523,6 +567,28 @@ class LotteryPlayRuleService
         return array_values(array_intersect($zodiacs, $validZodiacs));
     }
 
+    private static function parseNumberSelections(string $betContent): array
+    {
+        $parts = preg_split('/[,\s，、;-]+/u', $betContent);
+        if ($parts === false) {
+            return [];
+        }
+
+        $numbers = [];
+        foreach ($parts as $part) {
+            $part = trim((string)$part);
+            if ($part === '' || !preg_match('/^\d{1,2}$/', $part)) {
+                continue;
+            }
+            $number = (int)$part;
+            if ($number >= 1 && $number <= 49) {
+                $numbers[] = $number;
+            }
+        }
+
+        return array_values(array_unique($numbers));
+    }
+
     private static function normalizeDrawnNumbers(array $drawnNumbers): array
     {
         $regular = array_map('intval', array_slice($drawnNumbers, 0, 6));
@@ -555,6 +621,15 @@ class LotteryPlayRuleService
             'hit_count' => 1,
             'odds' => self::SIX_SPECIAL_ZODIAC_ODDS,
             'judge_scope' => 'special',
+        ];
+    }
+
+    private static function buildNumberComboRule(int $selectCount, int $hitCount, string $judgeScope): array
+    {
+        return [
+            'select_count' => $selectCount,
+            'hit_count' => $hitCount,
+            'judge_scope' => $judgeScope,
         ];
     }
 

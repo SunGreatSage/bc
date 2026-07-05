@@ -1881,13 +1881,18 @@ class BestPlanLogic extends BaseLogic
      */
     public static function getHistoryList(int $gid, int $limit = 10): array
     {
-        return Db::table('la_best_plan_history')
+        $query = Db::table('la_best_plan_history')
             ->field('id, gid, qishu, plate_code, analyze_time, total_bets, total_orders,
                      best_numbers, best_profit, best_profit_rate,
                      worst_number, worst_profit, worst_profit_rate,
                      avg_profit, status, actual_number, actual_profit')
-            ->where('gid', $gid)
-            ->order('analyze_time', 'desc')
+            ->where('gid', $gid);
+
+        if (self::columnExists('la_best_plan_history', 'admin_deleted_at')) {
+            $query->whereNull('admin_deleted_at');
+        }
+
+        return $query->order('analyze_time', 'desc')
             ->limit($limit)
             ->select()
             ->toArray();
@@ -1903,6 +1908,9 @@ class BestPlanLogic extends BaseLogic
     {
         $record = Db::table('la_best_plan_history')
             ->where('id', $id)
+            ->when(self::columnExists('la_best_plan_history', 'admin_deleted_at'), function ($query) {
+                $query->whereNull('admin_deleted_at');
+            })
             ->find();
 
         if (!$record) {
@@ -1932,6 +1940,24 @@ class BestPlanLogic extends BaseLogic
         }
 
         return $record;
+    }
+
+    private static function columnExists(string $table, string $column): bool
+    {
+        static $cache = [];
+        $key = $table . '.' . $column;
+        if (array_key_exists($key, $cache)) {
+            return $cache[$key];
+        }
+
+        try {
+            $row = Db::query('SHOW COLUMNS FROM `' . $table . '` LIKE ?', [$column]);
+            $cache[$key] = !empty($row);
+        } catch (\Throwable $e) {
+            $cache[$key] = false;
+        }
+
+        return $cache[$key];
     }
 
     /**
@@ -2735,7 +2761,8 @@ class BestPlanLogic extends BaseLogic
             if (count($betNumbers) !== $comboRule['select_count']) {
                 return 'lose';
             }
-            $hitCount = count(array_intersect($betNumbers, $m1_m6));
+            $judgeNumbers = ($comboRule['judge_scope'] ?? '') === 'all7' ? $allNumbers : $m1_m6;
+            $hitCount = count(array_intersect($betNumbers, $judgeNumbers));
             return self::resolveResult($hitCount >= $comboRule['hit_count'], $betType);
         }
 
@@ -2747,10 +2774,11 @@ class BestPlanLogic extends BaseLogic
 
         if (
             $methodCode === 'zhengma'
+            || $methodCode === 'pingma'
             || self::containsKeyword($methodName, ['正码', '正碼', '平码', '平碼'])
         ) {
             $betNumbers = array_map('intval', $betItems);
-            $hit = !empty(array_intersect($betNumbers, $allNumbers));
+            $hit = !empty(array_intersect($betNumbers, $m1_m6));
             return self::resolveResult($hit, $betType);
         }
 
@@ -2857,6 +2885,8 @@ class BestPlanLogic extends BaseLogic
             'erzhonger' => ['select_count' => 2, 'hit_count' => 2],
             'sanzhonger' => ['select_count' => 3, 'hit_count' => 2],
             'sanzhongsan' => ['select_count' => 3, 'hit_count' => 3],
+            'liuzhongyi' => ['select_count' => 6, 'hit_count' => 1, 'judge_scope' => 'all7'],
+            'six_pick_one' => ['select_count' => 6, 'hit_count' => 1, 'judge_scope' => 'all7'],
         ];
 
         if (isset($rules[$methodCode])) {
@@ -2871,6 +2901,9 @@ class BestPlanLogic extends BaseLogic
         }
         if (self::containsKeyword($methodName, ['三中三'])) {
             return $rules['sanzhongsan'];
+        }
+        if (self::containsKeyword($methodName, ['6中1', '六中一'])) {
+            return $rules['liuzhongyi'];
         }
 
         return null;

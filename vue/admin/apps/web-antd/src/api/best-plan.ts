@@ -139,6 +139,38 @@ export namespace BestPlanApi {
     actual_profit: number | null;
   }
 
+  /** 期号历史记录 */
+  export interface IssueHistoryRecord {
+    id: number;
+    game_id: number;
+    plate_code: string;
+    issue: string;
+    result: string;
+    status: number;
+    status_text: string;
+    open_time: number;
+    close_time: number;
+    draw_time: number;
+    is_settled: number;
+    settled_at: number;
+    total_bet_amount: string;
+    total_prize_amount: string;
+    created_at: number;
+    updated_at: number;
+    open_time_text: string;
+    close_time_text: string;
+    draw_time_text: string;
+    settled_time_text: string;
+  }
+
+  /** 期号历史列表 */
+  export interface IssueHistoryResult {
+    lists: IssueHistoryRecord[];
+    count: number;
+    page_no: number;
+    page_size: number;
+  }
+
   /** 分析详情 */
   export interface DetailRecord extends HistoryRecord {
     number_details: NumberDetail[];
@@ -193,6 +225,7 @@ export namespace BestPlanApi {
     prize_amount: string;
     profit_amount: string;
     is_settled: number;
+    can_cancel?: boolean;
     created_at: number;
     created_time: string;
   }
@@ -352,6 +385,23 @@ export async function getHistoryList(params: { gid?: number; limit?: number }) {
 }
 
 /**
+ * 获取期号历史列表
+ */
+export async function getIssueHistoryList(params: {
+  gid?: number;
+  page?: number;
+  limit?: number;
+  plate_code?: string;
+  issue?: string;
+  start_date?: string;
+  end_date?: string;
+}) {
+  return requestClient.get<BestPlanApi.IssueHistoryResult>('/best_plan/getIssueHistoryList', {
+    params,
+  });
+}
+
+/**
  * 获取分析详情
  */
 export async function getDetail(id: number) {
@@ -371,10 +421,77 @@ export async function getOrderHistory(params: {
   user_type?: 'user' | 'agent' | '';
   plate_code?: string;
   issue?: string;
-  status?: '' | '1' | '2';
+  status?: '' | '0' | '1' | '2' | '3' | '4';
+  profit_type?: '' | 'profit' | 'loss' | 'flat';
+  start_date?: string;
+  end_date?: string;
 }) {
   return requestClient.get<BestPlanApi.OrderHistoryResult>('/best_plan/getOrderHistory', {
     params,
+  });
+}
+
+type DeleteLogFilters = Record<string, string | number | null | undefined>;
+
+function appendDeleteLogFilters(formData: URLSearchParams, filters?: DeleteLogFilters) {
+  Object.entries(filters || {}).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return;
+    }
+    formData.append(`filters[${key}]`, String(value));
+  });
+}
+
+export async function deleteBetRecords(ids: number[], filters?: DeleteLogFilters) {
+  const formData = new URLSearchParams();
+  ids.forEach((id) => formData.append('ids[]', String(id)));
+  appendDeleteLogFilters(formData, filters);
+
+  return requestClient.post<{ affected: number; ids: number[] }>('/best_plan/deleteBetRecords', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+}
+
+export async function cancelBetBeforeClose(id: number) {
+  const formData = new URLSearchParams();
+  formData.append('id', String(id));
+
+  return requestClient.post<{
+    id: number;
+    sn: string;
+    status: number;
+    status_text: string;
+    refund_amount: string;
+  }>('/best_plan/cancelBetBeforeClose', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+}
+
+export async function deleteHistories(ids: number[], filters?: DeleteLogFilters) {
+  const formData = new URLSearchParams();
+  ids.forEach((id) => formData.append('ids[]', String(id)));
+  appendDeleteLogFilters(formData, filters);
+
+  return requestClient.post<{ affected: number; ids: number[] }>('/best_plan/deleteHistories', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+}
+
+export async function deleteIssueHistories(ids: number[], filters?: DeleteLogFilters) {
+  const formData = new URLSearchParams();
+  ids.forEach((id) => formData.append('ids[]', String(id)));
+  appendDeleteLogFilters(formData, filters);
+
+  return requestClient.post<{ affected: number; ids: number[] }>('/best_plan/deleteIssueHistories', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
   });
 }
 

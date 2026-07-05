@@ -443,6 +443,9 @@ const comboRuleText = computed(() => {
   if (comboMode.value === 'miss' || comboHitCount.value === 0) {
     return `选${comboSelectCount.value}个号码，7个开奖号码全部不中即中奖`
   }
+  if (specialRules.value?.judge_scope?.includes('全部7个') || specialRules.value?.rule_49?.includes('不打和')) {
+    return `选${comboSelectCount.value}个号码，7个开奖号码中任意${comboHitCount.value}个命中即中奖`
+  }
   return `选${comboSelectCount.value}个号码，中${comboHitCount.value}个即中奖（只算正码）`
 })
 

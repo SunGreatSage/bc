@@ -282,6 +282,18 @@ class BestPlanController extends BaseAdminController
         return $this->success('获取成功', $result);
     }
 
+    /**
+     * @notes 获取后台期号历史列表
+     * @return Json
+     */
+    public function getIssueHistoryList(): Json
+    {
+        $params = $this->request->get();
+        $result = BestPlanLogic::getIssueHistoryList($params);
+
+        return $this->success('获取成功', $result);
+    }
+
 
     /**
      * @notes 获取历史分析详情
@@ -320,6 +332,95 @@ class BestPlanController extends BaseAdminController
         $result = BestPlanLogic::getOrderHistory($params);
 
         return $this->success('获取成功', $result);
+    }
+
+    /**
+     * @notes 后台删除历史下单展示数据
+     * @return Json
+     */
+    public function deleteBetRecords(): Json
+    {
+        if (!$this->isRootAdmin()) {
+            return $this->fail('只有总管理可以删除历史下单数据');
+        }
+
+        $ids = $this->parseIds($this->request->post('ids/a', $this->request->post('ids', [])));
+        $filters = $this->parseFilters($this->request->post('filters/a', $this->request->post('filters', [])));
+        $result = BestPlanLogic::deleteBetRecords($ids, $this->adminId, $filters);
+
+        if (BestPlanLogic::getError()) {
+            return $this->fail(BestPlanLogic::getError());
+        }
+
+        return $this->success('删除成功', $result);
+    }
+
+    /**
+     * @notes 后台删除分析历史记录
+     * @return Json
+     */
+    public function deleteHistories(): Json
+    {
+        if (!$this->isRootAdmin()) {
+            return $this->fail('只有总管理可以删除历史记录');
+        }
+
+        $ids = $this->parseIds($this->request->post('ids/a', $this->request->post('ids', [])));
+        $filters = $this->parseFilters($this->request->post('filters/a', $this->request->post('filters', [])));
+        $result = BestPlanLogic::deleteHistories($ids, $this->adminId, $filters);
+
+        if (BestPlanLogic::getError()) {
+            return $this->fail(BestPlanLogic::getError());
+        }
+
+        return $this->success('删除成功', $result);
+    }
+
+    /**
+     * @notes 后台隐藏期号历史
+     * @return Json
+     */
+    public function deleteIssueHistories(): Json
+    {
+        if (!$this->isRootAdmin()) {
+            return $this->fail('只有总管理可以删除期号历史');
+        }
+
+        $ids = $this->parseIds($this->request->post(
+            'issue_ids/a',
+            $this->request->post('issue_ids', $this->request->post('ids/a', $this->request->post('ids', [])))
+        ));
+        $filters = $this->parseFilters($this->request->post('filters/a', $this->request->post('filters', [])));
+        $result = BestPlanLogic::deleteIssueHistories($ids, $this->adminId, $filters);
+
+        if (BestPlanLogic::getError()) {
+            return $this->fail(BestPlanLogic::getError());
+        }
+
+        return $this->success('删除成功', $result);
+    }
+
+    /**
+     * @notes 后台封盘前撤单
+     * @return Json
+     */
+    public function cancelBetBeforeClose(): Json
+    {
+        if (!$this->isRootAdmin()) {
+            return $this->fail('只有总管理可以撤单');
+        }
+
+        $id = (int)$this->request->post('id', 0);
+        if ($id <= 0) {
+            return $this->fail('注单ID不能为空');
+        }
+
+        $result = BestPlanLogic::cancelBetBeforeClose($id, $this->adminId);
+        if ($result === false) {
+            return $this->fail(BestPlanLogic::getError());
+        }
+
+        return $this->success('撤单成功', $result);
     }
 
 
@@ -419,6 +520,43 @@ class BestPlanController extends BaseAdminController
         } catch (\Exception $e) {
             return $this->fail('对比失败: ' . $e->getMessage());
         }
+    }
+
+    private function parseIds($raw): array
+    {
+        if (is_string($raw)) {
+            $raw = preg_split('/[,\s]+/', $raw) ?: [];
+        }
+        if (!is_array($raw)) {
+            return [];
+        }
+        $ids = array_map('intval', $raw);
+        $ids = array_filter($ids, fn($id) => $id > 0);
+        return array_values(array_unique($ids));
+    }
+
+    private function parseFilters($raw): array
+    {
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+            $raw = is_array($decoded) ? $decoded : [];
+        }
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $filters = [];
+        foreach ($raw as $key => $value) {
+            if (!is_scalar($value)) {
+                continue;
+            }
+            $value = trim((string)$value);
+            if ($value === '') {
+                continue;
+            }
+            $filters[(string)$key] = $value;
+        }
+        return $filters;
     }
 
 

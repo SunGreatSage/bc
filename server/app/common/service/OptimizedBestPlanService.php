@@ -162,6 +162,7 @@ class OptimizedBestPlanService
                         'numbers' => $numbers,
                         'select_count' => $comboRule['select_count'],
                         'hit_count' => $comboRule['hit_count'],
+                        'judge_scope' => $comboRule['judge_scope'] ?? 'regular6',
                     ];
                 }
                 continue;
@@ -329,7 +330,6 @@ class OptimizedBestPlanService
                 foreach ($betNumbers as $num) {
                     if ($num >= 1 && $num <= 49) {
                         $this->normalCodeWeights[$num] += $direction * $weightedAmount;
-                        $this->specialCodeWeights[$num] += $direction * $weightedAmount;
                     }
                 }
                 continue;
@@ -350,6 +350,9 @@ class OptimizedBestPlanService
                 $betNumbers = $this->parseNumberSelections($content);
                 foreach ($betNumbers as $num) {
                     $this->normalCodeWeights[$num] += $direction * $weightedAmount;
+                    if (($comboRule['judge_scope'] ?? '') === 'all7') {
+                        $this->specialCodeWeights[$num] += $direction * $weightedAmount;
+                    }
                 }
                 continue;
             }
@@ -673,13 +676,14 @@ class OptimizedBestPlanService
         }
 
         foreach ($this->flatNumberBets as $bet) {
-            $hit = !empty(array_intersect($bet['numbers'], $all7Numbers));
+            $hit = !empty(array_intersect($bet['numbers'], $normalCodes));
             $result = $this->resolveResult($hit, $bet['bet_type']);
             $this->accumulatePrize($result, $bet['amount'], $bet['odds'], $totalPrize);
         }
 
         foreach ($this->numberComboBets as $bet) {
-            $hitCount = count(array_intersect($bet['numbers'], $normalCodes));
+            $judgeNumbers = ($bet['judge_scope'] ?? '') === 'all7' ? $all7Numbers : $normalCodes;
+            $hitCount = count(array_intersect($bet['numbers'], $judgeNumbers));
             $result = $this->resolveResult($hitCount >= $bet['hit_count'], $bet['bet_type']);
             $this->accumulatePrize($result, $bet['amount'], $bet['odds'], $totalPrize);
         }
@@ -775,7 +779,7 @@ class OptimizedBestPlanService
 
         if ($this->containsKeyword($methodName, self::KEYWORDS_FLAT_NUMBER)) {
             $betNumbers = array_map('intval', $rawItems);
-            $hit = !empty(array_intersect($betNumbers, $allNumbers));
+            $hit = !empty(array_intersect($betNumbers, $normalCodes));
             return $this->resolveResult($hit, $betType);
         }
 
@@ -796,7 +800,8 @@ class OptimizedBestPlanService
                 return 'lose';
             }
             $normalCodes = array_values(array_diff($allNumbers, [$specialCode]));
-            $hitCount = count(array_intersect($betNumbers, $normalCodes));
+            $judgeNumbers = ($comboRule['judge_scope'] ?? '') === 'all7' ? $allNumbers : $normalCodes;
+            $hitCount = count(array_intersect($betNumbers, $judgeNumbers));
             return $this->resolveResult($hitCount >= $comboRule['hit_count'], $betType);
         }
 
@@ -890,6 +895,14 @@ class OptimizedBestPlanService
     protected function getNumberComboRule(string $methodName): ?array
     {
         $normalized = str_replace([' ', '　', '-', '_'], '', trim($methodName));
+        if (in_array($normalized, ['6中1', '六中一'], true)) {
+            return [
+                'select_count' => 6,
+                'hit_count' => 1,
+                'judge_scope' => 'all7',
+            ];
+        }
+
         $chineseNumberMap = [
             '一' => 1,
             '二' => 2,
@@ -919,6 +932,7 @@ class OptimizedBestPlanService
         return [
             'select_count' => $selectCount,
             'hit_count' => $hitCount,
+            'judge_scope' => 'regular6',
         ];
     }
 
