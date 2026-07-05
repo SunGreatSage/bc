@@ -5,7 +5,7 @@
         <div>
           <div class="text-base font-bold text-gray-900">开奖</div>
           <div class="text-xs text-gray-500">
-            <span v-if="qishu">第 {{ qishu }} 期</span>
+            <span v-if="qishu">第 {{ displayQishu || qishu }} 期</span>
             <span v-else>获取期号中...</span>
             <span class="mx-1">·</span>
             <span>盘口：{{ plateCode }}</span>
@@ -100,6 +100,7 @@ const plateCode = computed(() => {
 })
 
 const qishu = ref('')
+const displayQishu = ref('')
 const displayNumbers = ref(Array(7).fill('?'))
 const activeIndex = ref(-1)
 const secondsToKj = ref(null)
@@ -292,6 +293,7 @@ const fetchCurrentQishu = async (id) => {
 
   const nextQishu = String(response.data.qishu)
   qishu.value = nextQishu
+  displayQishu.value = String(response.data.display_qishu || nextQishu)
 
   const seconds = extractSecondsToKj(response.data)
   if (seconds !== null) startCountdown(id, seconds)
@@ -372,6 +374,7 @@ const startFlow = async () => {
   errorText.value = ''
   loading.value = true
   qishu.value = ''
+  displayQishu.value = ''
   secondsToKj.value = null
   activeIndex.value = -1
   displayNumbers.value = Array(7).fill('?')

@@ -234,7 +234,7 @@ const orderedRecords = computed(() => {
 const normalizeRecord = (item) => ({
   id: item?.id,
   issue: Number(item?.issue) || 0,
-  issueText: `${item?.issueText ?? item?.qishu ?? item?.issue ?? ''}`.trim(),
+  issueText: `${item?.displayIssueText ?? item?.display_qishu ?? item?.issueText ?? item?.qishu ?? item?.issue ?? ''}`.trim(),
   date: item?.date || item?.lotteryTime || formatDate(item?.drawTime || item?.createdAt),
   balls: Array.isArray(item?.balls) ? item.balls : [],
   drawTimeMs: Number(item?.drawTime) || 0,

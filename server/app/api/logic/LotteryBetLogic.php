@@ -10,6 +10,7 @@ use app\common\service\LotteryPlayRuleService;
 use app\common\service\OrderSnService;
 use app\common\service\BetCancelService;
 use app\common\service\DrawNumberDisplayService;
+use app\common\service\IssueDisplayService;
 use app\common\model\lottery\AccountLog;
 use app\common\model\lottery\WinningRecord;
 
@@ -1413,6 +1414,10 @@ class LotteryBetLogic
 
             return [
                 'qishu' => (string)$issue['issue'],
+                'display_qishu' => IssueDisplayService::formatDisplayQishu(
+                    (string)$issue['issue'],
+                    $drawTimeRaw
+                ),
                 'numbers' => $numbers,
                 'display_numbers' => $hasResult ? DrawNumberDisplayService::buildDisplayNumbers(
                     $numbers,

@@ -93,6 +93,10 @@ const columns: TableColumnsType = [
     dataIndex: 'issue',
     key: 'issue',
     width: 130,
+    customRender: ({ record }) => {
+      const item = record as BestPlanApi.OrderHistoryRecord;
+      return item.display_qishu ? `第${item.display_qishu}期` : item.issue;
+    },
   },
   {
     title: '下单玩法',

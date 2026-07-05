@@ -10,6 +10,7 @@ namespace app\api\controller;
 
 use app\api\logic\LotteryBetLogic;
 use app\api\logic\LotteryLoginLogic;
+use app\common\service\IssueDisplayService;
 use think\response\Json;
 
 /**
@@ -405,6 +406,10 @@ class LotteryBetController extends BaseApiController
 
         return $this->success('获取成功', [
             'qishu' => $currentIssue['issue'],
+            'display_qishu' => IssueDisplayService::formatDisplayQishu(
+                (string)$currentIssue['issue'],
+                $currentIssue['draw_time'] ?? null
+            ),
             'game_name' => $gameNames[$gid] ?? '未知游戏',
             'plate_code' => $currentIssue['plate_code'],
             'status' => $currentIssue['status'],

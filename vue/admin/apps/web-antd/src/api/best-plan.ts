@@ -11,6 +11,7 @@ export namespace BestPlanApi {
   /** 期号信息 */
   export interface QishuInfo {
     qishu: string;
+    display_qishu?: string;
     plate_code: string;  // 盘口代码
     opentime: string;
     closetime: string;
@@ -145,6 +146,7 @@ export namespace BestPlanApi {
     game_id: number;
     plate_code: string;
     issue: string;
+    display_qishu?: string;
     result: string;
     status: number;
     status_text: string;
@@ -213,6 +215,7 @@ export namespace BestPlanApi {
     game_id: number;
     plate_code: string;
     issue: string;
+    display_qishu?: string;
     method_id: number;
     method_name: string;
     bet_type: string;
@@ -251,6 +254,7 @@ export namespace BestPlanApi {
   /** 新期号预览/创建结果 */
   export interface NewIssueResult {
     issue: string;
+    display_qishu?: string;
     open_time: string;
     close_time: string;
     draw_time: string;
@@ -261,6 +265,7 @@ export namespace BestPlanApi {
     source_text?: string;
     current_issue?: {
       issue: string;
+      display_qishu?: string;
       open_time: string;
       close_time: string;
       draw_time: string;

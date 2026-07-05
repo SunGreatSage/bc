@@ -60,7 +60,7 @@
               >
                 <!-- 开奖日期显示 -->
                 <td class="px-2 py-2 text-sm text-gray-900 whitespace-nowrap border-r border-gray-300">
-                  <div class="font-medium">{{ result.date_display }}</div>
+                  <div class="font-medium">{{ getResultDateDisplay(result) }}</div>
                 </td>
 
                 <!-- 开奖号码 -->
@@ -218,6 +218,12 @@ const getDisplayNumbers = (result) => {
     return result.display_numbers
   }
   return Array.isArray(result?.numbers) ? result.numbers : []
+}
+
+const getResultDateDisplay = (result) => {
+  const displayQishu = `${result?.display_qishu ?? ''}`.trim()
+  if (!displayQishu) return result?.date_display || result?.date || ''
+  return `${result?.date || ''} (第${displayQishu}期)`
 }
 
 const totalPages = computed(() => {

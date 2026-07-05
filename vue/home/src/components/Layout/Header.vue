@@ -332,7 +332,7 @@ const fetchCurrentQishu = async () => {
     const result = await lotteryService.getCurrentPeriod(selectedLotteryType.value)
     if (result.code === 1) {
       currentQishu.value = result.data.qishu
-      accountInfo.value.periodNumber = result.data.qishu
+      accountInfo.value.periodNumber = result.data.display_qishu || result.data.qishu
     } else {
       console.error('获取期号失败:', result.msg)
     }
@@ -365,9 +365,10 @@ const fetchUserInfo = async () => {
       const rawTimeInfo = result.data.time_info || result.data
 
       if (rawTimeInfo && (rawTimeInfo.open_time || rawTimeInfo.current_qishu || rawTimeInfo.issue)) {
-        // 优先使用 issue 字段 (新系统), 其次使用 current_qishu (兼容老系统)
-        accountInfo.value.periodNumber = rawTimeInfo.issue || rawTimeInfo.current_qishu || rawTimeInfo.qishu || '加载中...'
-        currentQishu.value = rawTimeInfo.issue || rawTimeInfo.current_qishu || rawTimeInfo.qishu || ''
+        const rawIssue = rawTimeInfo.issue || rawTimeInfo.current_qishu || rawTimeInfo.qishu || ''
+        const displayIssue = rawTimeInfo.display_qishu || rawTimeInfo.display_issue || rawIssue
+        accountInfo.value.periodNumber = displayIssue || '加载中...'
+        currentQishu.value = rawIssue
 
         // 计算倒计时秒数（如果后端没有返回）
         const now = new Date()

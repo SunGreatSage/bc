@@ -116,6 +116,23 @@ const parseHomeTime = (value) => {
   return Number.isNaN(time) ? 0 : time
 }
 
+const deriveDisplayQishu = (qishu, drawTime = 0) => {
+  const text = `${qishu ?? ''}`.trim()
+  const match = text.match(/^(\d{4})(\d{2})(\d{2})/)
+  let date = null
+
+  if (match) {
+    date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+  } else if (Number(drawTime) > 0) {
+    date = new Date(Number(drawTime))
+  }
+
+  if (!date || Number.isNaN(date.getTime())) return ''
+  const yearStart = new Date(date.getFullYear(), 0, 1)
+  const day = Math.floor((date - yearStart) / 86400000) + 1
+  return String(day).padStart(3, '0')
+}
+
 const normalizeHomeBall = (item) => {
   const number = `${item?.num ?? item?.number ?? item ?? ''}`.padStart(2, '0')
   const zodiac = `${item?.zodiac ?? ''}`.trim()
@@ -134,6 +151,7 @@ const normalizeHomeBall = (item) => {
 const normalizeHomeLotteryRecord = (item) => {
   const qishu = `${item?.qishu ?? item?.issue ?? ''}`.trim()
   const drawTime = parseHomeTime(item?.draw_time || item?.kj_time || item?.date)
+  const displayIssueText = `${item?.display_qishu ?? item?.displayIssueText ?? ''}`.trim() || deriveDisplayQishu(qishu, drawTime)
   const numbers = Array.isArray(item?.display_numbers) && item.display_numbers.length > 0
     ? item.display_numbers
     : item?.numbers
@@ -141,7 +159,9 @@ const normalizeHomeLotteryRecord = (item) => {
   return {
     id: qishu || item?.id,
     issue: Number(qishu) || 0,
-    issueText: qishu,
+    issueText: displayIssueText || qishu,
+    rawIssueText: qishu,
+    displayIssueText,
     date: item?.date_display || item?.date || '',
     balls: Array.isArray(numbers) ? numbers.map(normalizeHomeBall) : [],
     drawTime,
@@ -210,6 +230,8 @@ export async function getPublicLotteryLatest() {
   })
   const currentQishu = `${currentPeriod?.qishu ?? ''}`.trim()
   const currentDrawTime = parseHomeTime(currentPeriod?.draw_time || currentPeriod?.kj_time)
+  const currentDisplayQishu =
+    `${currentPeriod?.display_qishu ?? ''}`.trim() || deriveDisplayQishu(currentQishu, currentDrawTime)
 
   const [currentResult, latestList] = await Promise.all([
     currentQishu
@@ -240,22 +262,30 @@ export async function getPublicLotteryLatest() {
 
   const hasCurrentResult = currentBalls.length > 0
   const currentDetailBalls =
-    hasCurrentResult && latestRecord?.issueText === currentQishu && latestRecord.balls.length
+    hasCurrentResult && latestRecord?.rawIssueText === currentQishu && latestRecord.balls.length
       ? latestRecord.balls
       : currentBalls
-  const issueText = hasCurrentResult ? currentQishu : latestRecord?.issueText || currentQishu
+  const currentResultDisplayQishu =
+    `${currentResult?.display_qishu ?? ''}`.trim() ||
+    deriveDisplayQishu(currentQishu, parseHomeTime(currentResult?.draw_time || currentResult?.kj_time || currentPeriod?.draw_time))
+  const issueText = hasCurrentResult
+    ? currentResultDisplayQishu || currentDisplayQishu || currentQishu
+    : latestRecord?.issueText || currentDisplayQishu || currentQishu
+  const rawIssueText = hasCurrentResult ? currentQishu : latestRecord?.rawIssueText || currentQishu
   const drawTime = hasCurrentResult
     ? parseHomeTime(currentResult?.draw_time || currentResult?.kj_time || currentPeriod?.draw_time)
     : Number(latestRecord?.drawTime) || 0
-  const nextIssueText = hasCurrentResult ? '' : currentQishu
+  const nextIssueText = hasCurrentResult ? '' : currentDisplayQishu || currentQishu
   const nextDrawTime = hasCurrentResult ? 0 : currentDrawTime
 
   return {
     balls: hasCurrentResult ? currentDetailBalls : latestRecord?.balls || [],
-    issue: Number(issueText) || 0,
+    issue: Number(rawIssueText) || 0,
     issueText,
-    issueKey: Number(issueText) || 0,
-    nextIssue: Number(nextIssueText) || 0,
+    rawIssueText,
+    displayIssueText: issueText,
+    issueKey: Number(rawIssueText) || 0,
+    nextIssue: Number(currentQishu) || 0,
     nextIssueText,
     nextDrawTime,
     drawTime,

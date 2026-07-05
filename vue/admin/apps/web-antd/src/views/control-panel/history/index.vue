@@ -178,6 +178,10 @@ const issueColumns: TableColumnsType = [
     dataIndex: 'issue',
     key: 'issue',
     width: 130,
+    customRender: ({ record }) => {
+      const item = record as BestPlanApi.IssueHistoryRecord;
+      return item.display_qishu ? `第${item.display_qishu}期` : item.issue;
+    },
   },
   {
     title: '盘口',

@@ -245,6 +245,24 @@ function formatPlanNumber(number: unknown) {
   return String(value).padStart(2, '0');
 }
 
+function formatDisplayQishu(record?: { qishu?: string; issue?: string; display_qishu?: string } | null) {
+  const display = `${record?.display_qishu ?? ''}`.trim();
+  if (display) {
+    return `第${display}期`;
+  }
+  const raw = `${record?.qishu ?? record?.issue ?? ''}`.trim();
+  return raw ? `第${raw}期` : '暂无';
+}
+
+function formatIssueWithRaw(record?: { qishu?: string; issue?: string; display_qishu?: string } | null) {
+  const raw = `${record?.qishu ?? record?.issue ?? ''}`.trim();
+  const displayText = formatDisplayQishu(record);
+  if (!raw || displayText.includes(raw)) {
+    return displayText;
+  }
+  return `${displayText}（原始：${raw}）`;
+}
+
 function isBeforeCloseTime() {
   if (!qishuInfo.value?.closetime) {
     return false;
@@ -973,8 +991,8 @@ async function handleCreateNewIssue() {
     `选择盘口：${selectedPlate.value}\n` +
     `创建方式：${preview.strategy_text}\n` +
     `规则说明：${preview.source_text || '按当前选择的创建方式生成'}\n\n` +
-    `当前期号：${currentIssue?.issue || '暂无'}${currentIssue ? `（${currentIssue.status_text}）` : ''}\n` +
-    `新期号：${preview.issue}\n\n` +
+    `当前期号：${formatIssueWithRaw(currentIssue)}${currentIssue ? `（${currentIssue.status_text}）` : ''}\n` +
+    `新期号：${formatIssueWithRaw(preview)}\n\n` +
     `新开盘时间：${preview.open_time}\n` +
     `新封盘时间：${preview.close_time}\n` +
     `新开奖时间：${preview.draw_time}\n` +
@@ -997,7 +1015,7 @@ async function handleCreateNewIssue() {
 
         message.success(
           `✅ 新期号创建成功！\n\n` +
-          `期号：${result.issue}\n` +
+          `期号：${formatIssueWithRaw(result)}\n` +
           `开盘时间：${result.open_time}\n` +
           `封盘时间：${result.close_time}\n` +
           `开奖时间：${result.draw_time}\n` +
@@ -1082,7 +1100,8 @@ onBeforeUnmount(() => {
       <Row :gutter="16" v-if="qishuInfo">
         <Col :span="4">
           <div class="text-gray-500">当前期号</div>
-          <div class="text-2xl font-bold">{{ qishuInfo.qishu }}</div>
+          <div class="text-2xl font-bold">{{ formatDisplayQishu(qishuInfo) }}</div>
+          <div v-if="qishuInfo.display_qishu" class="text-xs text-gray-400">原始：{{ qishuInfo.qishu }}</div>
         </Col>
         <Col :span="4">
           <div class="text-gray-500">开盘时间</div>
@@ -1398,7 +1417,7 @@ onBeforeUnmount(() => {
     >
       <div v-if="qishuInfo" class="space-y-4">
         <div class="text-sm text-gray-600">
-          <div>期号：<span class="font-medium text-gray-900">{{ qishuInfo.qishu }}</span></div>
+          <div>期号：<span class="font-medium text-gray-900">{{ formatIssueWithRaw(qishuInfo) }}</span></div>
           <div>盘口：<span class="font-medium text-gray-900">{{ selectedPlate }}</span></div>
         </div>
 

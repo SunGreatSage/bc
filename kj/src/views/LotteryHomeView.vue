@@ -269,7 +269,7 @@ const displayBalls = computed(() =>
 )
 
 const formatIssueText = (lottery) => {
-  const issueText = `${lottery?.issueText ?? ''}`.trim()
+  const issueText = `${lottery?.displayIssueText ?? lottery?.issueText ?? ''}`.trim()
   if (issueText) return `第${issueText}期`
   const year = Number(lottery?.year) || new Date().getFullYear()
   const issue = Number(lottery?.issue) || 0
@@ -279,7 +279,7 @@ const formatIssueText = (lottery) => {
 
 const formatSourceSub = (source) => {
   if (source.data?.status === 'error') return '加载失败'
-  const issueText = `${source.data?.issueText ?? ''}`.trim()
+  const issueText = `${source.data?.displayIssueText ?? source.data?.issueText ?? ''}`.trim()
   const nextIssueText = `${source.data?.nextIssueText ?? ''}`.trim()
   if (issueText) {
     return nextIssueText ? `第${issueText}期 / 下期${nextIssueText}` : `第${issueText}期`
@@ -313,11 +313,13 @@ const nextIssueText = computed(() => {
 
   if (!activeIsLocal.value) {
     const issue = Number(activeLottery.value?.nextIssue) || 0
+    const rawNextIssueText = `${activeLottery.value?.nextIssueText ?? ''}`.trim()
     const nextDrawTime = Number(activeLottery.value?.nextDrawTime) || 0
     const date = nextDrawTime ? new Date(nextDrawTime) : null
     const dateText = date
       ? `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())}`
       : ''
+    if (rawNextIssueText) return `下期第${rawNextIssueText}期${dateText ? ` ${dateText}` : ''}`
     if (!issue) return activeLottery.value?.title || '等待开奖信息'
     return `下期第${String(issue).padStart(3, '0')}期${dateText ? ` ${dateText}` : ''}`
   }

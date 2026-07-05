@@ -10,6 +10,7 @@ namespace app\adminapi\logic;
 
 use app\common\logic\BaseLogic;
 use app\common\service\BetCancelService;
+use app\common\service\IssueDisplayService;
 use app\common\service\OperationLogContentService;
 use think\facade\Db;
 
@@ -104,6 +105,10 @@ class BestPlanLogic extends BaseLogic
         // ✅ 始终包含所有字段，避免前端undefined
         $result = [
             'qishu' => $issue['issue'],
+            'display_qishu' => IssueDisplayService::formatDisplayQishu(
+                (string)$issue['issue'],
+                $issue['draw_time'] ?? null
+            ),
             'plate_code' => $issue['plate_code'],
             'opentime' => $issue['open_time'] ? date('Y-m-d H:i:s', $issue['open_time']) : '',
             'closetime' => $issue['close_time'] ? date('Y-m-d H:i:s', $issue['close_time']) : '',
@@ -267,6 +272,10 @@ class BestPlanLogic extends BaseLogic
 
         foreach ($lists as &$item) {
             $item['status'] = (int)($item['status'] ?? 0);
+            $item['display_qishu'] = IssueDisplayService::formatDisplayQishu(
+                (string)($item['issue'] ?? ''),
+                $item['draw_time'] ?? null
+            );
             $item['status_text'] = self::getIssueStatusText($item['status']);
             $item['is_settled'] = (int)($item['is_settled'] ?? 0);
             $item['open_time_text'] = !empty($item['open_time']) ? date('Y-m-d H:i:s', (int)$item['open_time']) : '';
@@ -348,6 +357,7 @@ class BestPlanLogic extends BaseLogic
                 '(b.total_amount - b.prize_amount) as profit_amount',
                 'b.is_settled',
                 'i.close_time',
+                'i.draw_time',
                 'b.created_at',
                 'b.updated_at',
             ])
@@ -357,6 +367,10 @@ class BestPlanLogic extends BaseLogic
             ->toArray();
 
         foreach ($lists as &$item) {
+            $item['display_qishu'] = IssueDisplayService::formatDisplayQishu(
+                (string)($item['issue'] ?? ''),
+                $item['draw_time'] ?? null
+            );
             $item['is_agent'] = (int)($item['is_agent'] ?? 0);
             $item['user_type'] = $item['is_agent'] === 1 ? 'agent' : 'user';
             $item['user_type_text'] = $item['is_agent'] === 1 ? '代理用户' : '普通用户';
@@ -985,6 +999,10 @@ class BestPlanLogic extends BaseLogic
 
         $result = [
             'issue' => $newIssue['issue'],
+            'display_qishu' => IssueDisplayService::formatDisplayQishu(
+                (string)$newIssue['issue'],
+                $newIssue['draw_time'] ?? null
+            ),
             'open_time' => date('Y-m-d H:i:s', (int)$newIssue['open_time']),
             'close_time' => date('Y-m-d H:i:s', (int)$newIssue['close_time']),
             'draw_time' => date('Y-m-d H:i:s', (int)$newIssue['draw_time']),
@@ -998,6 +1016,10 @@ class BestPlanLogic extends BaseLogic
         if ($currentIssue) {
             $result['current_issue'] = [
                 'issue' => $currentIssue['issue'],
+                'display_qishu' => IssueDisplayService::formatDisplayQishu(
+                    (string)$currentIssue['issue'],
+                    $currentIssue['draw_time'] ?? null
+                ),
                 'open_time' => date('Y-m-d H:i:s', (int)$currentIssue['open_time']),
                 'close_time' => date('Y-m-d H:i:s', (int)$currentIssue['close_time']),
                 'draw_time' => date('Y-m-d H:i:s', (int)$currentIssue['draw_time']),
