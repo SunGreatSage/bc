@@ -67,7 +67,7 @@
                 <td class="px-2 py-2 border-r border-gray-300">
                   <div class="flex gap-2 justify-center items-center whitespace-nowrap">
                     <div
-                      v-for="(item, index) in result.numbers"
+                      v-for="(item, index) in getDisplayNumbers(result)"
                       :key="index"
                       class="flex items-center gap-1"
                     >
@@ -212,6 +212,13 @@ const fetchResults = async () => {
 const paginatedResults = computed(() => {
   return historyResults.value
 })
+
+const getDisplayNumbers = (result) => {
+  if (Array.isArray(result?.display_numbers) && result.display_numbers.length > 0) {
+    return result.display_numbers
+  }
+  return Array.isArray(result?.numbers) ? result.numbers : []
+}
 
 const totalPages = computed(() => {
   return Math.ceil(totalRecords.value / pageSize)

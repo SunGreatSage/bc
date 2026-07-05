@@ -8,6 +8,7 @@
 
 namespace app\api\controller;
 
+use app\common\service\DrawNumberDisplayService;
 use app\common\service\ZodiacYearService;
 use think\facade\Db;
 use think\response\Json;
@@ -175,6 +176,7 @@ class LotteryResultController extends BaseApiController
                 'qishu' => $kj['issue'],
                 'date_display' => date('Y-m-d', $kj['draw_time']) . ' (' . $kj['issue'] . ')',
                 'numbers' => [],
+                'display_numbers' => [],
                 'has_result' => false,
             ];
         }
@@ -248,6 +250,11 @@ class LotteryResultController extends BaseApiController
             'qishu' => (string)$kj['issue'],
             'date_display' => date('Y-m-d', $kj['draw_time']) . ' (' . $kj['issue'] . ')',
             'numbers' => $numbers,
+            'display_numbers' => DrawNumberDisplayService::buildDisplayNumbers(
+                $numbers,
+                (string)$kj['issue'],
+                (string)($kj['plate_code'] ?? '')
+            ),
             'has_result' => true,
             'total_score' => $totalScore,
             'special_num' => str_pad($specialNum, 2, '0', STR_PAD_LEFT),

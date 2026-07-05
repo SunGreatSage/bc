@@ -124,7 +124,7 @@ const statusSub = computed(() => {
   return ''
 })
 
-const storageKey = computed(() => `kj:result:${gid.value}:${plateCode.value}`)
+const storageKey = computed(() => `kj:display-result:v2:${gid.value}:${plateCode.value}`)
 
 const safeParseJson = (text) => {
   try {
@@ -311,7 +311,7 @@ const fetchDrawResultOnce = async (id) => {
     startCountdown(id, seconds)
   }
 
-  const numbers = normalizeNumbers(response?.data?.numbers)
+  const numbers = normalizeNumbers(response?.data?.display_numbers || response?.data?.numbers)
   if (!numbers) return
 
   // 已经有结果：停止轮询并开奖动画（仅首次）

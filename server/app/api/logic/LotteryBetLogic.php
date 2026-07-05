@@ -9,6 +9,7 @@ use app\common\service\ZodiacService;
 use app\common\service\LotteryPlayRuleService;
 use app\common\service\OrderSnService;
 use app\common\service\BetCancelService;
+use app\common\service\DrawNumberDisplayService;
 use app\common\model\lottery\AccountLog;
 use app\common\model\lottery\WinningRecord;
 
@@ -1413,6 +1414,11 @@ class LotteryBetLogic
             return [
                 'qishu' => (string)$issue['issue'],
                 'numbers' => $numbers,
+                'display_numbers' => $hasResult ? DrawNumberDisplayService::buildDisplayNumbers(
+                    $numbers,
+                    (string)$issue['issue'],
+                    (string)($issue['plate_code'] ?? $plateCode)
+                ) : [],
                 'kj_time' => $kjTime,
                 'draw_time' => $kjTime,
                 // status: 1=已开奖, 0=未开奖(兼容前端轮询判断)

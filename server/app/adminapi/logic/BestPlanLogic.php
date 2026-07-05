@@ -375,9 +375,9 @@ class BestPlanLogic extends BaseLogic
         $summary = self::buildOrderHistoryQuery($gid, $username, $userType, $plateCode, $issue, $status, $profitType, $startTime, $endTime)
             ->field([
                 'COUNT(b.id) as order_count',
-                'IFNULL(SUM(b.total_amount), 0) as total_amount',
-                'IFNULL(SUM(b.prize_amount), 0) as total_prize_amount',
-                'IFNULL(SUM(b.total_amount - b.prize_amount), 0) as total_profit_amount',
+                'IFNULL(SUM(CASE WHEN b.status <> 3 THEN b.total_amount ELSE 0 END), 0) as total_amount',
+                'IFNULL(SUM(CASE WHEN b.status <> 3 THEN b.prize_amount ELSE 0 END), 0) as total_prize_amount',
+                'IFNULL(SUM(CASE WHEN b.status <> 3 THEN b.total_amount - b.prize_amount ELSE 0 END), 0) as total_profit_amount',
             ])
             ->find();
 
